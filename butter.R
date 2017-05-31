@@ -14,7 +14,8 @@ makeRFs<-function#
 (expTrain,
  stTrain,
  geneLists, 
- dLevel='description1'){
+ dLevel='description1',
+ nTrees=2e2){
   ans<-list();
   cnames<-names(geneLists);
   cnames<-intersect(cnames, unique(as.vector(stTrain[,dLevel])));
@@ -22,7 +23,7 @@ makeRFs<-function#
     cat(cname,"\n");
     xgenes<-intersect(rownames(expTrain), geneLists[[cname]]);  
     cat(cname ,":", length(xgenes),"\n");
-    ans[[cname]]<-makeClassifier(expTrain[xgenes,],cname,stTrain, dLevel=dLevel);
+    ans[[cname]]<-makeClassifier(expTrain[xgenes,],cname,stTrain, dLevel=dLevel,nTrees)
   }
   ans;
 }
@@ -39,11 +40,12 @@ makeClassifier<-function
 (trainScores, 
  ctt,
  stTrain,
+ nTrees=2e2,
  dLevel='description1'){
   resp<-as.vector(stTrain[,dLevel]);
   xi<-which(resp!=ctt);
   resp[xi]<-'other';  
-  myClass<-randomForest(t(trainScores), as.factor(resp), ntree=2e3);
+  myClass<-randomForest(t(trainScores), as.factor(resp), ntree=nTrees)
   myClass;
 }
 
@@ -77,6 +79,32 @@ sc_classify<-function
   ans;
   # classification matrix
 }
+
+
+divide_sampTab<-function
+(sampTab,
+  prop=0.5,
+  dLevel="prefix"
+){
+
+  ctts<-unique(as.vector(sampTab[,dLevel]));
+  stTrain<-data.frame();
+  stVal<-data.frame();
+
+  for(ctt in ctts){
+    stTmp<-sampTab[sampTab[,dLevel]==ctt,];
+    xCount<-ceiling(prop * nrow(stTmp))
+    xnames<-sample(rownames(stTmp), xCount)
+
+    stTrain<-rbind(stTrain, stTmp[xnames,])
+
+    idsval<-setdiff( rownames(stTmp), rownames(stTrain) );
+    stVal<-rbind(stVal, stTmp[idsval,]);
+  }
+  list(stTrain=stTrain, stVal=stVal);
+}
+
+
 
 #' split data into train vs test
 #'
@@ -142,6 +170,67 @@ subSamp_for_class<-function
   }
   stTrain;
 }
+
+
+easy_assess<-function
+(classRes,
+ sampTab)
+{
+   afunct<-function(vector, len){
+     xi<-which.max(vector)
+     others<-setdiff(1:len, xi)
+     vector[xi]-sum(vector[others])
+   }
+   ans<-apply(classRes, 2, afunct, nrow(classRes))
+   cbind(sampTab, classDiff=ans)
+ }
+
+# splits data
+# makes classifiers
+# apply to held out data
+prebutter<-function
+(predictors,
+  expDat,
+  stDat, # with category partOn
+ propTrain=0.25,
+ partOn="group",
+ nTrees=200)
+{
+  geneLists<-list()
+  cts<-as.vector(unique(stDat[,partOn]))
+  for(ct in cts){
+    geneLists[[ct]]<-predictors
+  }
+
+  # split into training and test data
+  ttList<-sfc(stDat, propTrain, partOn)
+  stTrain<-ttList[['stTrain']]
+
+  # make RFs
+  myRFs<-makeRFs(expDat[predictors,rownames(stTrain)], stTrain, geneLists, dLevel=partOn,
+    nTrees=nTrees)
+  
+  # classify held out data
+  stVal<-ttList[['stVal']]
+
+  list(classRes=sc_classify(myRFs, expDat[predictors,rownames(stVal)], geneLists), stVal=stVal)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
