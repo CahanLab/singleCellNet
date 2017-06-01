@@ -1,6 +1,7 @@
-# scCellNet
+# singleCellNet
 # (C) Patrick Cahan 2012-2017
 
+#' @export
 getUniqueGenes<-function(genes, transID='id', geneID='symbol'){ #
   rownames(genes)<-as.vector(genes[,transID])
   dgenes<-names(which(table(genes[,2])>1))
@@ -14,11 +15,13 @@ getUniqueGenes<-function(genes, transID='id', geneID='symbol'){ #
   genes2
 }
 
+#' @export
 removeRed<-function(expOb,transID="id", geneID="symbol"){
      genes<-getUniqueGenes( fData(expOb), transID, geneID)
      expOb[rownames(genes),]
 }
 
+#' @export
 load10x_mtx<-function
 (path,
  mtx_fname="matrix.mtx",
@@ -37,9 +40,22 @@ load10x_mtx<-function
     res
 }
 
+#' Loads 10x data mtx
+#'
+#' @param path path
+#' @param prefix label to facilitate merging data sets when UMIs might collide
+#' @param mtx_fname mtx_fname
+#' @param gene_fname gene_fname
+#' @param bc_fname bc_fname
+#' @param bcFiltered bcFiltered
+#' @param removeRedundant removeRedundant
+#'
+#' @return list of list(sampTab=sampTab, expDat=expDat)
+#'
+#' @export
 load10x<-function
 (path,
- prefix, # label to facilitate merging data sets when UMIs might collide
+ prefix,
  mtx_fname="matrix.mtx",
  gene_fname="genes.tsv",
  bc_fname="barcodes.tsv",
@@ -73,6 +89,16 @@ load10x<-function
 	list(sampTab=sampTab, expDat=expDat)
 }
 
+#' Loads 10x data mtx
+#'
+#' @param basePath path
+#' @param pNames are prefix labels to facilitate merging data sets when UMIs might collide
+#' @param nCells number of cells per mtx to load
+#' @param secPath secPath
+#'
+#' @return list of list(sampTab=sampTab, expDat=expDat)
+#'
+#' @export
 mergeLoad10x<-function
 (basePath,
  pNames,
@@ -109,14 +135,4 @@ mergeLoad10x<-function
 	list(sampTab=stAll, expDat=expAll)
 
 }
-
-
-
-
-
-
-
-
-
-
 

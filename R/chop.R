@@ -1,3 +1,42 @@
+# Patrick Cahan (C) 2017
+# patrick.cahan@gmail.com
+
+
+#' @export
+chop_tsne<-function
+(datMat,
+ perplexity,
+ theta)
+{
+  chopped<-to_tsne(datMat, perplexity=perplexity, theta=theta)
+  args<-as.list(match.call())
+  list(choppedDat=chopped, args=args)
+}
+
+#' @export
+to_tsne<-function
+(datMat, #cols are vars, rows are cells/samples
+ perplexity=30,
+ theta=0.30){
+  tres<-Rtsne(datMat, pca=FALSE, perplexity=perplexity, theta=theta)
+  xres<-tres$Y
+  colnames(xres)<-c("TSNE.1", "TSNE.2")
+  rownames(xres)<-rownames(datMat)
+  xres
+}
+
+#' @export
+chop_pca<-function
+(expDat, # rows=vars, cols=cells
+ geneStats,
+ zThresh,
+ meanType)
+{
+  vgPCA_res<-vg_pca(expDat, geneStats, zThresh, meanType)
+  args<-as.list(match.call())
+  list(choppedDat=vgPCA_res[['pcaRes']]$x,  args=args, pcaSD=vgPCA_res[['pcaRes']]$sd, varGenes=vgPCA_res[['varGenes']])
+}
+
 
 
 #' find var genes and pca
@@ -12,6 +51,7 @@
 #' 
 #' @export
 #'
+#' @export
 vg_pca<-function
 (expDat,
  geneStats,
@@ -34,7 +74,6 @@ vg_pca<-function
 #' @return index of PC at which _quantile_ of sd is included
 #' 
 #' @export
-#'
 find_top_pc<-function
 (vp,
  qtile=.25)
@@ -72,16 +111,4 @@ pruneAndScan<-function
   plot2<-plotDBscan(prunedRes)
   multiplot(plot1, plot2, cols=2)
   tmpAns
-}
-
-cutTreeToGenes<-function # converts the result of running cutreeDynamicTree to a list of genes
-(genes, # vector of gene names in same order as ctRes
- ctRes # result of running cutreeDynamicTree 
-){
-  ans<-list()
-  grpNames<-unique(ctRes)
-  for(grpName in grpNames){
-    ans[[as.character(grpName)]]<-sort(genes[ which(ctRes==grpName) ])
-  }
-  ans;
 }

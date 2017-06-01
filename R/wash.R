@@ -1,26 +1,75 @@
-# scCellNet
+# singleCellNet
 # (C) Patrick Cahan 2012-2017
 
+
+#' subsets on ok genes, applies selected data transform
+#'
+#' down samples, computes per gene stats, finds ok genes
+#' @param preWashed list of expDat=expDat, geneStats=geneStats, okGenes=okGenes from prewash()
+#' @param transMethod transMethod 
+#' @param threshold threshold if method==binary then values less than threshold get set to 0, everything else gets set to 1
+#' @param removeBad
+#'
+#' @return list of geneStats, expDat, transMethod
+#'
+#' @export
 wash<-function
-(expDat,
-  prewashed){
-    geneStats<-pwashed[['geneStats']][pwashed[['okGenes']],]
-    expDat<-expDat[pwashed[['okGenes']],]
-    list(geneStats=geneStats,expDat=expDat)
+(preWashed,
+ transMethod="prop",
+ threshold=1,
+ removeBad=TRUE){
+
+    geneStats<-preWashed[['geneStats']]
+    expDat<-preWashed[['expDat']]
+
+    if(removeBad){     
+      geneStats<-geneStats[preWashed[['okGenes']],]
+      expDat<-expDat[preWashed[['okGenes']],]
+    }
+
+    if(transMethod=="binary"){
+      expDat<-trans_binarize(expDat, threshold=1)
+    }
+    else{
+      if(transMethod=="zscore"){
+        expDat<-trans_zscore(expDat)
+      }
+      else{
+        expDat<-trans_prop(expDat)
+      }
+    }
+
+    list(geneStats=geneStats, expDat=expDat, transMethod=transMethod)
 }
 
+#' down samples, computes per gene stats, finds ok genes
+#'
+#' down samples, computes per gene stats, finds ok genes
+#' @param expDat expDat
+#' @param stDat sample table
+#' @param countDepth counts to sample per cell
+#' @param minGenes min genes 
+#' @param alpha1 alpha 1
+#' @param mu mu 
+#' @param thresh detection threshold for gene stats
+#'
+#' @return list of expDat, geneStats, okgenes
+#'
+#' @export
 prewash<-function
 (expDat,
  stDat,
+ countDepth=1e3,
  minGenes=10,
  alpha1=0.01,
  mu=1,
  thresh=0){
 
+  expDat<-weighted_down(expDat,countDepth)
   geneStats<-sc_statTab(expDat, dThresh=thresh)
   alpha2<-minGenes/nrow(stDat)
   okGenes<-sc_filterGenes(geneStats, alpha1=alpha1, alpha2=alpha2, mu=mu)
-  list(geneStats=geneStats, okGenes=okGenes)
+  list(expDat=expDat, geneStats=geneStats, okGenes=okGenes)
 }
 
 
@@ -65,6 +114,7 @@ weighted_down<-function
     expCountDnW
   }
 
+#' @export
 trans_prop<-function 
 (expDat,
  xFact=1e5
@@ -79,11 +129,13 @@ trans_prop<-function
   log(1+ans)
 }
 
+#' @export
 trans_zscore<-function
 (expRaw){
   apply(expRaw, 2, scale)
 }
 
+#' @export
 trans_binarize<-function
 (expRaw,
   threshold=1){
@@ -92,13 +144,3 @@ trans_binarize<-function
   expRaw
 }
 
- 
-
-
-  #' express as a fraction of the column total
-#'
-#' express as a fraction of the column total
-#' @param expDat expression matrix
-#' @param xFact scale by this value
-#'
-#' @return transformed data matrix

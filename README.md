@@ -5,7 +5,8 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction and bulk R
 
 #### Processing pipeline
 
-1. Wash 
+1. Load
+2. Wash 
   * down sample
   * exclude undetected genes
   * apply selected transform
@@ -17,7 +18,7 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction and bulk R
     * arg list
     * expMatrix
     * transMethod
-2. Chop (dimension reduction)
+3. Chop (dimension reduction)
   * methods
     * PCA
     * tSNE
@@ -25,7 +26,7 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction and bulk R
     * choppedData
     * arg lis
     * varGenes
-3. Steam (assign cells to groups)
+4. Steam (assign cells to groups)
   * methods
     * manual
     * mclust
@@ -35,7 +36,9 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction and bulk R
     * arg list
     * optimized parameters (mclust=G and model shape, dt=minModSize and deepSplit, dbscan=eps and minPts)
     * method name
-4. Butter (make and assess classifiers)
+5. Butter (make and assess classifiers)
+6. Toss (classify new samples)
+7. Mix (integrate new training data)
 
 
 #### Setup
@@ -43,6 +46,7 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction and bulk R
 ```R
     install_github("pcahan1/singleCellNet", ref="master")
     library(singleCellNet)
+    library(cellrangerRkit)
     library(Rtsne)
     library(ggplot2)
     library(pheatmap)
@@ -112,4 +116,13 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction and bulk R
 
     ggplot(cAssBound, aes(x=method, y=classDiff,fill=wash )) + geom_boxplot(alpha=.75,colour="black", outlier.colour="#BDBDBD", outlier.size=.5) + xlab("Steam method") + theme_bw()
 ```
-![](md_img/hm.png)
+
+Added on 06-01-17
+
+Instructions for loading package, making a dbscan/binary data classifier, and applying it to a new data set
+
+![](md_img/hm1.jpg)
+
+![](md_img/hm2.jpg)
+
+

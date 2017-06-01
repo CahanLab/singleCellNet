@@ -3,7 +3,7 @@
 
 # functions to assign samples/cells to groups using dbscan, mclust, treecut and frienemies
 
-
+#' @export
 cutTreeToNames<-function # converts the result of running cutreeDynamicTree to a list of entities
 (entNames, # vector of names in same order as ctRes
  ctRes # result of running cutreeDynamicTree 
@@ -16,7 +16,7 @@ cutTreeToNames<-function # converts the result of running cutreeDynamicTree to a
   ans
 }
 
-
+#' @export
 steam_treecut<-function
 (sampTab,
  datMat,
@@ -130,6 +130,7 @@ steam_treecut<-function
 	sampTabNew
 }
 
+#' @export
 steam_mclust<-function
 (sampTab,
  datMat,
@@ -144,6 +145,7 @@ steam_mclust<-function
 
 
 # notet aht this will remove group==0 samples
+#' @export
 steam_dbscan<-function
 (sampTab,
  datMat,
@@ -204,7 +206,7 @@ steam_dbscan<-function
 
 }
 
-
+#' @export
 .steam_dbscan<-function
 (sampTab,
  datMat,

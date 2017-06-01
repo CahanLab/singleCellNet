@@ -1,7 +1,69 @@
-# 
+# singleCellNet
+# (C) Patrick Cahan 2012-2017
+
+# splits data
+# makes classifiers
+# apply to held out data
+# returns classifier too
+#' @export
+pipe_butter<-function
+(pipeSteamed, # has cpName(choppedDat), varGenes
+ washedDat, # has expDat
+ propTrain=0.25,
+ partOn="group",
+ nTrees=200)
+{
+  geneLists<-list()
+  stDat<-pipeSteamed[['steamed']][['sampTab']]
+  predictors<-pipeSteamed[['cp_pca']][['varGenes']]
+  cts<-as.vector(unique(stDat[,partOn]))
+  for(ct in cts){
+    geneLists[[ct]]<-predictors
+  }
+
+  # split into training and test data
+  ttList<-divide_sampTab(stDat, propTrain, partOn)
+  stTrain<-ttList[['stTrain']]
+
+  # make RFs
+  myRFs<-makeRFs(washedDat[['expDat']][predictors,rownames(stTrain)], stTrain, geneLists, dLevel=partOn,
+    nTrees=nTrees)
+  
+  # classify held out data
+  stVal<-ttList[['stVal']]
+
+  list(classResVal=list(classRes=sc_classify(myRFs, washedDat[['expDat']][predictors,rownames(stVal)], geneLists),
+  						stVal=stVal),
+  		classifiers=myRFs,
+  		predictors=geneLists)
+}
+
+# chop and steam dbscan style
+#' @export
+pipe_dbscan<-function
+(washedDat,
+ sampTab,
+ topPC,
+ zThresh=2)
+{
+	cp_pca<-chop_pca(washedDat[['expDat']], washedDat[['geneStats']], 
+		zThresh=zThresh, meanType="overall_mean")
+
+	# tsne
+	cat("tsne-ing\n")
+	cp_tsne<-chop_tsne(cp_pca[['choppedDat']][,1:topPC], perplexity=30, theta=.3)
+
+	# steam  dbscan	
+	cat("dbscan\n")
+	stm_dbs<-steam_dbscan(sampTab, cp_tsne[['choppedDat']][,1:2])
+
+	list(cp_pca=cp_pca, cp_tsne=cp_tsne, steamed=stm_dbs)
+}
+
 
 # input: chopped data
 # out: df of cAss with steam_method column
+#' @export
 pipe_cAss<-function
 (washedDat, # expDat, geneStats
  sampTab, 
@@ -62,7 +124,7 @@ pipe_cAss<-function
 	ans
 }
 
-
+#' @export
 pipe_steam_list<-function
 (washedDat,
  sampTab,
@@ -103,6 +165,7 @@ pipe_steam_list<-function
 # steam method
 # steamParams (list)
 # out: df of cAss with steam_method column
+#' @export
 pipe_cAss_all<-function
 (steamed, # result of running `pipe_steam_list`
  expDat, # expression data as you like it to be transformed

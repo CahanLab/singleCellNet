@@ -1,5 +1,23 @@
-# scCellNet
+# singleCellNet
 # (C) Patrick Cahan 2012-2017
+
+
+#' classify
+#'
+#' classify, wrapper to sc_classify
+#' @param washedDat result of wash()
+#' @param classList result of pipeButter()
+#'
+#' @return matrix of classifier results
+#'
+#' @export
+butter_classify<-function
+(washedDat,
+ classList # result of pipeButter
+ ){
+    # !!! add check that wash is done the same way
+    sc_classify(classList[['classifiers']], washedDat[['expDat']], classList[['predictors']])
+}
 
 #' make classifiers
 #'
@@ -10,6 +28,8 @@
 #' @param dLevel stTrain column name to split on
 #'
 #' @return list of classifiers
+#'
+#' @export
 makeRFs<-function#
 (expTrain,
  stTrain,
@@ -20,9 +40,9 @@ makeRFs<-function#
   cnames<-names(geneLists);
   cnames<-intersect(cnames, unique(as.vector(stTrain[,dLevel])));
   for(cname in cnames){
-    cat(cname,"\n");
+   ### cat(cname,"\n");
     xgenes<-intersect(rownames(expTrain), geneLists[[cname]]);  
-    cat(cname ,":", length(xgenes),"\n");
+    ### cat(cname ,":", length(xgenes),"\n");
     ans[[cname]]<-makeClassifier(expTrain[xgenes,],cname,stTrain, dLevel=dLevel,nTrees)
   }
   ans;
@@ -36,6 +56,8 @@ makeRFs<-function#
 #' @param stTrain sample table
 #'
 #' @return randomForest classifier
+#'
+#' @export
 makeClassifier<-function 
 (trainScores, 
  ctt,
@@ -49,6 +71,7 @@ makeClassifier<-function
   myClass;
 }
 
+
 #' classify data
 #'
 #' run binary classifiers on input expression matrix
@@ -58,6 +81,7 @@ makeClassifier<-function
 #'
 #' @return classification matrix nrow=length(classList) ncol=ncol(expDat)
 #'
+#' @export
 sc_classify<-function
 (classList, 
  expDat, 
@@ -80,7 +104,16 @@ sc_classify<-function
   # classification matrix
 }
 
-
+#' divide sample table
+#'
+#' divide sample table
+#' @param sampTab sampTab
+#' @param prop prop
+#' @param dLevel dLevel
+#'
+#' @return list of stTrain stVal
+#'
+#' @export
 divide_sampTab<-function
 (sampTab,
   prop=0.5,
@@ -105,73 +138,7 @@ divide_sampTab<-function
 }
 
 
-
-#' split data into train vs test
-#'
-#' Splits a sample table into 2 sample tables roughly by prop in which no samples with sampe exp_id are in both the test and train
-#' @param sampTab sample table must have exp_id column
-#' @param prop proportion of samples to use as training
-#' @param dLevel column name for 
-#' @param dLevelStudy column name to indicate experiment or study id
-#'
-#' @return list of stTrain stVal
-samp_for_class<-function# return a sampTab for training a test classifier
-(sampTab,
-  prop=0.5,
-  dLevel="description1",
-  dLevelStudy="exp_id"){
-
-  ctts<-unique(as.vector(sampTab[,dLevel]));
-  stTrain<-data.frame();
-  stVal<-data.frame();
-  for(ctt in ctts){
-    stTmp<-sampTab[sampTab[,dLevel]==ctt,];
-    stTrain<-rbind(stTrain, subSamp_for_class(stTmp,prop, dLevelStudy));
-
-    idsval<-setdiff( rownames(stTmp), rownames(stTrain) );
-    stVal<-rbind(stVal, stTmp[idsval,]);
-  }
-  list(stTrain=stTrain, stVal=stVal);
-}
-
-#' select from sample table
-#'
-#' that's it. helper function
-#' @param sampTab sample table
-#' @param prop fraction of samples to select
-#' @param dLevelStudy column name to indicate experiment or study id
-#'
-#' @return stTrain
-subSamp_for_class<-function
-(sampTab,
-  prop=0.5,
-  dLevelStudy="exp_id"){
-
-  expIDcounts<-sort(table(sampTab[,dLevelStudy]));
-  expIDs<-names(expIDcounts);
-  total<-sum(expIDcounts);
-
-  runningTotal<-0;
-  i<-1;
-  xi<-floor( length(expIDcounts)/2 );
-  while(i<=length(expIDcounts)){
-    runningTotal<-sum(expIDcounts[1:i]);
-    if(runningTotal/total > prop){
-      xi<- i-1;
-      break;
-    }
-    i<-i+1;
-  }
-  expIDs<-expIDs[1:xi];
-  
-  stTrain<-data.frame();
-  for(expID in expIDs){
-    stTrain<-rbind(stTrain, sampTab[sampTab[,dLevelStudy]==expID,]);
-  }
-  stTrain;
-}
-
-
+#' @export
 easy_assess<-function
 (classRes,
  sampTab)
@@ -188,6 +155,7 @@ easy_assess<-function
 # splits data
 # makes classifiers
 # apply to held out data
+#' @export
 prebutter<-function
 (predictors,
   expDat,
@@ -203,7 +171,7 @@ prebutter<-function
   }
 
   # split into training and test data
-  ttList<-sfc(stDat, propTrain, partOn)
+  ttList<-divide_sampTab(stDat, propTrain, partOn)
   stTrain<-ttList[['stTrain']]
 
   # make RFs

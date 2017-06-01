@@ -100,6 +100,7 @@ zscore<-function
   ### zscore
 }
 
+
 zscoreVect<-function
 ### Compute the mean zscore of given genes in each sample
 (genes,
@@ -126,6 +127,7 @@ zscoreVect<-function
 #'
 #' @return corrected zMat
 #'
+#' @export
 cn_correctZmat<-function
 (zmat){
   myfuncInf<-function(vect){

@@ -3,8 +3,9 @@
 #' heatmap of the classification result
 #'
 #' Heatmap of the classification result.
-#' @param cnRes returned from cn_sapply
+#' @param classMat classMat
 #' @param isBig is this a big heatmap? TRUE or FALSE
+#' @param cluster_cols cluster_cols
 #'
 #' @return nothing
 #'
@@ -14,7 +15,8 @@
 #' @export
 hmClass<-function
 (classMat, 
- isBig=FALSE
+ isBig=FALSE,
+ cluster_cols=FALSE
 ){
  
   cools<-colorRampPalette(c("black", "limegreen", "yellow"))( 100 )
@@ -27,13 +29,12 @@ hmClass<-function
     breaks=seq(from=0, to=1, length.out=100),
     border_color=bcol,
     cluster_rows = FALSE,
-    cluster_cols = FALSE)
+    cluster_cols = cluster_cols)
   # classification heatmap
 }
 
 
-
-# functions for scRNAseq analysis
+#' @export
 hmcellsgenes<-function
 (expDat,
  geneList,
@@ -97,7 +98,7 @@ hmcellsgenes<-function
 }
 
 
-
+#' @export
 hmgenesSimple<-function
 (expDat,
   cRow=FALSE,
@@ -130,7 +131,7 @@ hmgenesSimple<-function
   #  value;
 }
 
-
+#' @export
 hmgenesSimple2<-function
 (expDat,
   annTab,
@@ -205,7 +206,7 @@ plotDBscan<-function(mcRes, legend=FALSE)
   ans
 }
 
-
+#' @export
 sc_plot_statTab<-function# multi plot of mu, alpha, mean, cov, fano, and mean vs cov
 (statTab){
 
@@ -221,6 +222,7 @@ sc_plot_statTab<-function# multi plot of mu, alpha, mean, cov, fano, and mean vs
 
 }
 
+#' @export
 ptsne<-function(xres, cname="study_id")
 {
   xi<-which(colnames(xres)==cname)
@@ -229,7 +231,7 @@ ptsne<-function(xres, cname="study_id")
   ggplot(xres, aes(x=TSNE.1, y=TSNE.2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=1) + theme_bw() + scale_colour_manual(values=ColorRamp) #+ facet_wrap( ~ k, nrow=3)
 }
 
-
+#' @export
 tsneMult<-function# facet tsne plot by gene
 (tsneDat, # cols TSNE.1, TNSE.2, and genes
  genesToPlot, # genes to plot
@@ -256,6 +258,7 @@ tsneMult<-function# facet tsne plot by gene
 
 
 # generic red/blue heatmap
+#' @export
 mp_hmVars<-function# basic heatmap
 (expDat,
  ### numeric matrix
@@ -352,6 +355,7 @@ mp_hmVars<-function# basic heatmap
 # 3 will go all the way across the bottom.
 #
 # See: http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+#' @export
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
 
