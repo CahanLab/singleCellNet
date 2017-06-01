@@ -121,8 +121,55 @@ Added on 06-01-17
 
 Instructions for loading package, making a dbscan/binary data classifier, and applying it to a new data set
 
+```R
+    library(devtools)
+    devtools::install_github("pcahan1/singleCellNet")
+    library(singleCellNet)
+    library(singleCellNet)
+    library(cellrangerRkit)
+    library(Rtsne)
+    library(ggplot2)
+    library(pheatmap)
+    library(dbscan)
+    library(RColorBrewer)
+    library(WGCNA)
+    library(mclust)
+    library(randomForest)
+```
+
+Load training data -- takes 2-3 minutes
+```R
+    system.time(rawDat<-mergeLoad10x("yourPathTo/10x_public/Zheng_2016/bead_purified/", c("bcell_cd19", "cd34", "monocytes_cd14", "nkcell_cd56", "tcell_cd4_helper", "tcell_cd8_cytotoxic"), nCells=1e3))
+
+    expDat<-rawDat[['expDat']]
+    stDat<-rawDat[['sampTab']]
+```
+
+wash, steam, butter
+```R
+    system.time(pWashed<-prewash(expDat, stDat, countDepth=1e3))
+    system.time(washedProp<-wash(pWashed, transMethod="prop"))
+    system.time(db_steamed<-pipe_dbscan(washedProp, stDat, topPC=6, zThresh=2))
+    system.time(washedBinary<-wash(pWashed, transMethod="binary"))
+    system.time(binClassifiers<-pipe_butter(db_steamed, washedBinary))
+    hmClass(binClassifiers[['classResVal']][['classRes']], isBig=T)
+```
 ![](md_img/hm1.jpg)
 
+Load query data and classify
+```R
+    ppath<-paste0("yourPathTo/10x_public/Zheng_2016/frozen_a/filtered_matrices_mex/hg19")
+    tmpX<-load10x(ppath, "frozen_a")
+
+    expRaw_FA<-tmpX[['expDat']]
+    stFA<-tmpX[['sampTab']]
+    system.time(pWashed_FA<-prewash(expRaw_FA, stFA, countDepth=1e3))
+    system.time(washedBinary_FA<-wash(pWashed_FA, transMethod="binary",removeBad=FALSE))
+    fa_class<-butter_classify(washedBinary_FA,binClassifiers)
+    hmClass(fa_class, isBig=T, cluster_cols=TRUE) 
+```
+
 ![](md_img/hm2.jpg)
+
 
 
