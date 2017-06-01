@@ -83,6 +83,7 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction and bulk R
     cAssAll<-pipe_cAss(washedDat, stDat)
     ggplot(cAssAll, aes(x=group, y=classDiff)) + geom_boxplot(alpha=.75,colour="black", outlier.colour="#BDBDBD", outlier.size=.5) + xlab("cluster") + theme_bw() + facet_wrap( ~ method)
 ```
+![](md_img/cAssAll_1.jpg)
 
 #### Chop and Steam, useful when assessing various wash methods
 ```R
@@ -116,6 +117,7 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction and bulk R
 
     ggplot(cAssBound, aes(x=method, y=classDiff,fill=wash )) + geom_boxplot(alpha=.75,colour="black", outlier.colour="#BDBDBD", outlier.size=.5) + xlab("Steam method") + theme_bw()
 ```
+![](md_img/classDiff_wash_by_steam.jpg)
 
 Added on 06-01-17
 
@@ -124,7 +126,6 @@ Instructions for loading package, making a dbscan/binary data classifier, and ap
 ```R
     library(devtools)
     devtools::install_github("pcahan1/singleCellNet")
-    library(singleCellNet)
     library(singleCellNet)
     library(cellrangerRkit)
     library(Rtsne)
