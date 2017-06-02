@@ -1,5 +1,30 @@
 
 
+dotplot_pipesteamed<-function
+(steamed, # result of running a pipe_steam like pipe_dbscan
+ chopMethod="tsne",# tsne or PCA
+ steamMethod="dbscan"
+ ){
+
+  sampTab<-steamed[['steamed']][['sampTab']]
+
+  if(chopMethod=='tsne'){
+    choppedDat<-steamed[['cp_tsne']][['choppedDat']]
+  }
+  else{
+    choppedDat<-steamed[['cp_pca']][['choppedDat']]
+  }
+  datTab<-choppedDat[rownames(sampTab),]
+  colnames(datTab)[1:2]<-c("dim.1", "dim.2")
+
+  xres<-cbind(sampTab, datTab)
+
+  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(xres$group)))
+  ggplot(xres, aes(x=dim.1, y=dim.2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=1) + theme_bw() + scale_colour_manual(values=ColorRamp) #+ facet_wrap( ~ k, nrow=3)
+}
+
+
+
 #' heatmap of the classification result
 #'
 #' Heatmap of the classification result.
@@ -229,6 +254,20 @@ ptsne<-function(xres, cname="study_id")
   colnames(xres)[xi]<-"group"
   ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(xres$group)))
   ggplot(xres, aes(x=TSNE.1, y=TSNE.2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=1) + theme_bw() + scale_colour_manual(values=ColorRamp) #+ facet_wrap( ~ k, nrow=3)
+}
+
+#' @export
+tsneClass<-function
+(classRes, #result of butter_classify()
+ steamed #from a pipe_wash like pipe_dbscan()
+ ){
+  sampTab<-steamed[['steamed']][['sampTab']]
+  choppedDat<-steamed[['cp_tsne']][['choppedDat']]
+  datTab<-choppedDat[rownames(sampTab),]
+  datTab<-cbind(datTab, t(classRes[,rownames(sampTab)]))
+  classNames<-rownames(classRes)
+  datTab<-as.data.frame(datTab)
+  tsneMult(datTab, classNames)
 }
 
 #' @export

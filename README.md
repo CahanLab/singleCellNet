@@ -173,4 +173,27 @@ Load query data and classify
 ![](md_img/hm2.jpg)
 
 
+#### some plotting functions
+
+```R
+    dotplot_pipesteamed(db_steamed)
+```
+
+![](md_img/tsne_train.jpg)
+
+```R
+   washedProp_query<-wash(pWashed_FA, transMethod="prop")
+    db_steamed_query<-pipe_dbscan(washedProp_query, stFA, nClusters=c(3,10),topPC=12, zThresh=1.5)
+    dotplot_pipesteamed(db_steamed_query)
+```
+
+![](md_img/tsne_query.jpg)
+
+Overlay classification results
+```R
+    library(tidyr)
+    tsneClass(fa_class, db_steamed_query)
+```
+
+![](md_img/tsne_class.jpg)
 

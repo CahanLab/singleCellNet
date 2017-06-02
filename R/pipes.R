@@ -44,6 +44,8 @@ pipe_dbscan<-function
 (washedDat,
  sampTab,
  topPC,
+ nClusters=c(5,20),
+ sClusters=c(10,NA),
  zThresh=2)
 {
 	cp_pca<-chop_pca(washedDat[['expDat']], washedDat[['geneStats']], 
@@ -55,7 +57,7 @@ pipe_dbscan<-function
 
 	# steam  dbscan	
 	cat("dbscan\n")
-	stm_dbs<-steam_dbscan(sampTab, cp_tsne[['choppedDat']][,1:2])
+	stm_dbs<-steam_dbscan(sampTab, cp_tsne[['choppedDat']][,1:2],nClusters=nClusters,sClusters=sClusters)
 
 	list(cp_pca=cp_pca, cp_tsne=cp_tsne, steamed=stm_dbs)
 }

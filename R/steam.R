@@ -152,7 +152,7 @@ steam_dbscan<-function
  nClusters=c(5,20),
  sClusters=c(10,NA),
  epsRange=seq(0.5,3, by=.1),
- minPtsRange=seq(20,200,by=20)
+ minPtsRange=seq(2,100,by=1)
  ){
  	if(is.na(sClusters[2])){
  		sClusters[2]<-ceiling(nrow(sampTab)*.75)
@@ -164,6 +164,7 @@ steam_dbscan<-function
     minSizes<-rep(0, nrow(args))
     maxSizes<-rep(0, nrow(args))
  	for(i in seq(nrow(args))){
+ 	##	cat(args[i,1], "::",args[i,2],"\n")
  		tmpAns<-.steam_dbscan(sampTab, datMat, eps=args[i,1],minPts=args[i,2])
  		grps<-table(tmpAns$group)
  		nClus[i]<-length(grps)
