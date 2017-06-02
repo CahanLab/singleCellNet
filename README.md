@@ -44,6 +44,7 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction and bulk R
 #### Setup
 
 ```R
+    library(devtools)
     install_github("pcahan1/singleCellNet", ref="master")
     library(singleCellNet)
     library(cellrangerRkit)
