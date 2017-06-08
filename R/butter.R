@@ -2,6 +2,48 @@
 # (C) Patrick Cahan 2012-2017
 
 
+extractImport<-function
+(classifiers # from makeRFs
+){
+  classNames<-names(classifiers)
+  preds<-rownames(classifiers[[1]]$importance)
+  ans<-matrix(0, nrow=length(preds), ncol=length(classNames))
+  rownames(ans)<-preds
+  colnames(ans)<-classNames
+  for(cname in classNames){
+    ans[,cname]<-classifiers[[cname]]$importance
+  }
+  ans
+}
+
+
+#' @export
+butter_classGenes<-function
+(washed, # from wash()
+ sampTab, # has group col, likely from steam
+ classifiers, # from pipe_butter
+ ngenes=10 # number of genes per class
+ ){
+
+  diffGenesMat<-enrDiff(washed[['expDat']], sampTab) # returns a matrix, one col per cluster
+  classList<-classifiers$classifiers
+  importGenes<-extractImport(classList)
+  diffGenesMat<-diffGenesMat[rownames(importGenes),] * (1+importGenes)
+  classNames<-names(classList)
+  ans<-list()
+  for(cname in classNames){
+#    ans[[cname]]<-rownames(diffGenesMat)[order(diffGenesMat[,cname], decreasing=TRUE)][1:ngenes]
+
+    tmpans<-diffGenesMat[order(diffGenesMat[,cname], decreasing=TRUE),cname]
+    xi<-which(tmpans<=0)[1]
+    tmpThresh<-min(ngenes, (xi-1))
+    ans[[cname]]<-names(tmpans[1:tmpThresh])
+  }
+  ans
+
+}
+
+
 #' classify
 #'
 #' classify, wrapper to sc_classify

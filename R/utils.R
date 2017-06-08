@@ -3,6 +3,65 @@
 
 # commonly used or misc functions
 
+
+
+#' find transcript factors
+#'
+#' find transcript factors
+#' @param annotation
+#' @param species defaul is 'Hs', can also be 'Mm;
+#' @param ontology default is BP 
+#'
+#' @return vector fo TF names
+#' @export
+#' @importFrom AnnotationDbi as.list
+#'
+find_genes_byGo<-function# 
+(annotation,
+  species='Hs',
+  onto="BP"
+){
+
+  cat("Loading gene annotations ...\n")
+  require(GO.db);
+
+  if(species=='Hs'){
+    require(org.Hs.eg.db);
+    egSymbols<-as.list(org.Hs.egSYMBOL);
+    goegs<-as.list(org.Hs.egGO2ALLEGS);
+  }
+  else{
+    require(org.Mm.eg.db);
+    egSymbols<-as.list(org.Mm.egSYMBOL);
+    goegs<-as.list(org.Mm.egGO2ALLEGS);
+  }
+
+  goterms<-as.list(GOTERM);
+  goids<-names(goegs);
+  onts<-lapply(goids, Ontology);
+  bps<-onts[onts==onto];
+  goids<-names(unlist(bps));
+
+  cat("matching gene symbols and annotations")
+  gobpList<-list();
+  for(goid in goids){
+    egs <- goegs[[ goid ]];
+    goterm<-Term(goterms[[goid]]);
+    genes<-sort(unique(as.vector(unlist( egSymbols[egs] ))));
+    gobpList[[goterm]]<-genes;
+  }
+
+  ### newHsTRs<-gobpList[['regulation of transcription, DNA-dependent']];
+  regNames<-names(gobpList)[grep(annotation, names(gobpList))];
+  trs<- unique(unlist(gobpList[regNames]));
+  cat(annotation, ": ", length(trs),"\n");
+  sort(trs)
+
+}
+
+
+
+
 #' 1-PCC distance
 #'
 #' 1-PCC distance

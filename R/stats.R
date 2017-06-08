@@ -164,6 +164,36 @@ sc_findEnr<-function
   ans;
 }
 
+#' @export
+enrDiff<-function 
+(expDat,
+ sampTab,
+ dLevel="group")
+{
+  groups<-unique(as.vector(sampTab[,dLevel]))
+  myMeans<-matrix(0,nrow=nrow(expDat), ncol=length(groups))
+  rownames(myMeans)<-rownames(expDat)
+  colnames(myMeans)<-groups
+
+  for(group in groups){
+    xi<-which(sampTab[,dLevel]==group)
+    myMeans[,group]<-apply(expDat[,xi], 1, median)
+  }
+
+  ans<-matrix(0,nrow=nrow(expDat), ncol=length(groups))
+  colnames(ans)<-groups
+  rownames(ans)<-rownames(expDat)
+  for(group in groups){
+    cat(group,"\n")
+    others<-setdiff(groups, group)
+    tmpMeans<-apply(myMeans[,others], 1, median)
+    myDiff<-myMeans[,group] - tmpMeans
+    ans[,group]<-myDiff
+  }
+  ans
+}
+
+
 
 ### bins genes into x groups based on overallmean
 binGenesAlpha<-function

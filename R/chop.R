@@ -30,9 +30,17 @@ chop_pca<-function
 (expDat, # rows=vars, cols=cells
  geneStats,
  zThresh,
- meanType)
+ meanType,
+ varGenes=NULL)
 {
-  vgPCA_res<-vg_pca(expDat, geneStats, zThresh, meanType)
+  if(is.null(varGenes)){
+    vgPCA_res<-vg_pca(expDat, geneStats, zThresh, meanType)
+  }
+  else{
+    vgPCA_res<-list()
+    vgPCA_res[['varGenes']]<-varGenes
+    vgPCA_res[['pcaRes']]<-prcomp(t(expDat[varGenes,]),center=T,scale=TRUE)
+  }
   args<-as.list(match.call())
   list(choppedDat=vgPCA_res[['pcaRes']]$x,  args=args, pcaSD=vgPCA_res[['pcaRes']]$sd, varGenes=vgPCA_res[['varGenes']])
 }

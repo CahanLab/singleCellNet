@@ -1,6 +1,29 @@
 # singleCellNet
 # (C) Patrick Cahan 2012-2017
 
+
+
+pipe_averageGroup<-function
+(washed,
+pipeSteamed
+){
+
+	varGenes<-pipeSteamed[['cp_pca']][['varGenes']]
+	stx<-pipeSteamed[['steamed']][['sampTab']]
+	grps<-unique(stx$group)
+	expDat<-washed[['expDat']]
+	ans<-matrix(0, nrow=length(varGenes), ncol=length(grps))
+	colnames(ans)<-grps
+	rownames(ans)<-varGenes
+	for(grp in grps){
+		stTmp<-stx[stx$group==grp,]
+		expTmp<-expDat[varGenes,rownames(stTmp)]
+		ans[,grp]<-apply(expTmp,1, mean)
+	}
+	ans
+}
+
+
 # splits data
 # makes classifiers
 # apply to held out data
@@ -60,6 +83,25 @@ pipe_dbscan<-function
 	stm_dbs<-steam_dbscan(sampTab, cp_tsne[['choppedDat']][,1:2],nClusters=nClusters,sClusters=sClusters)
 
 	list(cp_pca=cp_pca, cp_tsne=cp_tsne, steamed=stm_dbs)
+}
+
+# chop and steam dynamiccuttree style
+#' @export
+pipe_treecut<-function
+(washedDat,
+ sampTab,
+ topPC,
+ nClusters=c(5,20),
+ sClusters=c(10,NA),
+ zThresh=2)
+{
+	cp_pca<-chop_pca(washedDat[['expDat']], washedDat[['geneStats']], zThresh=zThresh, meanType="overall_mean")
+
+	# steam  dbscan	
+	cat("cuttree\n")
+	stm<-steam_treecut(sampTab, cp_pca[['choppedDat']][,1:topPC],nClusters=nClusters,sClusters=sClusters)
+
+	list(cp_pca=cp_pca, steamed=stm)
 }
 
 

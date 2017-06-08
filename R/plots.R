@@ -3,7 +3,8 @@
 dotplot_pipesteamed<-function
 (steamed, # result of running a pipe_steam like pipe_dbscan
  chopMethod="tsne",# tsne or PCA
- steamMethod="dbscan"
+ steamMethod="dbscan",
+ cName="group"
  ){
 
   sampTab<-steamed[['steamed']][['sampTab']]
@@ -18,9 +19,11 @@ dotplot_pipesteamed<-function
   colnames(datTab)[1:2]<-c("dim.1", "dim.2")
 
   xres<-cbind(sampTab, datTab)
+  xi<-which(colnames(xres)==cName)
+  colnames(xres)[xi]<-"groupX"
 
-  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(xres$group)))
-  ggplot(xres, aes(x=dim.1, y=dim.2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=1) + theme_bw() + scale_colour_manual(values=ColorRamp) #+ facet_wrap( ~ k, nrow=3)
+  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(xres$groupX)))
+  ggplot(xres, aes(x=dim.1, y=dim.2, colour=groupX) ) + geom_point(pch=19, alpha=3/4, size=1) + theme_bw() + scale_colour_manual(values=ColorRamp) #+ facet_wrap( ~ k, nrow=3)
 }
 
 
@@ -149,12 +152,58 @@ hmgenesSimple<-function
         show_colnames = anc, annotation_names_row = FALSE, scale='none',
 #        clustering_distance_rows='euclidean',
         clustering_distance_rows='correlation',
-       # clustering_distance_cols="correlation", 
-       clustering_distance_cols="euclidean", 
+        clustering_distance_cols="correlation", 
+       #clustering_distance_cols="euclidean", 
         clustering_method="average",
         annotation_names_col = FALSE, fontsize_row=fontsize_row)
   #  value;
 }
+
+#' @export
+hm_varGenes<-function
+(washed,
+ steamed, # from steam_pipe so has cp_pca
+  cName="group",
+  cRow=FALSE,
+  cCol=FALSE,
+  limits=c(-3,3),
+  toScale=FALSE,
+  fontsize_row=NULL){
+  
+  expDat<-washed[['expDat']]
+  varGenes<-steamed[['cp_pca']][['varGenes']]
+  sampTab<-steamed[['steamed']][['sampTab']]
+  expDat<-expDat[varGenes,rownames(sampTab)]
+  
+  annTab<-data.frame(group=sampTab[,cName])
+  rownames(annTab)<-rownames(sampTab)
+
+  value<-expDat
+  if(toScale){
+    value <- t(scale(t(expDat)))
+  }
+  
+  value[value < limits[1]] <- limits[1]
+  value[value > limits[2]] <- limits[2]
+
+ 
+  groupNames<-unique(annTab[,cName])
+  xcol <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(groupNames))
+  names(xcol) <- groupNames
+  anno_colors <- list(group = xcol)
+
+  xx<-data.frame(group=as.factor(annTab[,cName]))
+  rownames(xx)<-rownames(annTab)
+
+  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol,
+        show_colnames = FALSE, annotation_names_row = FALSE,
+##        annotation_col = annTab,
+ ##clustering_distance_rows='correlation',
+        annotation_col = xx,
+        annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
+}
+
+
 
 #' @export
 hmgenesSimple2<-function
