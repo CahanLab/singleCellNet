@@ -67,54 +67,50 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction and bulk R
     expDat<-rawDat[['expDat']]
     stDat<-rawDat[['sampTab']]
 
-    expDn<-weighted_down(expDat,1e3)
-
-    expNorm<-trans_dNorm(expDn)
-    expNorm<-log10(1+expNorm)
 ```
 
 #### Wash
 ```R
-    pwashed<-prewash(expNorm, stDat)
-    washedDat<-wash(expNorm, pwashed)
+    pwashed<-prewash(expDat, stDat, countDepth = 1e3)
+    washedProp<-wash(pwashed, transMethod="prop"))
 ```
 
 #### Chop, Steam, and assess classifiers based only on expProp
 ```R
-    cAssAll<-pipe_cAss(washedDat, stDat)
+    cAssAll<-pipe_cAss(washedProp, stDat)
     ggplot(cAssAll, aes(x=group, y=classDiff)) + geom_boxplot(alpha=.75,colour="black", outlier.colour="#BDBDBD", outlier.size=.5) + xlab("cluster") + theme_bw() + facet_wrap( ~ method)
 ```
 ![](md_img/cAssAll_1.jpg)
 
 #### Chop and Steam, useful when assessing various wash methods
 ```R
-    steamed<-pipe_steam_list(washedDat, stDat, topPC=20)
+    steamed<-pipe_steam_list(washedProp, stDat, topPC=20)
 ```
 
 #### make classifiers and assess -- expProp
 ```R
-    classAssProp<-pipe_cAss_all(steamed, expDat, stDat)
+    classAssProp<-pipe_cAss_all(steamed, washedProp, stDat)
     ggplot(classAssProp, aes(x=method, y=classDiff)) + geom_boxplot(alpha=.75,colour="black", outlier.colour="#BDBDBD", outlier.size=.5) + xlab("cluster") + theme_bw()
 ```
 #### Binary data
 ```R
-    expBin<-trans_binarize(expDn, threshold=1)
-    classAssBin<-pipe_cAss_all(steamed, expBin, stDat)
+    washedBinary<-wash(pwashed, transMethod="binary"))
+    cAssBinary<-pipe_cAss_all(steamed, washedBinary$expDat, stDat)
 ```
 
 #### zscore data
 ```R
-    expZscore<-trans_zscore(expDn)
-    # make sure gene names are here -- need to fix this
-    rownames(expZscore)<-rownames(expDn)
-    classAssZscore<-pipe_cAss_all(steamed, expZscore, stDat)
+    washedZscore<-wash(pwashed, transMethod="zscore"))
+    # make sure gene names are here
+    rownames(washedZscore$expDat) <- rownames(washedBinary$expDat)
+    cAssZscore<-pipe_cAss_all(steamed, washedZscore$expDat, stDat)
 ````
 
 #### compare all methods
 ```R
     cAssBound<-cbind(classAssProp, wash=rep("prop", nrow(classAssProp)))
-    cAssBound<-rbind(cAssBound, cbind(classAssBin, wash=rep("binary", nrow(classAssBin))))
-    cAssBound<-rbind(cAssBound, cbind(classAssZscore, wash=rep("zscore", nrow(classAssZscore))))
+    cAssBound<-rbind(cAssBound, cbind(cAssBinary, wash=rep("binary", nrow(cAssBinary))))
+    cAssBound<-rbind(cAssBound, cbind(cAssZscore, wash=rep("zscore", nrow(cAssZscore))))
 
     ggplot(cAssBound, aes(x=method, y=classDiff,fill=wash )) + geom_boxplot(alpha=.75,colour="black", outlier.colour="#BDBDBD", outlier.size=.5) + xlab("Steam method") + theme_bw()
 ```
