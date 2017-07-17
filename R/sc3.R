@@ -173,7 +173,7 @@ pipe_cAss_sc3 <- function
     
   }
   
-  return(classifier_list)
+  return(classRes_sc3_list)
 }
 
 
