@@ -1,8 +1,10 @@
-
 library(CellNet)
 library(singleCellNet)
 library(SC3)
 library(scater)
+library(Rtsne)
+library(pheatmap)
+library(plyr)
 #this version sepeartes group assignment in a sepearte name vector and replace that in sampTab before it passes in the pipe_butter function
 
 #steamed
@@ -11,6 +13,7 @@ steam_sc3 <- function(
   sampTab,
   k_estimator = FALSE, #optimal k
   ks = NULL,  #k mean range, it will be messed up if k starts with 1
+  silhouette_threshold = 0.8,
   pct_dropout_min = 10, 
   pct_dropout_max = 90,
   gene_filter = FALSE,
@@ -51,8 +54,8 @@ steam_sc3 <- function(
     ans<-list(sampTab = sampTab, args = args, opt_params = opt_params, group_list = group_list)
     
   } else {
-    cat("clustering\n")
-    opt_params <- rep(NA, 20)
+    cat("sc3 clustering\n")
+    opt_params <- rep(NA, 20) 
     group_list <- data.frame(matrix(nrow = nrow(sampTab), ncol =0))
     
     #calculate average silhouette index, set the threshold to be 0.7 
@@ -62,7 +65,7 @@ steam_sc3 <- function(
       index <- object@sc3$consensus[[1]]
       index_sum <- summary(index$silhouette, FUN = mean)
       index_avg <- sum(index_sum[[2]])/k
-      if (index_avg >= 0.8){
+      if (index_avg >= silhouette_threshold){
         #get the group assignment
         tmp_ans <- object@phenoData@data
         colnames(tmp_ans) <- as.character(k)
@@ -74,16 +77,22 @@ steam_sc3 <- function(
     #return the clusting assignment, the column of sc3_'k'_cluster contains the annotation information
     opt_params <- opt_params[!is.na(opt_params)]
     
-    #need to order the grouplist according to the sampTab here
+    if(!empty(group_list)){ #check to see with the situation where group_list is empty
+      #need to order the grouplist according to the sampTab here
+      group_list$names<-rownames(group_list)
+      group_list <- group_list[match(rownames(sampTab), rownames(group_list)),]
+      
+      #convert cluster assignment to characters
+      group_list <- data.frame(lapply(group_list, as.character), stringsAsFactors=FALSE)
+      group_list<-as.data.frame(group_list[,-ncol(group_list)])
+      
+      rownames(group_list) <- rownames(sampTab)
+      colnames(group_list) <- opt_params
+    }
     
-    group_list$names<-rownames(group_list)
-    group_list <- group_list[match(rownames(sampTab), rownames(group_list)),]
-    
-    #convert cluster assignment to characters
-    group_list <- data.frame(lapply(group_list, as.character), stringsAsFactors=FALSE)
-    group_list<-as.data.frame(group_list[,-ncol(group_list)])
-    rownames(group_list) <- rownames(sampTab)
-    colnames(group_list) <- opt_params
+    if(empty(group_list)){
+      cat("group_list is empty, you may want to re-adjust silhouette_threshold\n")
+    }
     
     args <- as.list(match.call())
     ans<-list(sampTab = sampTab, args = args, opt_params = opt_params, group_list = group_list)
@@ -96,8 +105,9 @@ steam_sc3 <- function(
 pipe_sc3 <- function
 (washedDat,
  sampTab,
+ silhouette_threshold = 0.8,
  ks=NULL,
- topPC=6,
+ topPC=20,
  zThresh = 2)
 {
   cp_pca<-chop_pca(washedDat[['expDat']], washedDat[['geneStats']], 
@@ -108,8 +118,14 @@ pipe_sc3 <- function
   cp_tsne<-chop_tsne(cp_pca[['choppedDat']][,1:topPC], perplexity=30, theta=.3)
   
   #sc3
-  cat("SC3\n")
-  stm_sc3 <- steam_sc3(washedDat[['expDat']], sampTab, k_estimator = FALSE, ks = ks, gene_filter = FALSE, biology = FALSE)
+  cat("SC3 clustering\n")
+  stm_sc3 <- steam_sc3(washedDat[['expDat']], sampTab, k_estimator = FALSE, ks = ks, gene_filter = FALSE,silhouette_threshold = silhouette_threshold, biology = FALSE)
+  
+  if(empty(group_list)) {
+    cat("group_list is empty\n")
+    cat("please adjust the silhouette threshold and remake your pipeSteamed object\n")
+    
+  }
   
   #there is group_list in steam_sc3
   list(cp_pca = cp_pca, cp_tsne = cp_tsne, steamed = stm_sc3)
@@ -121,7 +137,8 @@ pipe_cAss_sc3 <- function
 (washedDat,
  sampTab,
  ks = NULL,
- topPC = 6,
+ silhouette_threshold = 0.8,
+ topPC = 20,
  zThresh = 2)
 {
   # all methods need PCA dimension reduction, this will gives us varGenes
@@ -134,14 +151,21 @@ pipe_cAss_sc3 <- function
   cp_tsne<-chop_tsne(cp_pca[['choppedDat']][,1:topPC], perplexity=30, theta=.3)
   
   #sc3
-  cat("SC3\n")
-  stm_sc3 <- steam_sc3(washedDat[['expDat']], sampTab, k_estimator = FALSE, ks = ks, gene_filter = FALSE, biology = FALSE)
+  cat("SC3 clustering\n")
+  stm_sc3 <- steam_sc3(washedDat[['expDat']], sampTab, k_estimator = FALSE, ks = ks, silhouette_threshold = silhouette_threshold, gene_filter = FALSE, biology = FALSE)
   
   #pre-butter each, to split and divide up the training data
   cat("pre-butter sc3\n")
   #this is where we start to split the group list and adding it to the sampTab
   stDat <- stm_sc3[['sampTab']]
   group_list <- stm_sc3[['group_list']]
+  
+  if(empty(group_list)) {
+    cat("group_list is empty\n")
+    stop("please adjust the silhouette threshold\n")
+    
+  }
+  
   opt_params <- stm_sc3[['opt_params']]
   divide_sampTab_list <- list()
   
@@ -173,7 +197,7 @@ pipe_cAss_sc3 <- function
     
   }
   
-  return(classifier_list)
+  return(classRes_sc3_list)
 }
 
 
@@ -189,6 +213,13 @@ pipe_butter_sc3<-function
   #this is where i need to loop throught the divide sampTab loop
   stDat<-pipeSteamed[['steamed']][['sampTab']]
   group_list <- pipeSteamed[['steamed']][['group_list']]
+  
+  if(empty(group_list)) {
+    cat("group_list is empty\n")
+    stop("please adjust the silhouette threshold and remake your pipeSteamed object\n")
+    
+  }
+  
   opt_params <- pipeSteamed[['steamed']][['opt_params']]
   predictors<-pipeSteamed[['cp_pca']][['varGenes']]
   classResVal_list <- list()
