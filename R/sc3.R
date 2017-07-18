@@ -1,4 +1,3 @@
-
 library(CellNet)
 library(singleCellNet)
 library(SC3)
@@ -122,6 +121,8 @@ pipe_sc3 <- function
   cat("SC3 clustering\n")
   stm_sc3 <- steam_sc3(washedDat[['expDat']], sampTab, k_estimator = FALSE, ks = ks, gene_filter = FALSE,silhouette_threshold = silhouette_threshold, biology = FALSE)
   
+  group_list <- stm_sc3[['group_list']]
+    
   if(empty(group_list)) {
     cat("group_list is empty\n")
     cat("please adjust the silhouette threshold and remake your pipeSteamed object\n")
@@ -163,7 +164,8 @@ pipe_cAss_sc3 <- function
   
   if(empty(group_list)) {
     cat("group_list is empty\n")
-    stop("please adjust the silhouette threshold\n")   
+    stop("please adjust the silhouette threshold\n")
+    
   }
   
   opt_params <- stm_sc3[['opt_params']]
@@ -216,7 +218,8 @@ pipe_butter_sc3<-function
   
   if(empty(group_list)) {
     cat("group_list is empty\n")
-    stop("please adjust the silhouette threshold and remake your pipeSteamed object\n")   
+    stop("please adjust the silhouette threshold and remake your pipeSteamed object\n")
+    
   }
   
   opt_params <- pipeSteamed[['steamed']][['opt_params']]
