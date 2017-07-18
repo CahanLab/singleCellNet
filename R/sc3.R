@@ -163,8 +163,7 @@ pipe_cAss_sc3 <- function
   
   if(empty(group_list)) {
     cat("group_list is empty\n")
-    stop("please adjust the silhouette threshold\n")
-    
+    stop("please adjust the silhouette threshold\n")   
   }
   
   opt_params <- stm_sc3[['opt_params']]
@@ -217,8 +216,7 @@ pipe_butter_sc3<-function
   
   if(empty(group_list)) {
     cat("group_list is empty\n")
-    stop("please adjust the silhouette threshold and remake your pipeSteamed object\n")
-    
+    stop("please adjust the silhouette threshold and remake your pipeSteamed object\n")   
   }
   
   opt_params <- pipeSteamed[['steamed']][['opt_params']]
