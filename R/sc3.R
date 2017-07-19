@@ -5,15 +5,15 @@ library(scater)
 library(Rtsne)
 library(pheatmap)
 library(plyr)
-#this version sepeartes group assignment in a sepearte name vector and replace that in sampTab before it passes in the pipe_butter function
+#this version select k based on the local maxima of the k; instead of silhouette threshold
+#it is tested on the weighted version of sampTab
 
 #steamed
 steam_sc3 <- function(
   dataMat,
   sampTab,
   k_estimator = FALSE, #optimal k
-  ks = NULL,  #k mean range, it will be messed up if k starts with 1
-  silhouette_threshold = 0.8,
+  ks = 2:20,  #k mean range, it will be messed up if k starts with 1
   pct_dropout_min = 10, 
   pct_dropout_max = 90,
   gene_filter = FALSE,
@@ -55,29 +55,30 @@ steam_sc3 <- function(
     
   } else {
     cat("sc3 clustering\n")
-    opt_params <- rep(NA, 20) 
-    group_list <- data.frame(matrix(nrow = nrow(sampTab), ncol =0))
+    opt_params <- rep(NA, 19) 
+    group_list_tmp <- data.frame(matrix(nrow = nrow(sampTab), ncol =0))
+    #make sure the colnames of index_avg is corresponding to ks
+    index_avg <- rep(0,19)
     
-    #calculate average silhouette index, set the threshold to be 0.7 
-    #collect the ks that passes that threshold 
-    for (k in ks) {
-      object <- sc3(object, ks = k, gene_filter = FALSE)
+    #calculate the average silhouette index for each k
+    for (i in 1:length(ks)) {
+      object <- sc3(object, ks = k, k_estimator = FALSE, gene_filter = FALSE)
       index <- object@sc3$consensus[[1]]
       index_sum <- summary(index$silhouette, FUN = mean)
-      index_avg <- sum(index_sum[[2]])/k
-      if (index_avg >= silhouette_threshold){
-        #get the group assignment
-        tmp_ans <- object@phenoData@data
-        colnames(tmp_ans) <- as.character(k)
-        group_list <- cbind(group_list, tmp_ans)
-        opt_params[k] <- k
-      } 
+      index_avg_tmp <- sum(index_sum[[2]])/k
+      index_avg[i] <- index_avg_tmp
+      tmp_ans <- object@phenoData@data
+      colnames(tmp_ans) <- as.character(k)
+      group_list_tmp <- cbind(group_list_tmp, tmp_ans)
     }
     
-    #return the clusting assignment, the column of sc3_'k'_cluster contains the annotation information
+    opt_params<-find_localMaxK(index_avg,m=1)
     opt_params <- opt_params[!is.na(opt_params)]
     
-    if(!empty(group_list)){ #check to see with the situation where group_list is empty
+    if(length(opt_params) > 0){ #check to see with the situation where group_list is empty
+      #subset group_list according to opt_params
+      opt_tmp <- opt_params - 1
+      group_list <- subset(group_list_tmp, select = opt_tmp)
       #need to order the grouplist according to the sampTab here
       group_list$names<-rownames(group_list)
       group_list <- group_list[match(rownames(sampTab), rownames(group_list)),]
@@ -88,14 +89,12 @@ steam_sc3 <- function(
       
       rownames(group_list) <- rownames(sampTab)
       colnames(group_list) <- opt_params
-    }
-    
-    if(empty(group_list)){
-      cat("group_list is empty, you may want to re-adjust silhouette_threshold\n")
+    } else {
+      cat("opt_params is empty\n")
     }
     
     args <- as.list(match.call())
-    ans<-list(sampTab = sampTab, args = args, opt_params = opt_params, group_list = group_list)
+    ans<-list(sampTab = sampTab, args = args, opt_params = opt_params, group_list = group_list, index_avg = index_avg)
   }
   
   return(ans)
@@ -105,7 +104,6 @@ steam_sc3 <- function(
 pipe_sc3 <- function
 (washedDat,
  sampTab,
- silhouette_threshold = 0.8,
  ks=NULL,
  topPC=20,
  zThresh = 2)
@@ -119,14 +117,12 @@ pipe_sc3 <- function
   
   #sc3
   cat("SC3 clustering\n")
-  stm_sc3 <- steam_sc3(washedDat[['expDat']], sampTab, k_estimator = FALSE, ks = ks, gene_filter = FALSE,silhouette_threshold = silhouette_threshold, biology = FALSE)
+  stm_sc3 <- steam_sc3(washedDat[['expDat']], sampTab, k_estimator = FALSE, ks = ks, gene_filter = FALSE, biology = FALSE)
   
   group_list <- stm_sc3[['group_list']]
     
   if(empty(group_list)) {
     cat("group_list is empty\n")
-    cat("please adjust the silhouette threshold and remake your pipeSteamed object\n")
-    
   }
   
   #there is group_list in steam_sc3
@@ -139,7 +135,6 @@ pipe_cAss_sc3 <- function
 (washedDat,
  sampTab,
  ks = NULL,
- silhouette_threshold = 0.8,
  topPC = 20,
  zThresh = 2)
 {
@@ -154,7 +149,7 @@ pipe_cAss_sc3 <- function
   
   #sc3
   cat("SC3 clustering\n")
-  stm_sc3 <- steam_sc3(washedDat[['expDat']], sampTab, k_estimator = FALSE, ks = ks, silhouette_threshold = silhouette_threshold, gene_filter = FALSE, biology = FALSE)
+  stm_sc3 <- steam_sc3(washedDat[['expDat']], sampTab, k_estimator = FALSE, ks = ks, gene_filter = FALSE, biology = FALSE)
   
   #pre-butter each, to split and divide up the training data
   cat("pre-butter sc3\n")
@@ -163,9 +158,7 @@ pipe_cAss_sc3 <- function
   group_list <- stm_sc3[['group_list']]
   
   if(empty(group_list)) {
-    cat("group_list is empty\n")
-    stop("please adjust the silhouette threshold\n")
-    
+    stop("group_list is empty\n")
   }
   
   opt_params <- stm_sc3[['opt_params']]
@@ -217,9 +210,7 @@ pipe_butter_sc3<-function
   group_list <- pipeSteamed[['steamed']][['group_list']]
   
   if(empty(group_list)) {
-    cat("group_list is empty\n")
-    stop("please adjust the silhouette threshold and remake your pipeSteamed object\n")
-    
+    stop("group_list is empty\n")
   }
   
   opt_params <- pipeSteamed[['steamed']][['opt_params']]
@@ -258,5 +249,40 @@ pipe_butter_sc3<-function
   return(classResVal_list)
 }
 
+#helper functions
+#finding local maxima silhouette index
+find_peaks <- function (x, m = 1){
+  shape <- diff(sign(diff(x, na.pad = FALSE)))
+  pks <- sapply(which(shape < 0), FUN = function(i){
+    z <- i - m + 1
+    z <- ifelse(z > 0, z, 1)
+    w <- i + m + 1
+    w <- ifelse(w < length(x), w, length(x))
+    if(all(x[c(z : i, (i + 2) : w)] <= x[i + 1])) return(i + 1) else return(numeric(0))
+  })
+  pks <- unlist(pks)
+  #include extreme testing, that is to compare the first value to second
+  if (x[1] > x[2]){
+    pks <- c(1,pks)
+  }
+  
+  #and compare the last value to the second last value
+  if(x[length(x)] > x[length(x)-1]){
+    pks<-c(pks, 19)
+  }
+  
+  #this return the indexes
+  pks
+}
 
+#find the k corresponding to the local maxima of silhouette index
+#column names of the silhouette index will be the k
+find_localMaxK <- function(index_avg, m =1){
+  pks <- find_peaks(index_avg, m = m)
+  for(i in 1: length(pks)){
+    #need to make sure that index_avg is in the same order as that of k
+    opt_params[i] <- pks[i] + 1
+  }
+  opt_params
+}
 
