@@ -268,7 +268,7 @@ find_peaks <- function (x, m = 1){
   
   #and compare the last value to the second last value
   if(x[length(x)] > x[length(x)-1]){
-    pks<-c(pks, 19)
+    pks<-c(pks, length(x))
   }
   
   #this return the indexes
