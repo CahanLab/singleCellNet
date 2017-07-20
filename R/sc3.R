@@ -195,6 +195,68 @@ pipe_cAss_sc3 <- function
   return(classRes_sc3_list)
 }
 
+#access the classifer performance with pipesteamed object
+pipe_cAss_sc3_v2 <- function
+(pipeSteamed,
+ washedDat,
+ sampTab,
+ topPC = 20,
+ zThresh = 2)
+{
+  # all methods need PCA dimension reduction, this will gives us varGenes
+  cat("reducing dimensionality\n")
+  cp_pca<-pipeSteamed[['cp_pca']]
+  
+  # tsne
+  cat("tsne-ing\n")
+  cp_tsne<-pipeSteamed[['cp_tsne']]
+  
+  #sc3
+  cat("SC3 clustering\n")
+  stm_sc3 <- pipeSteamed[['steamed']]
+  
+  #pre-butter each, to split and divide up the training data
+  cat("pre-butter sc3\n")
+  #this is where we start to split the group list and adding it to the sampTab
+  stDat <- stm_sc3[['sampTab']]
+  group_list <- stm_sc3[['group_list']]
+  
+  if(empty(group_list)) {
+    stop("group_list is empty\n")
+  }
+  
+  opt_params <- stm_sc3[['opt_params']]
+  divide_sampTab_list <- list()
+  
+  #instead of straight appending, just write a for loop to add the assignment
+  for (i in 1:ncol(group_list)) {
+    k = colnames(group_list)[i]
+    divide_sampTab_name <- paste0("classRes_sc3_", k, sep = "")
+    stDat_tmp <- cbind(sampTab, group_list[,i])
+    colnames(stDat_tmp)[ncol(stDat_tmp)] <- "group"
+    divide_sampTab_list[[divide_sampTab_name]]<-prebutter(cp_pca$varGenes, washedDat[['expDat']], stDat_tmp,
+                                                          propTrain=.25, partOn="group", nTrees=200)
+    
+  }
+  
+  #assess and iterate through the classRes_sc3 list, name them accordingly
+  #for loop to iterate through the classifier_list
+  classRes_sc3_list <- list()
+  
+  for (i in 1:length(opt_params)) {
+    k = opt_params[i]
+    classRes_name <- paste0("cAss_sc3_", k, sep = "")
+    
+    #iterate through the divide_sampTab_list to identify the classRes_sc3 per k
+    divide_sampTab_name <- paste0("classRes_sc3_", k, sep = "")
+    classRes_sc3<- divide_sampTab_list[[divide_sampTab_name]]
+    
+    #classifying/access and put into a list
+    classRes_sc3_list[[classRes_name]] <- easy_assess(classRes_sc3[['classRes']], classRes_sc3[['stVal']])
+    
+  }
+  return(classRes_sc3_list)
+}
 
 #make classifiers
 pipe_butter_sc3<-function
