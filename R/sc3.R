@@ -61,18 +61,18 @@ steam_sc3 <- function(
     index_avg <- rep(0,19)
     
     #calculate the average silhouette index for each k
-    for (i in 1:length(ks)) {
+    for (k in ks[1]:ks[length(ks)]) {
       object <- sc3(object, ks = k, k_estimator = FALSE, gene_filter = FALSE)
       index <- object@sc3$consensus[[1]]
       index_sum <- summary(index$silhouette, FUN = mean)
       index_avg_tmp <- sum(index_sum[[2]])/k
-      index_avg[i] <- index_avg_tmp
+      index_avg[k-1] <- index_avg_tmp
       tmp_ans <- object@phenoData@data
       colnames(tmp_ans) <- as.character(k)
       group_list_tmp <- cbind(group_list_tmp, tmp_ans)
     }
     
-    opt_params<-find_localMaxK(index_avg,m=1)
+    opt_params<-find_localMaxK(index_avg,opt_params,m=1)
     opt_params <- opt_params[!is.na(opt_params)]
     
     if(length(opt_params) > 0){ #check to see with the situation where group_list is empty
@@ -277,7 +277,7 @@ find_peaks <- function (x, m = 1){
 
 #find the k corresponding to the local maxima of silhouette index
 #column names of the silhouette index will be the k
-find_localMaxK <- function(index_avg, m =1){
+find_localMaxK <- function(index_avg, opt_params, m =1){
   pks <- find_peaks(index_avg, m = m)
   for(i in 1: length(pks)){
     #need to make sure that index_avg is in the same order as that of k
