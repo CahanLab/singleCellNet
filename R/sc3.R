@@ -46,7 +46,7 @@ steam_sc3 <- function(
     #return the clusting assignment, the column of sc3_'k'_cluster contains the annotation information
     group_list <- object@phenoData@data
     group_list <- group_list[match(rownames(sampTab), rownames(group_list)),]
-    rownames(group_list) <- rownmaes(sampTab)
+    rownames(group_list) <- rownames(sampTab)
     colnames(group_list) <- as.character(optimal_k)
     
     #convert cluster assignment to characters
