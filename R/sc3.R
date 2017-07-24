@@ -7,6 +7,8 @@ library(pheatmap)
 library(plyr)
 #this version select k based on the local maxima of the k; instead of silhouette threshold
 #it is tested on the weighted version of sampTab
+#this version deal with sample size larger than 5000. make sure svm runs properly
+#this version also deal with only one k value
 
 #steamed
 steam_sc3 <- function(
@@ -39,6 +41,7 @@ steam_sc3 <- function(
     
     cat("clustering\n")
     object <- sc3(object, ks = optimal_k, gene_filter = FALSE)
+    object<-sc3_run_svm.SCESet(object)
     
     #return the clusting assignment, the column of sc3_'k'_cluster contains the annotation information
     group_list <- object@phenoData@data
@@ -63,6 +66,7 @@ steam_sc3 <- function(
     #calculate the average silhouette index for each k
     for (k in ks[1]:ks[length(ks)]) {
       object <- sc3(object, ks = k, k_estimator = FALSE, gene_filter = FALSE)
+      object<-sc3_run_svm.SCESet(object)
       index <- object@sc3$consensus[[1]]
       index_sum <- summary(index$silhouette, FUN = mean)
       index_avg_tmp <- sum(index_sum[[2]])/k
@@ -72,8 +76,12 @@ steam_sc3 <- function(
       group_list_tmp <- cbind(group_list_tmp, tmp_ans)
     }
     
-    opt_params<-find_localMaxK(index_avg,opt_params,m=1)
-    opt_params <- opt_params[!is.na(opt_params)]
+    if (length(ks) > 1) {
+      opt_params<-find_localMaxK(index_avg,opt_params,m=1)
+      opt_params <- opt_params[!is.na(opt_params)]
+    } else {
+      opt_params = ks
+    }
     
     if(length(opt_params) > 0){ #check to see with the situation where group_list is empty
       #subset group_list according to opt_params
@@ -347,4 +355,17 @@ find_localMaxK <- function(index_avg, opt_params, m =1){
   }
   opt_params
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
