@@ -46,7 +46,7 @@ steam_sc3 <- function(
     #return the clusting assignment, the column of sc3_'k'_cluster contains the annotation information
     group_list <- object@phenoData@data
     group_list <- group_list[match(rownames(sampTab), rownames(group_list)),]
-    rownames(group_list) <- rownames(sampTab)
+    rownames(group_list) <- rownmaes(sampTab)
     colnames(group_list) <- as.character(optimal_k)
     
     #convert cluster assignment to characters
@@ -83,12 +83,14 @@ steam_sc3 <- function(
       opt_params = ks
     }
     
-    if(length(opt_params) > 0){ #check to see with the situation where group_list is empty
+    if(length(opt_params) > 0) { #check to see with the situation where group_list is empty
       #subset group_list according to opt_params
-      opt_tmp <- opt_params - 1
-      group_list <- subset(group_list_tmp, select = opt_tmp)
+      opt_tmp <- as.character(opt_params)
+      group_list <- as.data.frame(group_list_tmp[,opt_tmp])
+      
       #need to order the grouplist according to the sampTab here
-      group_list$names<-rownames(group_list)
+      rownames(group_list) <- rownames(group_list_tmp)
+      group_list$names<-rownames(group_list_tmp)
       group_list <- group_list[match(rownames(sampTab), rownames(group_list)),]
       
       #convert cluster assignment to characters
@@ -101,6 +103,7 @@ steam_sc3 <- function(
       cat("opt_params is empty\n")
     }
     
+    names(test$index_avg) <- seq(1:19) + 1
     args <- as.list(match.call())
     ans<-list(sampTab = sampTab, args = args, opt_params = opt_params, group_list = group_list, index_avg = index_avg)
   }
