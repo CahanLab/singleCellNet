@@ -103,7 +103,7 @@ steam_sc3 <- function(
       cat("opt_params is empty\n")
     }
     
-    names(test$index_avg) <- seq(1:19) + 1
+    names(index_avg) <- seq(1:19) + 1
     args <- as.list(match.call())
     ans<-list(sampTab = sampTab, args = args, opt_params = opt_params, group_list = group_list, index_avg = index_avg)
   }
