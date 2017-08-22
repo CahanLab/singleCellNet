@@ -225,10 +225,11 @@ steam_mclust<-function
 steam_dbscan<-function
 (sampTab,
  datMat,
- nClusters=c(5,20),
- sClusters=c(10,NA),
+ nClusters=c(5,20), # number of clusters
+ sClusters=c(10,NA), # size of clusters
  epsRange=seq(0.5,3, by=.1),
- minPtsRange=seq(2,100,by=1)
+ minPtsRange=seq(2,100,by=1),
+ seleCrit="median"
  ){
  	if(is.na(sClusters[2])){
  		sClusters[2]<-ceiling(nrow(sampTab)*.75)
@@ -251,6 +252,7 @@ steam_dbscan<-function
  	tmpAns<-cbind(args, ans)
 # 	rownames(tmpAns)<-as.character(1:nrow(tmpAns))
 
+
  	# select the ones that fit criteria
  	#crit1<-rownames(tmpAns[tmpAns$num_groups> nClusters[1] & tmpAns$num_groups< nClusters[2],])
  	crit1<-which(tmpAns$num_groups> nClusters[1] & tmpAns$num_groups< nClusters[2])
@@ -262,17 +264,22 @@ steam_dbscan<-function
  	if(length(x1)>=1){
 
 
- 		ng_range<-tmpAns[x1,]$num_groups
- 		aa<-median(ng_range)
- 		ai<-which(tmpAns[x1,]$num_groups==aa)[1]
-
- 		###ai<-which.min(tmpAns[x1,]$num_groups)
+ 		if(seleCrit=='median'){
+	 		ng_range<-tmpAns[x1,]$num_groups
+### 			aa<-median(ng_range)
+			aa<-ng_range[floor(length(ng_range)/2)]
+ 			ai<-which(tmpAns[x1,]$num_groups==aa)[1]
+ 		}
+ 		else{
+ 			ai<-which.min(tmpAns[x1,]$num_groups)
+ 		}
  		#x<-which.min(tmpAns[x1[ai],]$largets)
 
  		x<-x1[ai]
  		if(length(x)>1){
  			x<-x[1]
  		}
+ 		cat("X=", x,"\n")
  		ans<-.steam_dbscan(sampTab, datMat, eps=args[x,1], minPts=args[x,2])
  		opt_params<-list(eps=args[x,1], minPts=args[x,2])
  		cat("eps=",args[x,1], "minPts=",args[x,2],"\n")
@@ -288,7 +295,7 @@ steam_dbscan<-function
  	ans<-ans[ans$group!=0,]
  	ans<-droplevels(ans)
  	list(sampTab=ans, args=args, opt_params=opt_params)
-
+ 
 }
 
 #' @export

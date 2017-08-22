@@ -204,6 +204,54 @@ hm_varGenes<-function
 }
 
 
+#' @export
+hm_genes<-function
+(washed,
+ steamed, # from steam_pipe so has cp_pca
+ genes,
+  cName="group",
+  cRow=FALSE,
+  cCol=FALSE,
+  limits=c(-3,3),
+  toScale=FALSE,
+  fontsize_row=NULL){
+  
+  expDat<-washed[['expDat']]
+  ###varGenes<-steamed[['cp_pca']][['varGenes']]
+  sampTab<-steamed[['steamed']][['sampTab']]
+  expDat<-expDat[genes,rownames(sampTab)]
+  
+  annTab<-data.frame(group=sampTab[,cName])
+  rownames(annTab)<-rownames(sampTab)
+
+  value<-expDat
+  if(toScale){
+    value <- t(scale(t(expDat)))
+  }
+  
+  value[value < limits[1]] <- limits[1]
+  value[value > limits[2]] <- limits[2]
+
+ 
+ ### groupNames<-unique(annTab[,cName])
+  groupNames<-unique(sampTab[,cName])
+
+  xcol <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(groupNames))
+  names(xcol) <- groupNames
+  anno_colors <- list(group = xcol)
+
+  xx<-data.frame(group=as.factor(annTab[,"group"]))
+  rownames(xx)<-rownames(annTab)
+
+  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol,
+        show_colnames = FALSE, annotation_names_row = FALSE,
+##        annotation_col = annTab,
+   clustering_distance_rows='correlation',
+        annotation_col = xx,
+        annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
+}
+
+
 
 #' @export
 hmgenesSimple2<-function
@@ -296,6 +344,12 @@ sc_plot_statTab<-function# multi plot of mu, alpha, mean, cov, fano, and mean vs
 
 }
 
+simple_tnse<-function
+(tsneRes){
+  xres<-as.data.frame(tsneRes)
+  ggplot(xres, aes(x=TSNE.1, y=TSNE.2) ) + geom_point(pch=19, alpha=2/4, size=1) + theme_bw() 
+}
+
 #' @export
 ptsne<-function(xres, cname="study_id")
 {
@@ -318,6 +372,22 @@ tsneClass<-function
   datTab<-as.data.frame(datTab)
   tsneMult(datTab, classNames)
 }
+
+tsneGenes<-function
+(washed,
+ steamed,
+ genes)
+{
+  sampTab<-steamed[['steamed']][['sampTab']]
+  choppedDat<-steamed[['cp_tsne']][['choppedDat']]
+  expDat<-washed$expDat[genes,rownames(sampTab)]
+
+  datTab<-choppedDat[rownames(sampTab),]
+  datTab<-cbind(datTab, t(expDat))
+  datTab<-as.data.frame(datTab)
+  tsneMult(datTab, genes)
+}
+
 
 #' @export
 tsneMult<-function# facet tsne plot by gene

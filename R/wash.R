@@ -2,7 +2,7 @@
 # (C) Patrick Cahan 2012-2017
 
 
-#' subsets on ok genes, applies selected data transform
+#' subsets on ok genes, applies selected data transform, and recalculates gene stats
 #'
 #' down samples, computes per gene stats, finds ok genes
 #' @param preWashed list of expDat=expDat, geneStats=geneStats, okGenes=okGenes from prewash()
@@ -39,6 +39,7 @@ wash<-function
       }
     }
 
+    geneStats<-sc_statTab(expDat, dThresh=0)
     list(geneStats=geneStats, expDat=expDat, transMethod=transMethod)
 }
 

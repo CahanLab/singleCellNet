@@ -57,6 +57,17 @@ butter_classify<-function
 (washedDat,
  classList # result of pipeButter
  ){
+
+    # fill out missing genes
+    predictors<-classList[['predictors']][[1]]
+    genes<-rownames(washedDat[['expDat']])
+    mGenes<-setdiff(predictors, genes)
+    cat(mGenes,"\n")
+    matToAdd<-matrix(0, nrow=length(mGenes), ncol=ncol(washedDat[['expDat']]))
+    rownames(matToAdd)<-mGenes
+    colnames(matToAdd)<-colnames(washedDat[['expDat']])
+    washedDat[['expDat']]<-rbind(washedDat[['expDat']], matToAdd)
+
     # !!! add check that wash is done the same way
     sc_classify(classList[['classifiers']], washedDat[['expDat']], classList[['predictors']])
 }
