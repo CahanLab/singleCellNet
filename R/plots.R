@@ -247,6 +247,7 @@ hm_genes<-function
         show_colnames = FALSE, annotation_names_row = FALSE,
 ##        annotation_col = annTab,
    clustering_distance_rows='correlation',
+   clustering_distance_cols='correlation',
         annotation_col = xx,
         annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
 }

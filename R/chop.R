@@ -1,59 +1,10 @@
 # Patrick Cahan (C) 2017
 # patrick.cahan@gmail.com
 
+#'export
 
 
-#' export
-mat_to_df<-function
-(corMat,
- cutoff=0.4,
-){
-  i<-1;
-  j<-2
-  while(i<nrow(corMat)){
-    while(j<nrow(corMat)){
 
- 
-  targets<-vector();
-  regulators=vector();
-  zscoresX<-vector();
-  correlations<-vector();
-  
-  targets<-rep('', 1e6);
-  regulators<-rep('', 1e6);
-  zscoresX<-rep(0, 1e6);
-  correlations<-rep(0, 1e6);
-  
-  str<-1;
-  stp<-1;
-  for(target in genes){
-    x<-zscores[target,];
-    regs<-names(which(x>threshold));
-    if(length(regs)>0){
-      zzs<-x[regs];
-      corrs<-corrMatrix[target,regs];
-      ncount<-length(regs);
-      stp<-str+ncount-1;
-      targets[str:stp]<-rep(target, ncount);
-      #    targets<-append(targets,rep(target, ncount));
-      regulators[str:stp]<-regs;
-      #regulators<-append(regulators, regs);
-      #    zscoresX<-append(zscoresX, zzs);
-      zscoresX[str:stp]<-zzs;
-      correlations[str:stp]<-corrs;
-      str<-stp+1;
-    }
-    #    correlations<-append(correlations, corrs);
-  }
-  targets<-targets[1:stp];
-  regulators<-regulators[1:stp];
-  zscoresX<-zscoresX[1:stp];
-  correlations<-correlations[1:stp];
-  
-  
-  data.frame(target=targets, reg=regulators, zscore=zscoresX, corr=correlations);
-
-  
 
 #' @export
 chop_tsne<-function

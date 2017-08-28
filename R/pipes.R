@@ -67,6 +67,7 @@ pipe_dbscan<-function
 (washedDat,
  sampTab,
  topPC,
+ seleCrit="median",
  nClusters=c(5,20),
  sClusters=c(10,NA),
  zThresh=2)
@@ -80,7 +81,7 @@ pipe_dbscan<-function
 
 	# steam  dbscan	
 	cat("dbscan\n")
-	stm_dbs<-steam_dbscan(sampTab, cp_tsne[['choppedDat']][,1:2],nClusters=nClusters,sClusters=sClusters)
+	stm_dbs<-steam_dbscan(sampTab, cp_tsne[['choppedDat']][,1:2],nClusters=nClusters,sClusters=sClusters, seleCrit=seleCrit)
 
 	list(cp_pca=cp_pca, cp_tsne=cp_tsne, steamed=stm_dbs)
 }
