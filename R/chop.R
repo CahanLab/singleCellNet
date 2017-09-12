@@ -1,7 +1,245 @@
 # Patrick Cahan (C) 2017
 # patrick.cahan@gmail.com
 
-#'export
+#' @export
+gpa<-function
+(expDat,
+ minClusterSize=20,
+ nPCs=2,
+ sdExpl=0.01,
+ dThresh=0,
+ zThresh=2,
+ meanType="overall_mean",
+ gMax=5){
+
+  # (1) gene stats
+  # (2) PCA
+  # (3) mclust
+
+  cat("Calculating gene statistics...\n")
+  geneStats<-sc_statTab(expDat, dThresh=dThresh)
+  cat("PCA...\n")
+  pcaRes<-vg_pca(expDat, geneStats, zThresh=zThresh, meanType=meanType)
+  ssdds<-pcaRes$pcaRes$sdev
+  ans<-0
+  if( sum(ssdds[1:nPCs]) / sum(ssdds) > sdExpl){
+    cat("MClust...\n")
+    res<-simple_steam_mclust(pcaRes$pcaRes$x[,1:nPCs],G=2:gMax)
+    sizes<-table(res)
+    if(min(sizes)>=minClusterSize){
+      ans<-res
+    }
+  }
+  groups<-ans
+ # diffExp<-par_findSpecGenes(expDat[pcaRes$varGenes,], db_steamed$steamed$sampTab))
+  list(gs=geneStats, pcaRes=pcaRes, groups=groups)
+}
+
+
+#' @export
+gpa_recurse<-function
+(expAll,
+  nPCs=2,
+  sdExpl=0.01,
+  dThresh=0,
+  zThresh=2,
+  meanType="overall_mean",
+  nGrps=2,
+  method="pcromp",
+  max=10,
+  minClusterSize=30,
+  ariThresh=.95){
+
+  
+  grps<-rep("0", ncol(expAll))
+  isDone<-rep(0, ncol(expAll))
+
+  ansList<-list()
+
+
+  count_i<-1
+  while(count_i <= max){
+    cat(count_i,"\n")
+    tmpAns<-gpa_break_tree(expAll, grps, isDone=isDone,nPCs=nPCs, minClusterSize=minClusterSize,sdExpl=sdExpl, dThresh=dThresh, zThresh=zThresh, meanType=meanType, nGrps=nGrps, method=method)
+    xgrps<-tmpAns$groups
+    ari<-adjustedRandIndex(grps, xgrps)
+    cat("Round ", count_i," ARI = ", ari,"\n")
+    if(ari>ariThresh){
+      break
+    }
+    else{
+      ansList[[count_i]]<-tmpAns
+      grps<-xgrps
+      isDone<-tmpAns$isDone
+      count_i<-count_i+1
+    }
+  }
+  list(results=ansList, groups=grps)
+}
+
+
+
+#' @export
+gpa_break_tree<-function
+(expDat,
+  grps, # vector of cluster labels
+  isDone, # bool vector indicating whether corresponding groups should be subjected to clustering
+  minClusterSize=20,
+  nPCs=2,
+  sdExpl=0.01,
+   dThresh=0,
+  zThresh=2,
+  meanType="overall_mean",
+  nGrps=2,
+  method="prcomp"
+ ){
+  ans_grp<-grps
+  ans_list<-list()
+  uniGrps<-unique(grps)
+  dontCluster<-unique(grps[which(isDone==TRUE)])
+  uniqGrps<-setdiff(uniGrps, dontCluster)
+
+  for(i in 1:length(uniGrps)){
+    uniGrp<-uniGrps[i]
+    xi<-which(grps==uniGrp)
+    if(length(xi)>=minClusterSize){      
+      cat(uniGrp,":" ,length(xi),"\n")
+    ###ans_list[[uniGrp]]<-gpa(expDat[,xi], minClusterSize=minClusterSize,nPCs=nPCs,sdExpl=sdExpl,dThresh=dThresh,zThresh=zThresh,meanType=meanType,gMax=gMax)
+     
+     ##**## ans_list[[uniGrp]]<-gpa_tree(expDat[,xi],nPCs=nPCs,sdExpl=sdExpl,dThresh=dThresh,zThresh=zThresh,meanType=meanType,nGrps=nGrps, method=method)
+
+      gpaRes<-gpa_tree(expDat[,xi],nPCs=nPCs,sdExpl=sdExpl,dThresh=dThresh,zThresh=zThresh,meanType=meanType,nGrps=nGrps, method=method)  
+      if(any(table(gpaRes$groups) < minClusterSize)){
+        ans_list[[uniGrp]]<-""
+        ans_grp[xi]<-uniGrp
+        isDone[xi]<-1
+      }
+      else{
+        ans_list[[uniGrp]]<-gpaRes
+        ans_grp[xi]<-paste0(uniGrp,"_",ans_list[[uniGrp]]$groups)
+      }
+    }
+  }
+  list(groups=ans_grp, res=ans_list, isDone=isDone)
+}
+
+
+#' @export
+gpa_tree<-function
+(expDat,
+ nPCs=2,
+ sdExpl=0.01,
+ dThresh=0,
+ zThresh=2,
+ meanType="overall_mean",
+ nGrps=2,
+ method="prcomp"){
+
+  # (1) gene stats
+  # (2) PCA
+  # (3) hclust -> cuttree
+
+  cat("Calculating gene statistics...\n")
+  geneStats<-sc_statTab(expDat, dThresh=dThresh)
+  cat("PCA...\n")
+  pcaRes<-vg_pca(expDat, geneStats, zThresh=zThresh, meanType=meanType, method=method)
+###  ssdds<-pcaRes$pcaRes$sdev
+  ans<-0
+ ### if( sum(ssdds[1:nPCs]) / sum(ssdds) > sdExpl){
+    cat("HCL cutre ... \n") ###, sum(ssdds[1:nPCs]) / sum(ssdds), "\n")
+    res<-simple_steam_cuttree(pcaRes$pcaRes$x[,1:nPCs],nClusters=nGrps)
+   ## sizes<-table(res)
+   ## if(min(sizes)>=minClusterSize){
+      ans<-res
+   ## }
+ ### }
+  groups<-ans
+ # diffExp<-par_findSpecGenes(expDat[pcaRes$varGenes,], db_steamed$steamed$sampTab))
+  list(gs=geneStats, pcaRes=pcaRes, groups=groups)
+}
+
+
+#' @export
+gpa_db<-function
+(expDat,
+ minClusterSize=20,
+ nPCs=2,
+ sdExpl=0.01,
+ dThresh=0,
+ zThresh=2,
+ meanType="overall_mean",
+ eps=1,
+ minPts=10){
+
+  # (1) gene stats
+  # (2) PCA
+  # (3) dbscan
+
+  cat("Calculating gene statistics...\n")
+  geneStats<-sc_statTab(expDat, dThresh=dThresh)
+  cat("PCA...\n")
+  pcaRes<-vg_pca(expDat, geneStats, zThresh=zThresh, meanType=meanType)
+  ssdds<-pcaRes$pcaRes$sdev
+  ans<-0
+  if( sum(ssdds[1:nPCs]) / sum(ssdds) > sdExpl){
+    cat("DBscan...\n")
+    res<-simple_steam_dbscan(pcaRes$pcaRes$x[,1:nPCs],eps=eps, minPts=minPts)
+    sizes<-table(res)
+    ##if(min(sizes)>=minClusterSize){
+      ans<-res
+    ##}
+  }
+  groups<-ans
+ # diffExp<-par_findSpecGenes(expDat[pcaRes$varGenes,], db_steamed$steamed$sampTab))
+  list(gs=geneStats, pcaRes=pcaRes, groups=groups)
+}
+
+
+#' @export
+gpa_break<-function
+(expDat,
+  grps,
+  minClusterSize=20,
+  nPCs=2,
+  sdExpl=0.01,
+ dThresh=0,
+ zThresh=2,
+ meanType="overall_mean",
+ gMax=5){
+  ans_grp<-grps
+  ans_list<-list()
+  uniGrps<-unique(grps)
+  for(uniGrp in uniGrps){
+    xi<-which(grps==uniGrp)
+    ans_list[[uniGrp]]<-gpa(expDat[,xi], minClusterSize=minClusterSize,nPCs=nPCs,sdExpl=sdExpl,dThresh=dThresh,zThresh=zThresh,meanType=meanType,gMax=gMax)
+    ans_grp[xi]<-ans_list[[uniGrp]]$groups
+  }
+  list(groups=ans_grp, res=ans_list)
+}
+
+
+#' @export
+gpa_break_db<-function
+(expDat,
+  grps,
+  nPCs=2,
+  sdExpl=0.01,
+ dThresh=0,
+ zThresh=2,
+ meanType="overall_mean",
+ eps=1,
+ minPts=10){
+  ans_grp<-grps
+  ans_list<-list()
+  uniGrps<-unique(grps)
+  for(uniGrp in uniGrps){
+    xi<-which(grps==uniGrp)
+    ###ans_list[[uniGrp]]<-gpa(expDat[,xi], minClusterSize=minClusterSize,nPCs=nPCs,sdExpl=sdExpl,dThresh=dThresh,zThresh=zThresh,meanType=meanType,gMax=gMax)
+    ans_list[[uniGrp]]<-gpa_db(expDat[,xi],nPCs=nPCs,sdExpl=sdExpl,dThresh=dThresh,zThresh=zThresh,meanType=meanType,eps=eps,minPts=minPts)
+    ans_grp[xi]<-ans_list[[uniGrp]]$groups
+  }
+  list(groups=ans_grp, res=ans_list)
+}
 
 
 
@@ -68,11 +306,21 @@ vg_pca<-function
 (expDat,
  geneStats,
  zThresh=2,
- meanType="overall_mean")
+ meanType="overall_mean",
+ method='prcomp',
+ max.iter=10)
 {
   ans<-list()
   ans[['varGenes']]<-findVarGenes(expDat,geneStats,zThresh=zThresh, meanType=meanType)
-  ans[['pcaRes']]<-prcomp(t(expDat[ ans[['varGenes']],]),center=T,scale=TRUE)
+  if(method=='prcomp'){
+    ans[['pcaRes']]<-prcomp(t(expDat[ ans[['varGenes']],]),center=T,scale=TRUE)
+  }
+  else{
+    # will not have a sdev item
+    normDat<-prep(t(expDat[ans[['varGenes']],]), scale="uv", center=TRUE)
+    tmpAns<-rpca(normDat, trace=FALSE, max.iter=max.iter)
+    ans[['pcaRes']]<-list(x=tmpAns$L.svd$u)
+  }
   ans
 }
 

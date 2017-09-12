@@ -305,6 +305,58 @@ if(FALSE){
         annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
 }
 
+#' plot gpa res
+#'
+#' plot gpa res
+#'
+#' @param gpaRes,
+#' @param legend whether to display it
+#'
+#' @return ggplot
+#' 
+#' @export
+#'
+plotGPA1<-function(gpaRes, legend=FALSE)
+{
+
+  aDat<-data.frame(pc1=gpaRes$pcaRes$pcaRes$x[,1], pc2=gpaRes$pcaRes$pcaRes$x[,2], group=gpaRes$groups) 
+  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
+  if(legend){
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
+  }
+  else{
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
+  }
+  ans
+}
+
+#' plot gpa_recurse res
+#'
+#' plot gpa_recurse res
+#'
+#' @param gpaRes,
+#' @param legend whether to display it
+#'
+#' @return ggplot
+#' 
+#' @export
+#'
+plotGPArecurse<-function(gpaRes, pLevel, legend=FALSE)
+{
+
+  aDat<-data.frame(pc1=gpaRes[[1]]$pcaRes$pcaRes$x[,1], pc2=gpaRes[[1]]$pcaRes$pcaRes$x[,2], group=gpaRes[[pLevel]]$groups) 
+  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
+  if(legend){
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
+  }
+  else{
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
+  }
+  ans
+}
+
+
+
 
 #' plot tsne results
 #'

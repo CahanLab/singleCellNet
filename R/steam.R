@@ -219,6 +219,14 @@ steam_mclust<-function
  	list(sampTab=ans, args=args, opt_params=opt_params)
 }
 
+#' @export
+simple_steam_mclust<-function
+(datMat,
+ G=2:9){
+	mcRes<-Mclust(datMat, G=G)
+	as.character(mcRes$classification)
+}
+
 
 # notet aht this will remove group==0 samples
 #' @export
@@ -283,17 +291,19 @@ steam_dbscan<-function
  		ans<-.steam_dbscan(sampTab, datMat, eps=args[x,1], minPts=args[x,2])
  		opt_params<-list(eps=args[x,1], minPts=args[x,2])
  		cat("eps=",args[x,1], "minPts=",args[x,2],"\n")
+ 		ans<-ans[order(ans$group),]
+ 		ans<-ans[ans$group!=0,]
+ 		ans<-droplevels(ans)
  	}
  	else{
- 		ans<-NULL
+ 		ans<-tmpAns
  		cat("Nothing fits criteria\n")
  		opt_params<-list(eps=NA, minPts=NA)
  	}
- 	ans<-ans[order(ans$group),]
+ 	
  	args<-as.list(match.call())
  	
- 	ans<-ans[ans$group!=0,]
- 	ans<-droplevels(ans)
+ 	
  	list(sampTab=ans, args=args, opt_params=opt_params)
  
 }
@@ -308,7 +318,24 @@ steam_dbscan<-function
    cbind(sampTab, group=as.character(dbRes$cluster))
 }
 
+#' @export
+simple_steam_dbscan<-function
+(datMat,
+ minPts=5,
+ eps=1.5){
+   dbRes<-dbscan(datMat, eps=eps, minPts=minPts)
+   as.character(dbRes$cluster)
+}
 
 
+#' @export
+simple_steam_cuttree<-function
+(datMat,
+ nClusters=2){
+	xdist<-dist(datMat)
+	### atree<-hclust(xdist, "ave")
+	atree<-hclust(xdist, "ward")
+	as.character(cutree(atree, k=nClusters))
+}
 
 

@@ -72,8 +72,8 @@ pipe_dbscan<-function
  sClusters=c(10,NA),
  zThresh=2)
 {
-	cp_pca<-chop_pca(washedDat[['expDat']], washedDat[['geneStats']], 
-		zThresh=zThresh, meanType="overall_mean")
+	#cp_pca<-chop_pca(washedDat[['expDat']], washedDat[['geneStats']], zThresh=zThresh)
+	cp_pca<-chop_pca(washedDat[['expDat']], washedDat[['geneStats']], zThresh=zThresh, meanType="overall_mean")
 
 	# tsne
 	cat("tsne-ing\n")

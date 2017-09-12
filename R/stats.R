@@ -272,3 +272,108 @@ findVarGenes<-function
   union(zByMean, zByAlpha)
 }
 
+
+
+par_findSpecGenes<-function#
+(expDat, ### expression matrix
+  sampTab, ### sample tableß
+  ###holm=1e-50, ### sig threshold
+  ###cval=0.5, ### R thresh
+  dLevel="group", #### annotation level to group on
+  prune=FALSE, ### limit to genes exclusively detected as CT in one CT
+  minSet=TRUE,
+  ncore=4
+){
+
+  newST<-sampTab
+  if(minSet){
+    cat("Making reduced sampleTable\n")
+    newST<-minTab(sampTab, dLevel)
+  }
+  
+  ans<-list()
+
+  cat("Making patterns\n")
+  myPatternG<-sc_sampR_to_pattern(as.vector(newST[,dLevel]));
+  expDat<-expDat[,rownames(newST)]
+  
+  cat("Testing patterns\n")
+ # aClust<-parallel::makeCluster(ncore, type='FORK')
+  specificSets<-lapply(myPatternG, sc_testPattern, expDat=expDat)
+ # stopCluster(aClust)
+  cat("Done testing\n")
+
+  if(prune){
+  # now limit to genes exclusive to each list
+   specGenes<-list();
+   for(ctName in ctNames){
+     others<-setdiff(ctNames, ctName);
+     x<-setdiff( ctGenes[[ctName]], unlist(ctGenes[others]));
+     specGenes[[ctName]]<-x;
+   }
+   ans<-specGenes;
+  }
+  else{
+   ans<-ctGenes;
+  }
+  names(ans)<-as.character(ctNames)
+  ans
+}
+
+
+
+sc_sampR_to_pattern<-function#
+(sampR){
+  d_ids<-unique(as.vector(sampR));
+  nnnc<-length(sampR);
+#  ans<-matrix(nrow=length(d_ids), ncol=nnnc);
+  ans<-list()
+  for(d_id in d_ids){
+    x<-rep(0,nnnc);
+    x[which(sampR==d_id)]<-1;
+    ans[[d_id]]<-x;
+  }
+  ans
+}
+
+
+
+sc_testPattern<-function(pattern, expDat){
+  pval<-vector();
+  cval<-vector();
+  geneids<-rownames(expDat);
+  llfit<-ls.print(lsfit(pattern, t(expDat)), digits=25, print=FALSE);
+  xxx<-matrix( unlist(llfit$coef), ncol=8,byrow=TRUE);
+  ccorr<-xxx[,6];
+  cval<- sqrt(as.numeric(llfit$summary[,2])) * sign(ccorr);
+  pval<-as.numeric(xxx[,8]);
+
+  #qval<-qvalue(pval)$qval;
+  holm<-p.adjust(pval, method='holm');
+  #data.frame(row.names=geneids, pval=pval, cval=cval, qval=qval, holm=holm);
+  data.frame(row.names=geneids, pval=pval, cval=cval,holm=holm);
+}
+
+getTopGenes<-function
+(xdat,
+  topN=3)
+# cval=.35,
+# holm=1e-2)
+{
+#  qqq<-xdat[which(xdat$cval>cval & xdat$holm<holm),]
+#  rownames(qqq[order(qqq$cval, decreasing=TRUE),][1:topN,])
+  rownames(xdat[order(xdat$cval, decreasing=TRUE),][1:topN,])
+}
+
+minTab<-function #subsample the table
+(sampTab, dLevel){
+  myMin<-min(table(sampTab[,dLevel]))
+  nST<-data.frame()
+  grps<-unique(as.vector(sampTab[,dLevel]))
+  for(grp in grps){
+    stX<-sampTab[sampTab[,dLevel]==grp,]
+    nST<-rbind(nST, stX[sample(rownames(stX), myMin),])
+  }
+  nST
+}
+
