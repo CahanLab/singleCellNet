@@ -314,9 +314,9 @@ par_findSpecGenes<-function#
    ans<-specGenes;
   }
   else{
-   ans<-ctGenes;
+   ans<-specificSets
   }
-  names(ans)<-as.character(ctNames)
+###  names(ans)<-as.character(ctNames)
   ans
 }
 

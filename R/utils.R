@@ -3,6 +3,29 @@
 
 # commonly used or misc functions
 
+#' @export
+getGenesFromGO<-function# return the entrez gene ids of a given a GOID, for now assumes mouse
+(GOID, # GO id to find genes for
+ annList 
+){
+  sort(as.vector(unlist(annList[['egSymbols']][annList[['goegs']][[GOID]]])));
+}
+
+
+
+# get GO:IDs
+#' @export
+annSetUp<-function(){
+library("org.Mm.eg.db")
+library(GO.db)
+  cat("Getting GO:IDs\n");
+  goegs<-as.list(org.Mm.egGO2ALLEGS);
+
+  # get EG <-> Symbols
+  cat("Getting Symbols\n");
+  egSymbols<-as.list(org.Mm.egSYMBOL);
+  list(goegs=goegs, egSymbols=egSymbols)
+}
 
 
 #' find transcript factors
