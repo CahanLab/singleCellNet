@@ -47,7 +47,7 @@ gpa_recurse<-function
   nGrps=2,
   method="pcromp",
   max=10,
-  minClusterSize=30,
+  minClusterSize=42,
   ariThresh=.95){
 
   
@@ -55,16 +55,17 @@ gpa_recurse<-function
   isDone<-rep(0, ncol(expAll))
 
   ansList<-list()
-
+  grp_list<-list()
 
   count_i<-1
   while(count_i <= max){
     cat(count_i,"\n")
     tmpAns<-gpa_break_tree(expAll, grps, isDone=isDone,nPCs=nPCs, minClusterSize=minClusterSize,sdExpl=sdExpl, dThresh=dThresh, zThresh=zThresh, meanType=meanType, nGrps=nGrps, method=method)
     xgrps<-tmpAns$groups
+    grp_list[[count_i]]<-xgrps
     ari<-adjustedRandIndex(grps, xgrps)
     cat("Round ", count_i," ARI = ", ari,"\n")
-    if(ari>ariThresh){
+    if(ari>ariThresh | all(isDone==TRUE) ){
       break
     }
     else{
@@ -74,7 +75,7 @@ gpa_recurse<-function
       count_i<-count_i+1
     }
   }
-  list(results=ansList, groups=grps)
+  list(results=ansList, groups=grps, grp_list=grp_list)
 }
 
 
@@ -84,6 +85,7 @@ gpa_break_tree<-function
 (expDat,
   grps, # vector of cluster labels
   isDone, # bool vector indicating whether corresponding groups should be subjected to clustering
+ ### aveSilhs, # named list of average sihls per group
   minClusterSize=20,
   nPCs=2,
   sdExpl=0.01,
@@ -99,6 +101,9 @@ gpa_break_tree<-function
   dontCluster<-unique(grps[which(isDone==TRUE)])
   uniqGrps<-setdiff(uniGrps, dontCluster)
 
+  pcs<-matrix(0, nrow=ncol(expDat), ncol=2)
+  rownames(pcs)<-colnames(expDat)
+
   for(i in 1:length(uniGrps)){
     uniGrp<-uniGrps[i]
     xi<-which(grps==uniGrp)
@@ -109,18 +114,20 @@ gpa_break_tree<-function
      ##**## ans_list[[uniGrp]]<-gpa_tree(expDat[,xi],nPCs=nPCs,sdExpl=sdExpl,dThresh=dThresh,zThresh=zThresh,meanType=meanType,nGrps=nGrps, method=method)
 
       gpaRes<-gpa_tree(expDat[,xi],nPCs=nPCs,sdExpl=sdExpl,dThresh=dThresh,zThresh=zThresh,meanType=meanType,nGrps=nGrps, method=method)  
-      if(any(table(gpaRes$groups) < minClusterSize)){
+      if( (any(table(gpaRes$groups) < minClusterSize))){ ###|| ( gpaRes$avesilh < aveSilhs[[uniqGrp]])){ 
         ans_list[[uniGrp]]<-""
         ans_grp[xi]<-uniGrp
         isDone[xi]<-1
       }
       else{
+        snames<-colnames(expDat[,xi])
+        pcs[snames,1:nPCs]<-gpaRes$pcs[,1:nPCs]
         ans_list[[uniGrp]]<-gpaRes
         ans_grp[xi]<-paste0(uniGrp,"_",ans_list[[uniGrp]]$groups)
       }
     }
   }
-  list(groups=ans_grp, res=ans_list, isDone=isDone)
+  list(groups=ans_grp, res=ans_list, isDone=isDone, pcs=pcs)#, aveSilhs=aveSils)
 }
 
 
@@ -143,19 +150,13 @@ gpa_tree<-function
   geneStats<-sc_statTab(expDat, dThresh=dThresh)
   cat("PCA...\n")
   pcaRes<-vg_pca(expDat, geneStats, zThresh=zThresh, meanType=meanType, method=method)
-###  ssdds<-pcaRes$pcaRes$sdev
   ans<-0
- ### if( sum(ssdds[1:nPCs]) / sum(ssdds) > sdExpl){
-    cat("HCL cutre ... \n") ###, sum(ssdds[1:nPCs]) / sum(ssdds), "\n")
-    res<-simple_steam_cuttree(pcaRes$pcaRes$x[,1:nPCs],nClusters=nGrps)
-   ## sizes<-table(res)
-   ## if(min(sizes)>=minClusterSize){
-      ans<-res
-   ## }
- ### }
-  groups<-ans
+  ans<-simple_steam_cuttree(pcaRes$pcaRes$x[,1:nPCs],nClusters=nGrps)
+  groups<-ans$grps
  # diffExp<-par_findSpecGenes(expDat[pcaRes$varGenes,], db_steamed$steamed$sampTab))
-  list(gs=geneStats, pcaRes=pcaRes, groups=groups)
+  pcs<-pcaRes$pcaRes$x[,1:nPCs]
+  rownames(pcs)<-colnames(expDat)
+  list(gs=geneStats, pcaRes=pcaRes, groups=groups, pcs=pcs, avesilh=ans$avesilh)
 }
 
 
@@ -319,7 +320,9 @@ vg_pca<-function
     # will not have a sdev item
     normDat<-prep(t(expDat[ans[['varGenes']],]), scale="uv", center=TRUE)
     tmpAns<-rpca(normDat, trace=FALSE, max.iter=max.iter)
-    ans[['pcaRes']]<-list(x=tmpAns$L.svd$u)
+    tmpX<-tmpAns$L.svd$u
+    rownames(tmpX)<-colnames(expDat)
+    ans[['pcaRes']]<-list(x=tmpX)
   }
   ans
 }

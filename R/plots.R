@@ -341,21 +341,70 @@ plotGPA1<-function(gpaRes, legend=FALSE)
 #' 
 #' @export
 #'
-plotGPArecurse<-function(gpaRes, pLevel, legend=FALSE)
+plotGPArec<-function(gpaRes, pcaLevel=1, grpLevel=1,legend=FALSE)
 {
-
-  aDat<-data.frame(pc1=gpaRes[[1]]$pcaRes$pcaRes$x[,1], pc2=gpaRes[[1]]$pcaRes$pcaRes$x[,2], group=gpaRes[[pLevel]]$groups) 
-  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
-  if(legend){
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
+ 
+  if(grpLevel>1){
+    prev<-gpaRes$grp_list[[grpLevel-1]]
   }
   else{
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
+    prev<-rep("1", length(gpaRes$grp_list[[grpLevel]]))
+  }
+  aDat<-data.frame(pc1=gpaRes$results[[pcaLevel]]$pcs[,1], pc2=gpaRes$results[[pcaLevel]]$pcs[,2], group=gpaRes$grp_list[[grpLevel]]) 
+  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
+  if(legend){
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group, shape=prev) ) + geom_point( alpha=3/4, size=.75) + theme_bw() + scale_colour_manual(values=ColorRamp)
+  }
+  else{
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group, shape=prev) ) + geom_point(pch=19, alpha=3/4, size=.75) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
   }
   ans
 }
 
+#' plot gpa_recurse res transform coordinates
+#'
+#' plot gpa_recurse res
+#'
+#' @param gpaRes,
+#' @param legend whether to display it
+#'
+#' @return ggplot
+#' 
+#' @export
+#'
+plotGPArecTrans<-function(gpaRes, pcaLevel=1, grpLevel=1,legend=FALSE)
+{
+ 
+  pc_l1<-gpaRes$results[[1]]$pcs[,1:2]
 
+  runningPCs<-pc_l1
+  ci<-2
+
+  while(ci<=pcaLevel){
+    weight<-(pcaLevel+1-ci)/pcaLevel
+    cat("CI ",ci, " weight: ",weight,"\n")
+    tmpPCs<-weight*gpaRes$results[[ci]]$pcs[,1:2]
+    runningPCs<-tmpPCs+runningPCs
+    ci<-ci+1
+  }
+
+  if(grpLevel>1){
+    prev<-gpaRes$grp_list[[grpLevel-1]]
+  }
+  else{
+    prev<-rep("1", length(gpaRes$grp_list[[grpLevel]]))
+  }
+  aDat<-data.frame(pc1=runningPCs[,1], pc2=runningPCs[,2], group=gpaRes$grp_list[[grpLevel]]) 
+  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
+  if(legend){
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group, shape=prev) ) + geom_point( alpha=3/4, size=.75) + theme_bw() + scale_colour_manual(values=ColorRamp)
+  }
+  else{
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group, shape=prev) ) + geom_point( alpha=3/4, size=.75) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
+  }
+  ans
+
+}
 
 
 #' plot tsne results
@@ -552,8 +601,90 @@ mp_hmVars<-function# basic heatmap
   }
 }
 
+#' plot gpa res
+#'
+#' plot gpa res
+#'
+#' @param gpaRes,
+#' @param title
+#' @param legend whether to display it
+#'
+#' @return ggplot
+#' 
+#' @export
+#'
+plotGPA<-function(gpaRes, title='', legend=FALSE)
+{
+
+  aDat<-data.frame(pc1=gpaRes$pcaRes$pcaRes$x[,1], pc2=gpaRes$pcaRes$pcaRes$x[,2], group=gpaRes$groups) 
+  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
+  if(legend){
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
+  }
+  else{
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
+  }
+  ans + ggtitle(title)
+}
+
+plotGPAann<-function(gpaRes, sampTab, dLevel="prefix", title='')
+{
+
+  
+  aDat<-data.frame(pc1=gpaRes$pcaRes$pcaRes$x[,1], pc2=gpaRes$pcaRes$pcaRes$x[,2], group=gpaRes$groups) 
+  rownames(aDat)<-rownames(gpaRes$pcs)
+  aDat<-cbind(aDat, ann=sampTab[rownames(aDat),dLevel])
+  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
+  
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group, shape=ann) ) + geom_point(alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
+  
+  ans + ggtitle(title)
+}
 
 
+
+gpa_multiPlot_ann<-function(
+ recRes,
+ sampTab,
+ dLevel="prefix",
+ str_level=1
+ ){
+
+  pList<-list()
+  p1<-plotGPAann(recRes$results[[str_level]]$res[[1]], sampTab=sampTab, dLevel=dLevel, title="Top level")
+  xlen<-length(recRes$results[[str_level+1]]$res)
+  pList[[1]]<-p1
+  for(xi in 1:xlen){
+    ttitle<-names(recRes$results[[str_level+1]]$res)[xi]
+    cat(ttitle,"\n")
+    xtmp<-recRes$results[[str_level+1]]$res[[xi]]
+    if(length(xtmp)>1){
+      pList[[xi+1]]<-plotGPAann(xtmp, sampTab=sampTab, dLevel=dLevel,title=ttitle)
+    }
+  }
+  multiplot(plotlist=pList, cols=xlen+1)
+}
+
+
+gpa_multiPlot<-function(
+ recRes,
+ str_level=1
+ ){
+
+  pList<-list()
+  p1<-plotGPA(recRes$results[[str_level]]$res[[1]], legend=T, title="Top level")
+  xlen<-length(recRes$results[[str_level+1]]$res)
+  pList[[1]]<-p1
+  for(xi in 1:xlen){
+    ttitle<-names(recRes$results[[str_level+1]]$res)[xi]
+    cat(ttitle,"\n")
+    xtmp<-recRes$results[[str_level+1]]$res[[xi]]
+    if(length(xtmp)>1){
+      pList[[xi+1]]<-plotGPA(xtmp, legend=F, title=ttitle)
+    }
+  }
+  multiplot(plotlist=pList, cols=xlen+1)
+}
 
 # Multiple plot function
 #

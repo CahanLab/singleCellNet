@@ -331,11 +331,24 @@ simple_steam_dbscan<-function
 #' @export
 simple_steam_cuttree<-function
 (datMat,
- nClusters=2){
+ nClusters=2:5){
 	xdist<-dist(datMat)
 	### atree<-hclust(xdist, "ave")
 	atree<-hclust(xdist, "ward")
-	as.character(cutree(atree, k=nClusters))
+	ansList<-list()
+	aveSils<-vector()
+	for(i in seq(length(nClusters))){
+		nClu<-nClusters[i]
+		cat(nClu,"\n")
+		##ansList[[i]]<-as.character(cutree(atree, k=nClu))
+		ansList[[i]]<-cutree(atree, k=nClu)
+		silh<-silhouette(as.numeric(ansList[[i]]), xdist)
+		aveSils<-append(aveSils, summary(silh)$avg.width)
+		cat(nClu, "::-> ",summary(silh)$avg.width,"\n")
+	} 
+	xi<-which.max(aveSils)
+	### Need to add fetch to sclus.avg.widths here too, for stopping criteria
+	list(grps=as.character(ansList[[ xi ]]), avesilh=aveSils[xi])
 }
 
 
