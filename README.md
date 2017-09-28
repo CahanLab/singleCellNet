@@ -194,3 +194,29 @@ Overlay classification results
 
 ![](md_img/tsne_class.jpg)
 
+
+Gene Ontology annotation. Find cell surface genes
+```R
+annDat<-annSetUp()
+ccGenes<-unique(getGenesFromGO("GO:0009986", annDat))
+length(ccGenes)
+[1] 829
+```
+
+Differential expression
+```R
+diffExp<-par_findSpecGenes(washedProp$expDat[mGenes,], db_steamed$steamed$sampTab, minSet=FALSE)
+### find the top 30 genes in each cluster
+ct1<-lapply( diffExp, getTopGenes, 30)
+
+
+### Heatmap these genes
+hm_genes(washedProp, db_steamed, unique(unlist(ct1)), cRow=T, font=3, limits=c(0,10), toS=F)
+```
+
+
+
+
+
+
+
