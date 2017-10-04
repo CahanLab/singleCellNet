@@ -13,6 +13,17 @@ getGenesFromGO<-function# return the entrez gene ids of a given a GOID, for now 
 
 
 
+dumbfunc<-function(
+ aNamedList){
+  ans<-vector()
+  nnames<-names(aNamedList)
+  for(nname in nnames){
+    ans<-append(ans, rep(nname, length(aNamedList[[nname]])))
+  }
+  ans
+}
+
+
 # get GO:IDs
 #' @export
 annSetUp<-function(){

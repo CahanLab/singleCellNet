@@ -62,3 +62,6 @@ export(weighted_down)
 export(getGenesFromGo)
 export(annSetUp)
 export(par_findSpecGenes)
+import(igraph)
+import(org.Mm.eg.db)
+

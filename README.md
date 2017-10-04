@@ -1,7 +1,12 @@
 # singleCellNet
 
 ### Introduction
-See [CellNet](https://github.com/pcahan1/CellNet) for an introduction and bulk RNA-Seq version. Here, we illustrate how to make single cell classifiers.
+See [CellNet](https://github.com/pcahan1/CellNet) for an introduction to CellNet, how to use it on bulk RNA-Seq, and how to analyze scRNA-Seq data with classifiers trained on bulk RNA-Seq. Here, we illustrate how to cluster single cell RNA-Seq data, build single cell classifiers based on the clustering results, and use these classifiers to assign 'cell identity' to scNRA-Seq data.
+
+
+
+
+
 
 #### Processing pipeline
 
@@ -197,10 +202,15 @@ Overlay classification results
 
 Gene Ontology annotation. Find cell surface genes
 ```R
+library("org.Mm.eg.db")
+library(GO.db)
 annDat<-annSetUp()
 ccGenes<-unique(getGenesFromGO("GO:0009986", annDat))
 length(ccGenes)
 [1] 829
+
+allGenes<-rownames(washedProp$expDat)
+mGenes<-intersect(allGenes, ccGenes)
 ```
 
 Differential expression
