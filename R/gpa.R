@@ -56,7 +56,7 @@ A_cutree<-function(
 	list(method="cutree", kvals=kvals, results=ans)
 }
 
-A_mclust<-function(
+if(FALSE){A_mclust<-function(
 	gpRes,
 	kvals=2:5){
 
@@ -67,6 +67,19 @@ A_mclust<-function(
 	}
 	list(method="Mclust", kvals=kvals, results=ans)
 }	
+}
+
+A_mclust<-function(
+  gpRes,
+  kvals=2:5){
+
+  ans<-list()
+  tmpRes<-Mclust(gpRes$pcaRes$pcaRes$x, G=kvals)
+  kval<-tmpRes$G
+  ans[[kval]]<-tmpRes$classification
+  list(method="Mclust", kvals=kval, results=ans)
+} 
+
 
 #return a list of kval-> {overall.silh=,__ , cluster.sils=__}
 A_silhouette<-function(
@@ -93,36 +106,40 @@ A_bundle<-function(
 	kvals=2:5
 ){
 
-#	methods<-c("mclust", "kmeans", "cutree")
-  methods<-c("kmeans", "cutree")
+	methods<-c("mclust", "kmeans", "cutree")
+#  methods<-c("kmeans", "cutree")
 	xdist<-dist(gpRes$pcaRes$pcaRes$x)
 
-##	cat("Mclust\n")
-##	mres <-A_mclust(gpRes, kvals=kvals)
+	cat("Mclust\n")
+	mres <-A_mclust(gpRes, kvals=kvals)
 	cat("kmeans\n")
 	kres <-A_kmeans(gpRes, kvals=kvals)
 	cat("cutree\n")
 	ctres<-A_cutree(xdist, kvals=kvals)
 
 
-##	mcsilhs<-A_silhouette(mres, xdist)
+	mcsilhs<-A_silhouette(mres, xdist)
 	ksilhs <-A_silhouette(kres, xdist)
 	ctsilhs<-A_silhouette(ctres, xdist)
 
-##	mcmax<-max(mcsilhs$overall)
+	mcmax<-max(mcsilhs$overall)
 	kmax <-max(ksilhs$overall)
 	ctmax<-max(ctsilhs$overall)
 
-##	xi<-which.max(c(mcmax, kmax, ctmax))
-##	sil.winner<-list(mcsilhs, ksilhs, ctsilhs)[[xi]]
+  cat("MClust max: ", mcmax,"\n")
+  cat("kmeans max: ", kmax,"\n")
+  cat("cutree max: ", ctmax,"\n")
 
-	xi<-which.max(c( kmax, ctmax))
-	sil.winner<-list(ksilhs, ctsilhs)[[xi]]
+	xi<-which.max(c(mcmax, kmax, ctmax))
+	sil.winner<-list(mcsilhs, ksilhs, ctsilhs)[[xi]]
+
+	xi<-which.max(c( mcmax,kmax, ctmax))
+	sil.winner<-list(mcsilhs,ksilhs, ctsilhs)[[xi]]
 	k.winner<-which.max(sil.winner$overall)
 
 	method.winner<-methods[xi]
-##	result.winner<-list(mres, kres, ctres)[[xi]]$results[[k.winner]]
-	result.winner<-list(kres, ctres)[[xi]]$results[[k.winner]]
+	result.winner<-list(mres, kres, ctres)[[xi]]$results[[k.winner]]
+##	result.winner<-list(kres, ctres)[[xi]]$results[[k.winner]]
 	list(method=method.winner, result=result.winner, k=k.winner, silh=list(overall=sil.winner$overall[k.winner], sil.clusters=sil.winner$cluster.sils[[k.winner]]))
 }
 
