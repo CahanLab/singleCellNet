@@ -3,10 +3,88 @@
 ### Introduction
 See [CellNet](https://github.com/pcahan1/CellNet) for an introduction to CellNet, how to use it on bulk RNA-Seq, and how to analyze scRNA-Seq data with classifiers trained on bulk RNA-Seq. Here, we illustrate how to cluster single cell RNA-Seq data, build single cell classifiers based on the clustering results, and use these classifiers to assign 'cell identity' to scNRA-Seq data.
 
+Shortcut to [wash/chop/steam/butter pipeline](#wcsb)
 
+#### New clustering pipeline
 
+#### Setup
+```R
+library(devtools)
+install_github("pcahan1/singleCellNet", ref="master")
+library(cluster)
+library(pcaMethods)
+library(rpca)
+library(data.tree)
+library(Rtsne)
+library(ggplot2)
+library(pheatmap)
+library(dbscan)
+library(RColorBrewer)
+library(WGCNA)
+library(mclust)
+library(randomForest)
+library(igraph)
+```
 
+#### Load data
+```R
+expDat<-utils_loadObject("expWashed_Jun_07_2017.rda")
+stDat<-utils_loadObject("stWashed_Jun_07_2017.rda")
+```
 
+#### Run GPA pipeline to fund clusters
+```R
+system.time(xTree2<-gpa_recurse(expDat, zThresh=1.5, maxLevel=4, nPCs=2, SilhDrop=0.1, methods=c("cutree", "kmeans", "mclust")))
+   user  system elapsed 
+524.059  24.049 548.333 
+```
+
+#### Print the clusters and their top genes
+```R
+print(xTree2$groupTree, "cells", "silh", "topGenes")
+           levelName cells      silh                topGenes
+1  L1_G1              5496 0.0000000                        
+2   ¦--L2_G1          3546 0.6915036        LTB, RPL3, RPL29
+3   ¦   ¦--L3_G1       974 0.7968496  CD79A, CD79B, HLA-DRB1
+4   ¦   ¦--L3_G2       813 0.8226070      SOX4, PRSS57, AIF1
+5   ¦   °--L3_G3      1759 0.8413364        CD3E, CD3D, IL32
+6   ¦--L2_G2           920 0.7741284     S100A9, S100A8, LYZ
+7   °--L2_G3          1030 0.7389446        GNLY, GZMB, NKG7
+8       ¦--L3_G4       939 0.8112976    PRF1, IFITM2, MT-CO2
+9       °--L3_G5        91 0.6297101        CD3D, CD8B, CD3E
+10          ¦--L4_G1    90 0.9885073     RPL15, RPL36, RPL29
+11          °--L4_G2     1 0.0000000 TMEM39B, ZMYM6, TMEM206
+```
+
+#### Plot the cell-cell correlation matrix
+```R
+corplot_sub(xTree2, expDat, min=1, prop=.15)
+```
+
+![hm_cc_corr](md_img/hm_cc_corr_101217.jpg =100x100)
+
+#### Plot the genes distinguishing the top-level clusters
+```R
+hm_gpa(expDat, xTree2$results[["L1_G1"]], maxPerGrp=300, topx=15, toScale=T)
+```
+
+![hm_level1](md_img/hm_level1_101217.jpg =80x100)
+
+#### Plot the genes distinguishing the L2_G1 clusters
+```R
+hm_gpa(expDat, xTree2$results[["L2_G1"]], maxPerGrp=300, topx=15, toScale=T)
+```
+
+![hm_l2g1](md_img/hm_l2g1_101217.jpg =80x100)
+
+#### Plot the genes distinguishing the L2_G3 clusters
+```R
+hm_gpa(expDat, xTree2$results[["L2_G3"]], maxPerGrp=300, topx=15, toScale=T)
+```
+
+![hm_l2g3](md_img/hm_l2g3_101217.jpg =80x100)
+
+#### <a name="wcsb">wash/chop/steam/butter pipeline</a>
 
 #### Processing pipeline
 

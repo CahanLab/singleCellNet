@@ -19,8 +19,32 @@ GP<-function(
   	cat("PCA...\n")
   	pcaRes<-vg_pca(expDat, geneStats, zThresh=zThresh, meanType=meanType, method=pcaMethod, max.iter=max.iter)
   	pcaRes$pcaRes$x<-pcaRes$pcaRes$x[,1:nPCs]
-  	list(geneStats=geneStats, pcaRes=pcaRes)
+
+    xdist<-dist(pcaRes$pcaRes$x)
+  	list(geneStats=geneStats, pcaRes=pcaRes, xdist=xdist)
  }
+
+
+# 
+A_method<-function(
+   gpRes,
+   kvals=2:5,
+   mName)
+{
+  if(mName=="kmeans"){
+    ans<-A_kmeans(gpRes, kvals=kvals)
+  }
+  else{
+    if(mName=="cutree"){
+      ans<-A_cutree(gpRes, kvals=kvals)
+    }
+    else{
+        ans<-A_mclust(gpRes, kvals=kvals)
+      }
+  }
+  ans
+}
+
 
 
 # return a standard A_result (method=, kvals=, results=)
@@ -42,11 +66,12 @@ A_kmeans<-function(
 
 
 A_cutree<-function(
-	aDist,
+	gpRes,
 	kvals=2:5,
   linkage="ward.D"
+#  linkage="average"
 ){
-	atree<-hclust(aDist, linkage)
+	atree<-hclust(gpRes$xdist, linkage)
 	ans<-list()
 	for(kval in kvals){
 		tmpRes<-cutree(atree, k=kval)
@@ -103,43 +128,52 @@ A_silhouette<-function(
 
 A_bundle<-function(
 	gpRes,
-	kvals=2:5
+	kvals=2:5,
+  methods=c("mclust", "kmeans", "cutree")
 ){
 
-	methods<-c("mclust", "kmeans", "cutree")
-#  methods<-c("kmeans", "cutree")
-	xdist<-dist(gpRes$pcaRes$pcaRes$x)
 
-	cat("Mclust\n")
-	mres <-A_mclust(gpRes, kvals=kvals)
-	cat("kmeans\n")
-	kres <-A_kmeans(gpRes, kvals=kvals)
-	cat("cutree\n")
-	ctres<-A_cutree(xdist, kvals=kvals)
+  aRes_list<-list()
+  silh_list<-list()
+  maxes<-rep(0, length(methods))
+  names(maxes)<-methods
+  for(mname in methods){
+    cat(mname,"\n")
+    aRes_list[[mname]] <- A_method(gpRes, kvals, mname)
+    silh_list[[mname]]<-A_silhouette(aRes_list[[mname]], gpRes$xdist)
+    maxes[mname]<-max(silh_list[[mname]]$overall)
+  }
 
 
-	mcsilhs<-A_silhouette(mres, xdist)
-	ksilhs <-A_silhouette(kres, xdist)
-	ctsilhs<-A_silhouette(ctres, xdist)
 
-	mcmax<-max(mcsilhs$overall)
-	kmax <-max(ksilhs$overall)
-	ctmax<-max(ctsilhs$overall)
+  if(FALSE){
+  	cat("Mclust\n")
+  	mres <-A_mclust(gpRes, kvals=kvals)
+  	cat("kmeans\n")
+  	kres <-A_kmeans(gpRes, kvals=kvals)
+  	cat("cutree\n")
+  	ctres<-A_cutree(xdist, kvals=kvals)
 
-  cat("MClust max: ", mcmax,"\n")
-  cat("kmeans max: ", kmax,"\n")
-  cat("cutree max: ", ctmax,"\n")
+  	mcmax<-max(mcsilhs$overall)
+  	kmax <-max(ksilhs$overall)
+  	ctmax<-max(ctsilhs$overall)
 
-	xi<-which.max(c(mcmax, kmax, ctmax))
-	sil.winner<-list(mcsilhs, ksilhs, ctsilhs)[[xi]]
+    cat("MClust max: ", mcmax,"\n")
+    cat("kmeans max: ", kmax,"\n")
+    cat("cutree max: ", ctmax,"\n")
+  }
 
-	xi<-which.max(c( mcmax,kmax, ctmax))
-	sil.winner<-list(mcsilhs,ksilhs, ctsilhs)[[xi]]
+	xi<-which.max(maxes)
+	method.winner<-methods[xi]
+
+
+	sil.winner<-silh_list[[xi]]
 	k.winner<-which.max(sil.winner$overall)
+  cat("Winner:: ",k.winner," ",method.winner,"\n")
 
 	method.winner<-methods[xi]
-	result.winner<-list(mres, kres, ctres)[[xi]]$results[[k.winner]]
-##	result.winner<-list(kres, ctres)[[xi]]$results[[k.winner]]
+	result.winner<-aRes_list[[xi]]$results[[k.winner]]
+
 	list(method=method.winner, result=result.winner, k=k.winner, silh=list(overall=sil.winner$overall[k.winner], sil.clusters=sil.winner$cluster.sils[[k.winner]]))
 }
 
@@ -186,10 +220,11 @@ gpa<-function(expDat,
  zThresh=2,
  meanType="overall_mean",
  pcaMethod="rpca",
- max.iter=30){
+ max.iter=30,
+ methods=c("mclust", "kmeans", "cutree")){
 
   gpRes<-GP(expDat, nPCs=nPCs, dThresh=dThresh, zThresh=zThresh, meanType=meanType,  pcaMethod=pcaMethod, max.iter=max.iter)
-	bundleRes<-A_bundle(gpRes, kvals=kvals)
+	bundleRes<-A_bundle(gpRes, kvals=kvals, methods=methods)
 	diffExp<-A_geneEnr(expDat[gpRes$pcaRes$varGenes,], gpRes, bundleRes, minSet=FALSE)
   list(gpRes=gpRes, bundleRes=bundleRes, diffExp=diffExp)
 
@@ -224,7 +259,8 @@ gpa_recurse<-function(
   maxLevel=4,
   max.iter=30,
   SilhDrop=0.25,
-  minClusterSize=42){
+  minClusterSize=42,
+  methods=c("mclust", "cutree", "kmeans")){
   
 
   topNodeName<-"L1_G1"
@@ -251,7 +287,12 @@ gpa_recurse<-function(
 
   grp_list[[1]]<-grps
 
+  gene_list<-list()
+
   count_level <- 2
+
+  orderedGrps<-vector()
+
   while( (count_level <= maxLevel) && any(as.logical(notDone))){
     cat("Level: ",count_level,"\n")
 
@@ -274,7 +315,8 @@ gpa_recurse<-function(
         dThresh=dThresh,
         zThresh=zThresh,
         meanType=meanType,
-        max.iter=max.iter)
+        max.iter=max.iter,
+        methods=methods)
 
 
       # UPDATE notDone to done if 
@@ -303,9 +345,12 @@ gpa_recurse<-function(
 
           # create new node and add to tree ...
           # ... add data.tree code here ...
-          newNode<-makeNode(newName, length(xi), silh=overall_silhs[[newName]], topGenes=getTopGenes(tmpAns$diffExp[[oldName]], 3))
+          xy_genes<-getTopGenes(tmpAns$diffExp[[oldName]],3)
+          ###newNode<-makeNode(newName, length(xi), silh=overall_silhs[[newName]], topGenes=getTopGenes(tmpAns$diffExp[[oldName]], 3))
+          newNode<-makeNode(newName, length(xi), silh=overall_silhs[[newName]], topGenes=xy_genes)
           newNode<-currNode$AddChildNode(newNode)
           listOfNodes[[newName]]<-newNode
+          gene_list[[newName]]<-xy_genes
         } 
         names(tmpAns$diffExp)<-nnames
         tmpAns$bundleRes$result<-tmpGrps
@@ -326,7 +371,7 @@ gpa_recurse<-function(
     grp_list[[count_level]]<-grps
     count_level<-count_level + 1
   }
-  list(results=ansList, groups=grps, grp_list=grp_list, groupTree=myTree)
+  list(results=ansList, groups=grps, grp_list=grp_list, groupTree=myTree, geneList=gene_list)
 }
 
 
@@ -547,10 +592,11 @@ hm_gpa<-function(
 	topx=10,
 	maxPerGrp=100,
 	toScale=FALSE,
-	limits=c(0,10))
+	limits=c(0,10),
+  fontsize_row=5)
 {
 	
-	hm_diff(expDat, gpaRes$diffExp, gpaRes$bundleRes, topx=topx, maxPerGrp=maxPerGrp, toScale=toScale, limits=limits)
+	hm_diff(expDat, gpaRes$diffExp, gpaRes$bundleRes, topx=topx, maxPerGrp=maxPerGrp, toScale=toScale, limits=limits, fontsize_row=fontsize_row)
 }
 
 

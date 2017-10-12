@@ -1,5 +1,109 @@
+#'
+reorderCells<-function
+(grpList){
+  curr_grps<-grpList[[1]]
+  curr_cells<-names(curr_grps)
+
+  for(i in 2:length(grpList)){
+    prior_grps<-curr_grps
+    prior_cells<-curr_cells
+
+    xList<-grpList[[i]]
+    prior_names<-sort(unique(prior_grps))
+    for(j in seq(length(prior_names))){
+      pname<-prior_names[j]
+      xi<-which(prior_grps==pname)
+      tmpCells<-prior_cells[xi]
+      tmpRes<-sort(xList[tmpCells])
+
+      curr_cells[xi]<-names(tmpRes)
+      curr_grps[xi] <-tmpRes
+    }
+  }
+  names(curr_grps)<-curr_cells
+  curr_grps
+}
 
 
+
+
+
+#' @export
+corplot_sub<-function
+(gpaRes,
+ expDat,
+ prop=0.1,
+ minCount=20){
+
+  orderedCells<-reorderCells(gpaRes$grp_list)
+  ssamp<-subsample_min(orderedCells, prop=prop, minCount=minCount)
+  ##ssamp<-subsample_min(gpaRes$groups, prop=prop, minCount=minCount)
+###  ssamp<-subsample_min(gpaRes$grp_list[[2]], prop=prop, minCount=minCount)
+
+
+
+  genes<-getVarFromList(gpaRes)
+  xcor<-cor(expDat[genes,names(ssamp)])
+  llevels<-length(gpaRes$grp_list)
+
+  xx<-gpaRes$grp_list[[2]][names(ssamp)]
+  xx<-data.frame(level_1=as.factor(xx))
+  cnames<-c("level_1")
+
+  if(llevels>2){
+    for(i in 3:llevels){
+      cnames<-append(cnames, paste0("level_", i-1))
+      danss<-gpaRes$grp_list[[i]][names(ssamp)]
+      xx<-cbind(xx, as.factor(danss))
+    }
+    colnames(xx)<-cnames
+  }
+ 
+
+
+  pheatmap(xcor,
+    cluster_rows = FALSE, 
+    cluster_cols = FALSE,  
+    show_colnames = FALSE,
+    show_rownames=FALSE,
+    annotation_names_row = FALSE, 
+    annotation_col = xx)
+
+
+}
+
+getVarFromList<-function(
+  gpaRes
+  ){
+    tmpAns<-vector()
+    for(i in seq(length(gpaRes$results))){
+      tmpAns<-append(tmpAns, gpaRes$results[[i]]$gpRes$pcaRes$varGenes)
+    }
+    sort(unique(tmpAns))
+  }
+
+
+subsample_min<-function
+(namedVect,
+  prop=0.10,
+  minCount=20){
+  groups<-unique(namedVect)
+  grpCounts<-table(namedVect)
+  newVect<-vector()
+  for(grp in groups){
+    cat(grp, ": ", ceiling(prop*grpCounts[grp]),"\n")
+    numToSamp<-max(minCount, ceiling(prop*grpCounts[grp]))
+    xi<-which(namedVect==grp)
+    tmpVect<-sample(namedVect[xi], numToSamp)
+    newVect<-append(newVect, tmpVect)
+  }
+  newVect
+}
+
+
+
+
+#' @export
 dotplot_pipesteamed<-function
 (steamed, # result of running a pipe_steam like pipe_dbscan
  chopMethod="tsne",# tsne or PCA
