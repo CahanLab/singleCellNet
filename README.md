@@ -67,28 +67,28 @@ print(xTree2$groupTree, "cells", "silh", "topGenes")
 corplot_sub(xTree2, expDat, min=1, prop=.15)
 ```
 
-![](md_img/hm_cc_corr_101217.jpg =100x100)
+<img src="md_img/hm_cc_corr_101217.jpg">
 
 #### Plot the genes distinguishing the top-level clusters
 ```R
 hm_gpa(expDat, xTree2$results[["L1_G1"]], maxPerGrp=300, topx=15, toScale=T)
 ```
 
-![](md_img/hm_level1_101217.jpg =80x100)
+<img src="md_img/hm_level1_101217.jpg">
 
 #### Plot the genes distinguishing the L2_G1 clusters
 ```R
 hm_gpa(expDat, xTree2$results[["L2_G1"]], maxPerGrp=300, topx=15, toScale=T)
 ```
 
-![](md_img/hm_l2g1_101217.jpg =80x100)
+<img src="md_img/hm_l2g1_101217.jpg">
 
 #### Plot the genes distinguishing the L2_G3 clusters
 ```R
 hm_gpa(expDat, xTree2$results[["L2_G3"]], maxPerGrp=300, topx=15, toScale=T)
 ```
 
-![](md_img/hm_l2g3_101217.jpg =80x100)
+<img src="md_img/hm_l2g3_101217.jpg">
 
 #### <a name="wcsb">wash/chop/steam/butter pipeline</a>
 
