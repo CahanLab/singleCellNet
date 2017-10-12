@@ -7,6 +7,12 @@ Shortcut to [wash/chop/steam/butter pipeline](#wcsb)
 
 #### New clustering pipeline
 
+Sample data:
+
+[Expression data](https://s3.amazonaws.com/cellnet-rnaseq/ref/examples/expWashed_Jun_07_2017.rda)
+[Meta-data](https://s3.amazonaws.com/cellnet-rnaseq/ref/examples/stWashed_Jun_07_2017.rda)
+
+
 #### Setup
 ```R
 library(devtools)
@@ -61,28 +67,28 @@ print(xTree2$groupTree, "cells", "silh", "topGenes")
 corplot_sub(xTree2, expDat, min=1, prop=.15)
 ```
 
-![hm_cc_corr](md_img/hm_cc_corr_101217.jpg =100x100)
+![](md_img/hm_cc_corr_101217.jpg =100x100)
 
 #### Plot the genes distinguishing the top-level clusters
 ```R
 hm_gpa(expDat, xTree2$results[["L1_G1"]], maxPerGrp=300, topx=15, toScale=T)
 ```
 
-![hm_level1](md_img/hm_level1_101217.jpg =80x100)
+![](md_img/hm_level1_101217.jpg =80x100)
 
 #### Plot the genes distinguishing the L2_G1 clusters
 ```R
 hm_gpa(expDat, xTree2$results[["L2_G1"]], maxPerGrp=300, topx=15, toScale=T)
 ```
 
-![hm_l2g1](md_img/hm_l2g1_101217.jpg =80x100)
+![](md_img/hm_l2g1_101217.jpg =80x100)
 
 #### Plot the genes distinguishing the L2_G3 clusters
 ```R
 hm_gpa(expDat, xTree2$results[["L2_G3"]], maxPerGrp=300, topx=15, toScale=T)
 ```
 
-![hm_l2g3](md_img/hm_l2g3_101217.jpg =80x100)
+![](md_img/hm_l2g3_101217.jpg =80x100)
 
 #### <a name="wcsb">wash/chop/steam/butter pipeline</a>
 
