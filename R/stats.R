@@ -321,7 +321,7 @@ par_findSpecGenes<-function#
 }
 
 
-
+#' @export
 sc_sampR_to_pattern<-function#
 (sampR){
   d_ids<-unique(as.vector(sampR));
@@ -337,7 +337,7 @@ sc_sampR_to_pattern<-function#
 }
 
 
-
+#' @export
 sc_testPattern<-function(pattern, expDat){
   pval<-vector();
   cval<-vector();
@@ -354,6 +354,7 @@ sc_testPattern<-function(pattern, expDat){
   data.frame(row.names=geneids, pval=pval, cval=cval,holm=holm);
 }
 
+#' @export
 getTopGenes<-function
 (xdat,
   topN=3)
