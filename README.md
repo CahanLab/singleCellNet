@@ -30,6 +30,11 @@ library(WGCNA)
 library(mclust)
 library(randomForest)
 library(igraph)
+## For PGA
+library(cluster)
+library(pcaMethods)
+library(rpca)
+library(data.tree)
 ```
 
 #### Load data
