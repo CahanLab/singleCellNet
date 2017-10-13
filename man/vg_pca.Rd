@@ -4,7 +4,8 @@
 \alias{vg_pca}
 \title{find var genes and pca}
 \usage{
-vg_pca(expDat, geneStats, zThresh = 2, meanType = "overall_mean")
+vg_pca(expDat, geneStats, zThresh = 2, meanType = "overall_mean",
+  method = "prcomp", max.iter = 10)
 }
 \arguments{
 \item{expDat}{expDat}

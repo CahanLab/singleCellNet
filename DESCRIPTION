@@ -19,4 +19,4 @@ License: PRIVATE
 Encoding: UTF-8
 LazyData: true
 URL: http://pcahan1.github.io/singleCellNet
-RoxygenNote: 6.0.1
+RoxygenNote: 6.0.1.9000

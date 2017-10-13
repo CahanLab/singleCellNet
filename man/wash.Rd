@@ -2,7 +2,7 @@
 % Please edit documentation in R/wash.R
 \name{wash}
 \alias{wash}
-\title{subsets on ok genes, applies selected data transform}
+\title{subsets on ok genes, applies selected data transform, and recalculates gene stats}
 \usage{
 wash(preWashed, transMethod = "prop", threshold = 1, removeBad = TRUE)
 }
