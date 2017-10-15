@@ -69,10 +69,10 @@ print(xTree2$groupTree, "cells", "silh", "topGenes")
 
 #### Plot the cell-cell correlation matrix
 ```R
-corplot_sub(xTree2, expDat, min=1, prop=.15)
+corplot_sub(xTree2, expDat, min=1, prop=.25, pSide=TRUE)
 ```
 
-<img src="md_img/hm_cc_corr_101217.jpg">
+<img src="md_img/hm_cc_corr_101517.jpg">
 
 #### Plot the genes distinguishing the top-level clusters
 ```R

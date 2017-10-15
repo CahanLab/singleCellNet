@@ -33,6 +33,7 @@ corplot_sub<-function
 (gpaRes,
  expDat,
  prop=0.1,
+ pSide=FALSE,
  minCount=20){
 
   orderedCells<-reorderCells(gpaRes$grp_list)
@@ -60,17 +61,42 @@ corplot_sub<-function
   }
  
 
+  if(pSide){
+    topGenes<-gpaRes$groupTree$Get("topGenes")
 
-  pheatmap(xcor,
-    cluster_rows = FALSE, 
-    cluster_cols = FALSE,  
-    show_colnames = FALSE,
-    show_rownames=FALSE,
-    annotation_names_row = FALSE, 
-    annotation_col = xx)
+    xy<-data.frame(levelX=xx[,ncol(xx)], genes=rep("", nrow(xx)))
+    rLabels<-rep("", nrow(xy))
+    grpNames<-unique(xy$levelX)
+    for(grpName in grpNames){
+      xi<-which(xy$levelX==grpName)
+      coord<-ceiling( (max(xi)-min(xi)) / 2 ) + min(xi)
+      cat(grpName,"  xi:",xi[1], "length: ", length(xi), "coord: ", coord,"\n")
+      rLabels[coord]<-topGenes[grpName]
+    } 
 
-
+    rownames(xy)<-rownames(xx)
+    pheatmap(xcor,
+      cluster_rows = FALSE, 
+      cluster_cols = FALSE,  
+      show_colnames = FALSE,
+      show_rownames=TRUE,
+      annotation_names_row = FALSE, 
+      annotation_col = xx,
+#      annotation_row = xy,
+      labels_row=rLabels,
+      fontsize_row=5)
+  }
+  else{
+    pheatmap(xcor,
+      cluster_rows = FALSE, 
+      cluster_cols = FALSE,  
+      show_colnames = FALSE,
+      show_rownames=FALSE,
+      annotation_names_row = FALSE, 
+      annotation_col = xx)
+    }
 }
+
 
 getVarFromList<-function(
   gpaRes

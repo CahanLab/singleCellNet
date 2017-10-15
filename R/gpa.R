@@ -260,7 +260,8 @@ gpa_recurse<-function(
   max.iter=30,
   SilhDrop=0.25,
   minClusterSize=42,
-  methods=c("mclust", "cutree", "kmeans")){
+  methods=c("mclust", "cutree", "kmeans"),
+  numGenes=5){
   
 
   topNodeName<-"L1_G1"
@@ -345,7 +346,7 @@ gpa_recurse<-function(
 
           # create new node and add to tree ...
           # ... add data.tree code here ...
-          xy_genes<-getTopGenes(tmpAns$diffExp[[oldName]],3)
+          xy_genes<-getTopGenes(tmpAns$diffExp[[oldName]],numGenes)
           ###newNode<-makeNode(newName, length(xi), silh=overall_silhs[[newName]], topGenes=getTopGenes(tmpAns$diffExp[[oldName]], 3))
           newNode<-makeNode(newName, length(xi), silh=overall_silhs[[newName]], topGenes=xy_genes)
           newNode<-currNode$AddChildNode(newNode)
