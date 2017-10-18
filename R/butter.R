@@ -142,7 +142,17 @@ sc_classify<-function
 ){
   ctts<-names(classList);
   ans<-matrix(0, nrow=length(ctts), ncol=ncol(expDat));
-  rownames(ans)<-ctts;
+  rownames(ans)<-ctts
+
+  ### 10-18-17. if the genes aren't in the query data, assume that they are 0
+  xGenes<-unique(unlist(cttComms))
+  missingGenes<-setdiff(xgenes, rownames(expDat))
+  newDat<-matrix(0, nrow=length(missingGenes), ncol=ncol(expDat))
+  rownames(newDat)<-missingGenes
+  colnames(newDat)<-colnames(expDat)
+  expDat<-rbind(expDat, newDat)
+
+
   for(ctt in ctts){
     #cat(ctt,"\n")
     ##    xgenes<-cttComms[[ctt]][[1]];

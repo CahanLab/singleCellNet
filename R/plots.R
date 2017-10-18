@@ -34,7 +34,8 @@ corplot_sub<-function
  expDat,
  prop=0.1,
  pSide=FALSE,
- minCount=20){
+ minCount=20,
+ llevel=1){
 
   orderedCells<-reorderCells(gpaRes$grp_list)
   ssamp<-subsample_min(orderedCells, prop=prop, minCount=minCount)
@@ -43,8 +44,15 @@ corplot_sub<-function
 
 
 
-  genes<-getVarFromList(gpaRes)
-  xcor<-cor(expDat[genes,names(ssamp)])
+  genes<-getVarFromList(gpaRes, llevel=llevel)
+  
+###
+###  xcor<-cor(expDat[genes,names(ssamp)])
+###
+  xcor<- dist(t(expDat[genes,names(ssamp)]))
+  maxX<-max(xcor)
+  xcor<-as.matrix((maxX - xcor)/maxX)
+
   llevels<-length(gpaRes$grp_list)
 
   xx<-gpaRes$grp_list[[2]][names(ssamp)]
@@ -60,7 +68,6 @@ corplot_sub<-function
     colnames(xx)<-cnames
   }
  
-
   if(pSide){
     topGenes<-gpaRes$groupTree$Get("topGenes")
 
@@ -95,16 +102,23 @@ corplot_sub<-function
       annotation_names_row = FALSE, 
       annotation_col = xx)
     }
+
 }
 
 
 getVarFromList<-function(
-  gpaRes
+  gpaRes,
+  llevel=1
   ){
-    tmpAns<-vector()
-    for(i in seq(length(gpaRes$results))){
-      tmpAns<-append(tmpAns, gpaRes$results[[i]]$gpRes$pcaRes$varGenes)
-    }
+   if(llevel==1){
+    tmpAns<-gpaRes$results[[1]]$gpRes$pcaRes$varGenes
+   }
+   else{
+      tmpAns<-vector()
+      for(i in seq(length(gpaRes$results))){
+       tmpAns<-append(tmpAns, gpaRes$results[[i]]$gpRes$pcaRes$varGenes)
+      }
+    } 
     sort(unique(tmpAns))
   }
 
