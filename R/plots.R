@@ -37,7 +37,9 @@ corplot_sub<-function
  minCount=20,
  llevel=1){
 
+  ###orderedCells<-reorderCells(gpaRes$grp_list)
   orderedCells<-reorderCells(gpaRes$grp_list)
+
   ssamp<-subsample_min(orderedCells, prop=prop, minCount=minCount)
   ##ssamp<-subsample_min(gpaRes$groups, prop=prop, minCount=minCount)
 ###  ssamp<-subsample_min(gpaRes$grp_list[[2]], prop=prop, minCount=minCount)
@@ -49,7 +51,10 @@ corplot_sub<-function
 ###
 ###  xcor<-cor(expDat[genes,names(ssamp)])
 ###
-  xcor<- dist(t(expDat[genes,names(ssamp)]))
+
+###  xcor<- dist(t(expDat[genes,names(ssamp)]))
+
+  xcor<-as.matrix(gpaRes$results[["L1_G1"]]$gpRes$xdist)[names(ssamp), names(ssamp)]
   maxX<-max(xcor)
   xcor<-as.matrix((maxX - xcor)/maxX)
 
@@ -69,12 +74,19 @@ corplot_sub<-function
   }
  
   if(pSide){
-    topGenes<-gpaRes$groupTree$Get("topGenes")
+    #topGenes<-gpaRes$groupTree$Get("topGenes")
 
-    xy<-data.frame(levelX=xx[,ncol(xx)], genes=rep("", nrow(xx)))
+
+    topGenes<-getTopGenesList(gpaRes$results[["L1_G1"]],7)
+
+
+    ### xy<-data.frame(levelX=xx[,ncol(xx)], genes=rep("", nrow(xx)))
+    xy<-data.frame(levelX=xx[,1], genes=rep("", nrow(xx)))
+
     rLabels<-rep("", nrow(xy))
     grpNames<-unique(xy$levelX)
     for(grpName in grpNames){
+      cat("***",grpName,"***\n")
       xi<-which(xy$levelX==grpName)
       coord<-ceiling( (max(xi)-min(xi)) / 2 ) + min(xi)
       cat(grpName,"  xi:",xi[1], "length: ", length(xi), "coord: ", coord,"\n")
@@ -103,6 +115,8 @@ corplot_sub<-function
       annotation_col = xx)
     }
 
+    rLabels
+
 }
 
 
@@ -110,6 +124,14 @@ getVarFromList<-function(
   gpaRes,
   llevel=1
   ){
+
+   gresNames<-names(gpaRes$results)
+   charMatch<-paste0("L",llevel,"_")
+
+   gresNames<-gresNames[grep(charMatch, gresNames)]
+
+
+if(FALSE){
    if(llevel==1){
     tmpAns<-gpaRes$results[[1]]$gpRes$pcaRes$varGenes
    }
@@ -119,8 +141,13 @@ getVarFromList<-function(
        tmpAns<-append(tmpAns, gpaRes$results[[i]]$gpRes$pcaRes$varGenes)
       }
     } 
-    sort(unique(tmpAns))
   }
+  tmpAns<-vector()
+  for(gName in gresNames){
+    tmpAns<-append(tmpAns, gpaRes$results[[gName]]$gpRes$pcaRes$varGenes)
+  }
+  sort(unique(tmpAns))
+}
 
 
 subsample_min<-function
@@ -448,6 +475,37 @@ if(FALSE){
         annotation_col = xx,
         annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
 }
+
+
+#' plot gpa res
+#'
+#' plot gpa res
+#'
+#' @param gpaRes,
+#' @param legend whether to display it
+#'
+#' @return ggplot
+#' 
+#' @export
+#'
+plotGPALevel<-function(gpaRes, llevel="L1_G1",legend=FALSE)
+{
+
+  xdat<-gpaRes$results[[llevel]]$gpRes$pcaRes$pcaRes$x
+  grps<-gpaRes$results[[llevel]]$bundleRes$result
+  xdat<-xdat[names(grps),]
+  aDat<-data.frame(pc1=xdat[,1], pc2=xdat[,2], group=grps) 
+ 
+  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
+  if(legend){
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
+  }
+  else{
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
+  }
+  ans
+}
+
 
 #' plot gpa res
 #'

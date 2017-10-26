@@ -366,6 +366,24 @@ getTopGenes<-function
   rownames(xdat[order(xdat$cval, decreasing=TRUE),][1:topN,])
 }
 
+#' @export
+getTopGenesList<-function
+(gpaResSortOf,
+  topN=3)
+# cval=.35,
+# holm=1e-2)
+{
+
+  gnames<-names(gpaResSortOf$diffExp)
+  tmpAns<-vector()
+  for(gname in gnames){
+    tmpAns<-append(tmpAns, paste( getTopGenes(gpaResSortOf$diffExp[[gname]], topN), collapse=", "))
+  }
+  names(tmpAns)<-gnames
+  tmpAns
+}
+
+
 minTab<-function #subsample the table
 (sampTab, dLevel){
   myMin<-min(table(sampTab[,dLevel]))
