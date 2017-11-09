@@ -177,6 +177,18 @@ A_bundle<-function(
 	list(method=method.winner, result=result.winner, k=k.winner, silh=list(overall=sil.winner$overall[k.winner], sil.clusters=sil.winner$cluster.sils[[k.winner]]))
 }
 
+gnrAll<-function(
+  expDat,
+  cellLabels){
+
+  myPatternG<-sc_sampR_to_pattern(as.character(cellLabels))
+  specificSets<-lapply(myPatternG, sc_testPattern, expDat=expDat)
+  cat("Done testing\n")
+  specificSets
+}
+
+
+
 A_geneEnr<-function(
 	expDat,
 	gpaRes, 
@@ -200,7 +212,8 @@ if(FALSE){
   expDat<-expDat[, names(bundleRes$result)]
 
   cat("Making patterns\n")
-  myPatternG<-sc_sampR_to_pattern(as.vector(bundleRes$result))
+  ####myPatternG<-sc_sampR_to_pattern(as.vector(bundleRes$result))
+  myPatternG<-sc_sampR_to_pattern(as.character(bundleRes$result))
 
   
   cat("Testing patterns\n")
@@ -226,6 +239,7 @@ gpa<-function(expDat,
   gpRes<-GP(expDat, nPCs=nPCs, dThresh=dThresh, zThresh=zThresh, meanType=meanType,  pcaMethod=pcaMethod, max.iter=max.iter)
 	bundleRes<-A_bundle(gpRes, kvals=kvals, methods=methods)
 	diffExp<-A_geneEnr(expDat[gpRes$pcaRes$varGenes,], gpRes, bundleRes, minSet=FALSE)
+  #names(diffExp)<-unique(bundleRes$result)
   list(gpRes=gpRes, bundleRes=bundleRes, diffExp=diffExp)
 
 }
@@ -333,12 +347,14 @@ gpa_recurse<-function(
       # update group names
       # update silhouette
         tmpGrps<-tmpAns$bundleRes$result
-        oldNames<-unique(tmpGrps)
+        ####  ##oldNames<-unique(tmpGrps)
+        oldNames<-names(tmpAns$diffExp)
+        #tmpAns$diffExp)<-oldNames
         nnames<-vector()
         for(oldName in oldNames){
           newName<-paste0("L",count_level,"_G",group_count)
           nnames<-append(nnames, newName)
-          cat(newName,"\n")
+          cat(oldName," :: ",newName,"\n")
           group_count<-group_count+1
           xi<-names(which(tmpGrps==oldName))
           tmpGrps[xi]<-newName
