@@ -75,7 +75,7 @@ corplot_sub(xTree, expDat, min=20, prop=.10, pSide=TRUE)
 hm_gpa(expDat, xTree$results[["L1_G1"]], maxPerGrp=300, topx=15, toScale=T)
 ```
 
-<img src="md_img/hm_level1_101217.png">
+<img src="md_img/hm_level1_111017.png">
 
 #### Plot the genes distinguishing the L2_G1 clusters
 ```R
