@@ -45,55 +45,59 @@ stDat<-utils_loadObject("stWashed_Jun_07_2017.rda")
 
 #### Run GPA pipeline to fund clusters
 ```R
-system.time(xTree2<-gpa_recurse(expDat, zThresh=1.5, maxLevel=4, nPCs=2, SilhDrop=0.1, methods=c("cutree", "kmeans", "mclust")))
+system.time(xTree<-gpa_recurse(expDat, zThresh=2, maxLevel=3, nPCs=2, SilhDrop=0.1, methods=c("cutree", "kmeans")))
    user  system elapsed 
-524.059  24.049 548.333 
+116.063  12.070 128.227
 ```
 
 #### Print the clusters and their top genes
 ```R
-print(xTree2$groupTree, "cells", "silh", "topGenes")
-           levelName cells      silh                topGenes
-1  L1_G1              5496 0.0000000                        
-2   ¦--L2_G1          3546 0.6915036        LTB, RPL3, RPL29
-3   ¦   ¦--L3_G1       974 0.7968496  CD79A, CD79B, HLA-DRB1
-4   ¦   ¦--L3_G2       813 0.8226070      SOX4, PRSS57, AIF1
-5   ¦   °--L3_G3      1759 0.8413364        CD3E, CD3D, IL32
-6   ¦--L2_G2           920 0.7741284     S100A9, S100A8, LYZ
-7   °--L2_G3          1030 0.7389446        GNLY, GZMB, NKG7
-8       ¦--L3_G4       939 0.8112976    PRF1, IFITM2, MT-CO2
-9       °--L3_G5        91 0.6297101        CD3D, CD8B, CD3E
-10          ¦--L4_G1    90 0.9885073     RPL15, RPL36, RPL29
-11          °--L4_G2     1 0.0000000 TMEM39B, ZMYM6, TMEM206
+pprint(xTree$groupTree, "cells", "silh", "topGenes")
+      levelName cells      silh                                    topGenes
+1 L1_G1          5496 0.0000000                                            
+2  ¦--L2_G1      3626 0.6994262              LTB, RPL29, LDHB, EEF1B2, CD3D
+3  ¦   ¦--L3_G1   972 0.7746405   CD79A, CD79B, HLA-DRB1, HLA-DRA, HLA-DRB5
+4  ¦   ¦--L3_G2   812 0.8150246 AIF1, RP11-620J15.3, SPINK2, LST1, KIAA0125
+5  ¦   °--L3_G3  1842 0.8182872               CD3D, CD3E, IL32, B2M, GIMAP7
+6  ¦--L2_G2       921 0.7471813             S100A9, S100A8, LYZ, CST3, FCN1
+7  °--L2_G3       949 0.8061697               GNLY, GZMB, NKG7, GZMA, CLIC3
 ```
 
 #### Plot the cell-cell correlation matrix
 ```R
-corplot_sub(xTree2, expDat, min=1, prop=.25, pSide=TRUE)
+corplot_sub(xTree, expDat, min=20, prop=.10, pSide=TRUE)
 ```
 
-<img src="md_img/hm_cc_corr_101517.jpg">
+<img src="md_img/hm_cc_corr_111017.png">
 
 #### Plot the genes distinguishing the top-level clusters
 ```R
-hm_gpa(expDat, xTree2$results[["L1_G1"]], maxPerGrp=300, topx=15, toScale=T)
+hm_gpa(expDat, xTree$results[["L1_G1"]], maxPerGrp=300, topx=15, toScale=T)
 ```
 
-<img src="md_img/hm_level1_101217.jpg">
+<img src="md_img/hm_level1_101217.png">
 
 #### Plot the genes distinguishing the L2_G1 clusters
 ```R
 hm_gpa(expDat, xTree2$results[["L2_G1"]], maxPerGrp=300, topx=15, toScale=T)
 ```
 
-<img src="md_img/hm_l2g1_101217.jpg">
+<img src="md_img/hm_level2grp1_111017.png">
 
-#### Plot the genes distinguishing the L2_G3 clusters
+#### Plot Principle components of all cells
 ```R
-hm_gpa(expDat, xTree2$results[["L2_G3"]], maxPerGrp=300, topx=15, toScale=T)
+plotGPALevel(xTree, "L1_G1", legend=T)
 ```
 
-<img src="md_img/hm_l2g3_101217.jpg">
+<img src="md_img/pca_level1_111017.png">
+
+#### Plot Principle components of cells in L2_G1
+```R
+plotGPALevel(xTree, "L2_G1", legend=T)
+```
+
+<img src="md_img/pca_level2grp1_111017.png">
+
 
 #### <a name="wcsb">wash/chop/steam/butter pipeline</a>
 
