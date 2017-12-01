@@ -817,6 +817,52 @@ tsneMult<-function# facet tsne plot by gene
  
 }
 
+#' @export
+tsneMultsimp<-function# facet tsne plot by gene
+(tsneDat, # cols TSNE.1, TNSE.2
+  expDat,
+ genesToPlot, # genes to plot
+ colorPal="BuPu",
+ revCol=TRUE,
+ toScale=TRUE,
+ limits=c(-3,3)
+ ){
+
+  require(tidyr)
+  value<-expDat[genesToPlot,]
+
+  if(toScale){
+    value <- t(scale(t(value)))
+  }
+  value[value < limits[1]] <- limits[1]
+  value[value > limits[2]] <- limits[2]
+
+
+  tsne<-as.data.frame(tsneDat[,c("TSNE.1", "TSNE.2")])
+  tsne<-cbind(tsne, t(value))
+
+  tsneLong<-gather_(tsne, "gene", "expression", genesToPlot)
+
+  if(revCol){
+    ColorRamp <- rev(colorRampPalette(rev(brewer.pal(n = 7,name = colorPal)))(100))[10:100]
+  }
+  else{
+    ColorRamp <- colorRampPalette(rev(brewer.pal(n = 7,name = colorPal)))(100)
+  }
+  ggplot(tsneLong, aes(x=TSNE.1, y=TSNE.2, colour=expression) ) + 
+  geom_point(pch=19, alpha=2/4, size=.25) + 
+  theme_bw() + 
+  scale_colour_gradientn(colours=ColorRamp) +
+  facet_wrap( ~ gene)
+ 
+}
+
+
+
+  
+
+
+
 
 # generic red/blue heatmap
 #' @export

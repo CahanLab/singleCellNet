@@ -81,7 +81,7 @@ A_cutree<-function(
 	list(method="cutree", kvals=kvals, results=ans)
 }
 
-if(FALSE){A_mclust<-function(
+A_mclust<-function(
 	gpRes,
 	kvals=2:5){
 
@@ -92,8 +92,9 @@ if(FALSE){A_mclust<-function(
 	}
 	list(method="Mclust", kvals=kvals, results=ans)
 }	
-}
 
+
+if(FALSE){
 A_mclust<-function(
   gpRes,
   kvals=2:5){
@@ -103,7 +104,7 @@ A_mclust<-function(
   kval<-tmpRes$G
   ans[[kval]]<-tmpRes$classification
   list(method="Mclust", kvals=kval, results=ans)
-} 
+} }
 
 
 #return a list of kval-> {overall.silh=,__ , cluster.sils=__}
@@ -670,6 +671,65 @@ hm_diff<-function(
 
 	  xx<-data.frame(group=as.factor(bundleRes$result))
 	  rownames(xx)<-cells
+
+  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol,
+        show_colnames = FALSE, annotation_names_row = FALSE,
+##        annotation_col = annTab,
+        annotation_col = xx,
+        annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
+}
+
+hm_gpa_sel<-function(
+  expDat,
+  genes,
+  grps, ## vector of cellnames -> grp label
+  maxPerGrp=100,
+  topx=10, 
+  cRow=FALSE,
+  cCol=FALSE,
+  limits=c(0,10),
+  toScale=FALSE,
+  fontsize_row=3){
+
+  
+  allgenes<-rownames(expDat)
+  missingGenes<-setdiff(genes, allgenes)
+  if(length(missingGenes)>0){
+    cat("Missing genes: ", paste0(missingGenes, collapse=","), "\n")
+    genes<-intersect(genes, allgenes)
+  }
+
+  value<-expDat[genes,]
+  if(toScale){
+      value <- t(scale(t(value)))
+    }
+
+  value[value < limits[1]] <- limits[1]
+  value[value > limits[2]] <- limits[2]
+
+  grps<-grps[order(grps)]
+  cells<-names(grps)
+  groupNames<-sort(unique(grps))
+
+  cells2<-vector()
+  for(groupName in groupNames){
+    xi<-which(grps==groupName)
+    if(length(xi)>maxPerGrp){
+      tmpCells<-sample(cells[xi], maxPerGrp)
+    }
+    else{
+      tmpCells<-cells[xi]
+    }
+    cells2<-append(cells2, tmpCells)
+  }
+  value<-value[,cells2]
+
+  xcol <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(groupNames))
+    names(xcol) <- groupNames
+    anno_colors <- list(group = xcol)
+
+    xx<-data.frame(group=as.factor(grps))
+    rownames(xx)<-cells
 
   pheatmap(value, cluster_rows = cRow, cluster_cols = cCol,
         show_colnames = FALSE, annotation_names_row = FALSE,

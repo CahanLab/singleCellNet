@@ -232,7 +232,8 @@ binGenes<-function
   inc<-rrange/nbins
   borders<-seq(inc, max, by=inc)
   for(i in length(borders):1){
-    xnames<-rownames(geneStats[which(geneStats$overall_mean<=borders[i]),]);
+    #xnames<-rownames(geneStats[which(geneStats$overall_mean<=borders[i]),]);
+    xnames<-rownames(geneStats[which(geneStats[,meanType]<=borders[i]),]);
     binGroup[xnames]<-i;
   }
   cbind(geneStats, bin=binGroup);
@@ -269,7 +270,23 @@ findVarGenes<-function
     zscsM[ rownames(xx) ]<-tmpZ[,1];
   }
   zByMean<-names(which(zscsM>zThresh))
-  union(zByMean, zByAlpha)
+
+  # by mu
+  sg<-binGenes(geneStats, meanType="mu")
+  zscsM<-rep(0, nrow(sg));
+  names(zscsM)<-rownames(sg);
+  bbins<-unique(sg$bin);
+  for(bbin in bbins){
+    xx<-sg[sg$bin==bbin,];
+    ###tmpZ<-scale(xx$fano);
+    tmpZ<-scale(xx$cov);
+    zscsM[ rownames(xx) ]<-tmpZ[,1];
+  }
+  zByMu<-names(which(zscsM>zThresh))
+
+
+  union(zByMu,union(zByMean, zByAlpha))
+
 }
 
 
