@@ -296,7 +296,67 @@ dotplot_pipesteamed<-function
   ggplot(xres, aes(x=dim.1, y=dim.2, colour=groupX) ) + geom_point(pch=19, alpha=3/4, size=1) + theme_bw() + scale_colour_manual(values=ColorRamp) #+ facet_wrap( ~ k, nrow=3)
 }
 
+#' heatmap of the classification result
+#'
+#' Heatmap of the classification result.
+#' @param classMat classMat
+#' @param isBig is this a big heatmap? TRUE or FALSE
+#' @param cluster_cols cluster_cols
+#'
+#' @return nothing
+#'
+#' @examples
+#' cn_HmClass(cnRes, isBig=TRUE)
+#'
+#' @export
+sc_hmClass<-function(
+  classMat,
+  grps, ## vector of cellnames -> grp label 
+  isBig=FALSE,
+  maxPerGrp=100,
+  cRow=FALSE,
+  cCol=FALSE,
+  fontsize_row=4
+){
+ 
+  cools<-colorRampPalette(c("black", "limegreen", "yellow"))( 100 )
+  bcol<-'white';
+  if(isBig){
+    bcol<-NA;
+  }
 
+
+  grps<-grps[order(grps)]
+  cells<-names(grps)
+  groupNames<-sort(unique(grps))
+
+  cells2<-vector()
+  for(groupName in groupNames){
+    xi<-which(grps==groupName)
+    if(length(xi)>maxPerGrp){
+      tmpCells<-sample(cells[xi], maxPerGrp)
+    }
+    else{
+      tmpCells<-cells[xi]
+    }
+    cells2<-append(cells2, tmpCells)
+  }
+  classMat<-classMat[,cells2]
+
+  xcol <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(groupNames))
+  names(xcol) <- groupNames
+  anno_colors <- list(group = xcol)
+
+  xx<-data.frame(group=as.factor(grps))
+  rownames(xx)<-cells
+
+  pheatmap(classMat, col=cools, breaks=seq(from=0, to=1, length.out=100), cluster_rows = cRow, cluster_cols = cCol,
+        show_colnames = FALSE, annotation_names_row = FALSE,
+##        annotation_col = annTab,
+        annotation_col = xx,
+        annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
+
+}
 
 #' heatmap of the classification result
 #'
@@ -594,6 +654,35 @@ plotGPALevel<-function(gpaRes, llevel="L1_G1",legend=FALSE)
   grps<-gpaRes$results[[llevel]]$bundleRes$result
   xdat<-xdat[names(grps),]
   aDat<-data.frame(pc1=xdat[,1], pc2=xdat[,2], group=grps) 
+ 
+  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
+  if(legend){
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
+  }
+  else{
+    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
+  }
+  ans
+}
+
+#' plot gpa res
+#'
+#' plot gpa res
+#'
+#' @param gpaRes,
+#' @param legend whether to display it
+#'
+#' @return ggplot
+#' 
+#' @export
+#'
+plotGPApca<-function(xres, legend=FALSE)
+{
+
+  xdat<-xres$gpRes$pcaRes$pcaRes$x
+  grps<-xres$bundleRes$result
+  xdat<-xdat[names(grps),]
+  aDat<-data.frame(pc1=xdat[,1], pc2=xdat[,2], group=as.character(grps) )
  
   ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
   if(legend){

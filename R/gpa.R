@@ -1,9 +1,33 @@
 # Patrick Cahan (C) 2017
 # patrick.cahan@gmail.com
 
+
+
 # G: gene stats
 # P: PCA
 # A: assign cells to groups
+
+
+bestGmc<-function(vect, grange){
+  diffs<-diff(vect)
+  grange[which.max(diffs)+1]
+}
+
+bestPC<-function(
+  pcSDs,
+  threshold=0.05){
+
+  ans<-min(which( abs(diff(pcSDs))<threshold ))
+  if(ans==1){
+    ans<-2
+  }
+  ans
+  
+}
+
+
+
+
 
 GP<-function(
 	expDat,
@@ -12,12 +36,18 @@ GP<-function(
 	meanType="overall_mean", ### basis to bin genes for variable gene detection
 	pcaMethod="rpca", # rpca or prcomp
 	nPCs=2, # top nPCs pcs to consider
+  pcAuto=TRUE,
 	max.iter=20
 ){
 	cat("Calculating gene statistics...\n")
   	geneStats<-sc_statTab(expDat, dThresh=dThresh)
   	cat("PCA...\n")
   	pcaRes<-vg_pca(expDat, geneStats, zThresh=zThresh, meanType=meanType, method=pcaMethod, max.iter=max.iter)
+
+    if(pcAuto){ # only valid if pcaMethod="prcomp"
+      nPCs<-bestPC(pcaRes$pcaRes$sd)
+      cat("Auto PCs: ",nPCs,"\n")
+    }
   	pcaRes$pcaRes$x<-pcaRes$pcaRes$x[,1:nPCs]
 
     xdist<-dist(pcaRes$pcaRes$x)
@@ -50,14 +80,16 @@ A_method<-function(
 # return a standard A_result (method=, kvals=, results=)
 A_kmeans<-function(
 	gpRes,
-	kvals=2:5
+	kvals=2:5,
+  max.iter=50
 ){
 
 	ans<-list()
 	cellNames<-rownames(gpRes$pcaRes$pcaRes$x)
 	for(kval in kvals){
-		tmpRes<-kmeans(gpRes$pcaRes$pcaRes$x, kval)
-		x<-tmpRes$cluster
+		###tmpRes<-kmeans(gpRes$pcaRes$pcaRes$x, kval, iter.max=max.iter)
+    tmpRes<-pam(gpRes$pcaRes$pcaRes$x, kval, cluster.only=TRUE,pamonce=1)
+		x<-tmpRes
 		names(x)<-cellNames
 		ans[[kval]]<-x
 	}
@@ -81,11 +113,14 @@ A_cutree<-function(
 	list(method="cutree", kvals=kvals, results=ans)
 }
 
+
+# don't select, let A_bundle select based on silhouette
 A_mclust<-function(
 	gpRes,
 	kvals=2:5){
 
 	ans<-list()
+
 	for(kval in kvals){
 		tmpRes<-Mclust(gpRes$pcaRes$pcaRes$x, G=kval)
 		ans[[kval]]<-tmpRes$classification
@@ -94,6 +129,28 @@ A_mclust<-function(
 }	
 
 
+# Mclust select k based on BIC plateau
+if(FALSE){
+A_mclust<-function(
+  gpRes,
+  ngenes=0,
+  kvals=2:5
+){
+
+  if(ngenes==0){
+    ngenes<-nrow(gpRes$pcaRes$pcaRes$x)
+  }
+  ans<-list()
+  bics<-mclustBIC(gpRes$pcaRes$pcaRes$x[1:ngenes,], G=kvals)#, modelNames=c("VVV"))
+  myG<-bestGmc(bics[kvals-1],kvals) 
+  tmpRes<-Mclust(gpRes$pcaRes$pcaRes$x[1:ngenes,], G=myG)#, modelNames=c("VVV"))
+  ans[[myG]]<-tmpRes$classification
+  cat(myG,"\n")
+  list(method="Mclust", kvals=myG, results=ans)
+} 
+}
+
+# mclust select based on MAC BIC
 if(FALSE){
 A_mclust<-function(
   gpRes,
@@ -104,32 +161,53 @@ A_mclust<-function(
   kval<-tmpRes$G
   ans[[kval]]<-tmpRes$classification
   list(method="Mclust", kvals=kval, results=ans)
-} }
-
+} 
+}
 
 #return a list of kval-> {overall.silh=,__ , cluster.sils=__}
 A_silhouette<-function(
 	aRes,
-	aDist
+	aDist,
+  adjust=TRUE # whether to adjust overall silhouette based on clustering size
+
 ){
 
 	kvals<-aRes$kvals
 	overalls<-rep(0, max(kvals))
 	indicies<-1:length(kvals)
 	clusterList<-list()
+  mins<-rep(0, max(kvals))
 	for(i in seq(length(indicies))){
 
 		kval <-kvals[i]
 		sil<-silhouette(aRes$results[[kval]], aDist)
 		overalls[kval]<-summary(sil)$avg.width
 		clusterList[[kval]]<-summary(sil)$clus.avg.widths
+
+    if(adjust){
+      tmpSizes<-summary(sil)$clus.sizes
+      adjTmp<-1+1/tmpSizes
+
+      clusterList[[kval]]<-summary(sil)$clus.avg.widths / adjTmp
+
+    }
+
+    mins[kval]<-min(table(aRes$results[[kval]]))
 	}
+  if(adjust){
+    adj<- 1 + 1/mins
+    str<-min(kvals)
+    stp<-max(kvals)
+    overalls[str:stp]<-overalls[str:stp] / adj[str:stp]
+  }
 	list(overall=overalls, cluster.sils=clusterList)
 }
 
+# priority given to mclust
+if(FALSE){
 A_bundle<-function(
-	gpRes,
-	kvals=2:5,
+  gpRes,
+  kvals=2:5,
   methods=c("mclust", "kmeans", "cutree")
 ){
 
@@ -138,11 +216,131 @@ A_bundle<-function(
   silh_list<-list()
   maxes<-rep(0, length(methods))
   names(maxes)<-methods
+
+   mres <-A_mclust(gpRes, kvals=kvals)
+
+   if( mres$kvals == 1 ){
+
+    meths<-c("kmeans", "cutree")
+    for(mname in meths){
+      cat(mname,"\n")
+      aRes_list[[mname]] <- A_method(gpRes, kvals, mname)
+      silh_list[[mname]]<-A_silhouette(aRes_list[[mname]], gpRes$xdist)
+      maxes[mname]<-max(silh_list[[mname]]$overall)
+    }
+    xi<-which.max(maxes)
+    method.winner<-methods[xi]
+    sil.winner<-silh_list[[xi]]
+    k.winner<-which.max(sil.winner$overall)
+    method.winner<-methods[xi]
+    result.winner<-aRes_list[[xi]]$results[[k.winner]]
+  }
+  else{
+    method.winner<-"mclust"
+    sil.winner<-A_silhouette(mres, gpRes$xdist)
+    k.winner<-which.max(sil.winner$overall)
+    cat("Winner:: ",k.winner," ",method.winner,"\n")
+    result.winner<-mres$results[[k.winner]]
+  } 
+
+  list(method=method.winner, result=result.winner, k=k.winner, silh=list(overall=sil.winner$overall[k.winner], sil.clusters=sil.winner$cluster.sils[[k.winner]]))
+}
+}
+
+# can be used to iterate over 2:nmax PCs
+bundle_wrap<-function(
+  gpRes,
+   kvals=2:5,
+  methods=c("mclust", "kmeans", "cutree"),
+  handicap=0.00 # how much to reduce other methods sil in comparison to mclust
+){
+
+  
+  gpX<-gpRes$pcaRes$pcaRes$x
+  pcMax<-ncol(gpX)
+  bList<-list()
+  bScore<-vector()
+  myrange<-2:pcMax
+  for(stp in  myrange){
+    gpTmp<-gpRes
+    gpTmp$pcaRes$pcaRes$x<-gpX[,1:stp]
+    gpTmp$xdist<-dist(gpX[,1:stp])
+    
+    tmpRes<-A_bundle(gpTmp, kvals=kvals, methods=methods, handicap=handicap)
+    silO<-tmpRes$silh$overall
+    bScore<-append(bScore, silO)
+    bList[[stp]]<-tmpRes
+    cat("testing pcas: ",stp,": ", silO ,"------\n")
+  }
+  cat("Winnder pcas: ",max(bScore)," ", myrange[which.max(bScore)],"\n")
+  bList[[ myrange[which.max(bScore)] ]]
+
+}
+
+
+A_bundle<-function(
+  gpRes,
+  kvals=2:5,
+  methods=c("mclust", "kmeans", "cutree"),
+  handicap=0.00, # how much to reduce other methods sil in comparison to mclust
+  adjust=TRUE # whether to penalize clustering with small clusters
+){
+
+
+  aRes_list<-list()
+  silh_list<-list()
+  maxes<-rep(0, length(methods))
+  names(maxes)<-methods
   for(mname in methods){
-    cat(mname,"\n")
+    
+    aRes_list[[mname]] <- A_method(gpRes, kvals, mname)
+    silh_list[[mname]]<-A_silhouette(aRes_list[[mname]], gpRes$xdist, adjust=adjust)
+
+
+    maxes[mname]<-max(silh_list[[mname]]$overall)
+    cat(mname," (",which.max(silh_list[[mname]]$overall),")\t", maxes[mname],"\n")
+  }
+
+
+  aai<-which(names(maxes)!='mclust')
+  maxes[aai]<-maxes[aai]*(1-handicap)
+  xi<-which.max(maxes)
+  method.winner<-methods[xi]
+
+
+  sil.winner<-silh_list[[xi]]
+  k.winner<-which.max(sil.winner$overall)
+  cat("Winner:: ",k.winner," ",method.winner,"\n")
+
+  #method.winner<-methods[xi]
+  result.winner<-aRes_list[[xi]]$results[[k.winner]]
+
+  list(method=method.winner, result=result.winner, k=k.winner, silh=list(overall=sil.winner$overall[k.winner], sil.clusters=sil.winner$cluster.sils[[k.winner]]))
+
+}
+
+
+if(FALSE){
+# orig
+
+A_bundle<-function(
+	gpRes,
+	kvals=2:5,
+  methods=c("mclust", "kmeans", "cutree"),
+  handicap=0.00 # how much to reduce other methods sil in comparison to mclust
+){
+
+
+  aRes_list<-list()
+  silh_list<-list()
+  maxes<-rep(0, length(methods))
+  names(maxes)<-methods
+  for(mname in methods){
+    
     aRes_list[[mname]] <- A_method(gpRes, kvals, mname)
     silh_list[[mname]]<-A_silhouette(aRes_list[[mname]], gpRes$xdist)
     maxes[mname]<-max(silh_list[[mname]]$overall)
+    cat(mname," (",which.max(silh_list[[mname]]$overall),")\t", maxes[mname],"\n")
   }
 
 
@@ -164,6 +362,8 @@ A_bundle<-function(
     cat("cutree max: ", ctmax,"\n")
   }
 
+  aai<-which(names(maxes)!='mclust')
+  maxes[aai]<-maxes[aai]*(1-handicap)
 	xi<-which.max(maxes)
 	method.winner<-methods[xi]
 
@@ -172,11 +372,15 @@ A_bundle<-function(
 	k.winner<-which.max(sil.winner$overall)
   cat("Winner:: ",k.winner," ",method.winner,"\n")
 
-	method.winner<-methods[xi]
+	#method.winner<-methods[xi]
 	result.winner<-aRes_list[[xi]]$results[[k.winner]]
 
 	list(method=method.winner, result=result.winner, k=k.winner, silh=list(overall=sil.winner$overall[k.winner], sil.clusters=sil.winner$cluster.sils[[k.winner]]))
+
 }
+
+}
+
 
 gnrAll<-function(
   expDat,
@@ -233,12 +437,14 @@ gpa<-function(expDat,
  dThresh=0,
  zThresh=2,
  meanType="overall_mean",
- pcaMethod="rpca",
+ pcaMethod="prcomp",
  max.iter=30,
  methods=c("mclust", "kmeans", "cutree")){
 
+cat("nPCs ",nPCs,"\n") 
   gpRes<-GP(expDat, nPCs=nPCs, dThresh=dThresh, zThresh=zThresh, meanType=meanType,  pcaMethod=pcaMethod, max.iter=max.iter)
 	bundleRes<-A_bundle(gpRes, kvals=kvals, methods=methods)
+  ### bundleRes<-bundle_wrap(gpRes, kvals=kvals, methods=methods)
 	diffExp<-A_geneEnr(expDat[gpRes$pcaRes$varGenes,], gpRes, bundleRes, minSet=FALSE)
   #names(diffExp)<-unique(bundleRes$result)
   list(gpRes=gpRes, bundleRes=bundleRes, diffExp=diffExp)
@@ -276,12 +482,15 @@ gpa_recurse<-function(
   SilhDrop=0.25,
   minClusterSize=42,
   methods=c("mclust", "cutree", "kmeans"),
+  pcaMethod="prcomp",
   numGenes=5){
   
 
+  set.seed(42)
+
   topNodeName<-"L1_G1"
   silhs<-list()
-  silhs[[topNodeName]]<-0
+  silhs[[topNodeName]]<- -1
 
   myTree<-makeNode(topNodeName, ncol(expAll), silh=0, topGenes="")
   
@@ -299,7 +508,7 @@ gpa_recurse<-function(
   grp_list<-list()
   overall_silhs<-list()
 
-  overall_silhs[[topNodeName]]<-0
+  overall_silhs[[topNodeName]]<- -1
 
   grp_list[[1]]<-grps
 
@@ -319,12 +528,16 @@ gpa_recurse<-function(
 
     group_count<-1
 
+
     for(i in 1:length(uniGrps)){
       uniGrp<-uniGrps[i]
 
       currNode<-listOfNodes[[uniGrp]]
 
       cells_in_grp<-names(which(grps==uniGrp))
+
+
+      cat("GROUP!!!! ->>>> ",uniGrp,"\n")
       tmpAns<-gpa(expAll[,cells_in_grp],
         kvals=kvals,
         nPCs=nPCs,
@@ -332,14 +545,18 @@ gpa_recurse<-function(
         zThresh=zThresh,
         meanType=meanType,
         max.iter=max.iter,
-        methods=methods)
+        methods=methods,
+        pcaMethod=pcaMethod)
 
 
       # UPDATE notDone to done if 
       # if overall_silhs[[uniGrp]] > tmpAns$bundleRes$silh$overall
       # this indicates that subsequent clustering is not meaningful
-     ### if(tmpAns$bundleRes$silh$overall < min( overall_silhs[[uniGrp]], 0.5)){
-      if(tmpAns$bundleRes$silh$overall <  (1-SilhDrop)*overall_silhs[[uniGrp]]){
+###      if(tmpAns$bundleRes$silh$overall < min( overall_silhs[[uniGrp]], 0.5)){
+ ## 12-11-17-->    if(tmpAns$bundleRes$silh$overall <  (1-SilhDrop)*overall_silhs[[uniGrp]]){
+ if( min(tmpAns$bundleRes$silh$sil.clusters) <  (1-SilhDrop)*overall_silhs[[uniGrp]]){
+      ##minCcount<-min(table(tmpAns$bundleRes$result))
+       ## if(tmpAns$bundleRes$silh$overall <  (1-SilhDrop)*overall_silhs[[uniGrp]] || (minCcount < minClusterSize)){
         notDone[cells_in_grp] <- 0
         grps[cells_in_grp] <- uniGrp
         ansList[[uniGrp]]<-NULL
@@ -355,9 +572,9 @@ gpa_recurse<-function(
         for(oldName in oldNames){
           newName<-paste0("L",count_level,"_G",group_count)
           nnames<-append(nnames, newName)
-          cat(oldName," :: ",newName,"\n")
           group_count<-group_count+1
           xi<-names(which(tmpGrps==oldName))
+          cat(oldName," :: ",newName," :: ", length(xi),  "\n")
           tmpGrps[xi]<-newName
           overall_silhs[[newName]] <- tmpAns$bundleRes$silh$sil.clusters[ oldName ]
 
@@ -374,10 +591,12 @@ gpa_recurse<-function(
         tmpAns$bundleRes$result<-tmpGrps
 
         # UPDATE notDone those cells in clusters with sizes < minClusterSize
+        cat("testing here for group length hyp ...\n")
         grpLengths<-table( tmpGrps )
         if( any(grpLengths < minClusterSize )){
           smallClusters<-names(which(grpLengths<minClusterSize))
           for(smallCluster in smallClusters){
+          	cat("bye bye to ... ",smallCluster,"\n")
             xi<-names(which(tmpGrps==smallCluster))
             notDone[xi]<-0
           }
@@ -684,7 +903,6 @@ hm_gpa_sel<-function(
   genes,
   grps, ## vector of cellnames -> grp label
   maxPerGrp=100,
-  topx=10, 
   cRow=FALSE,
   cCol=FALSE,
   limits=c(0,10),

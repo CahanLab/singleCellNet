@@ -2,6 +2,35 @@
 # (C) Patrick Cahan 2012-2017
 
 
+
+
+#' getClassGenes
+#'
+#' extract genes for training classifier
+#' @param diffRes a df with cval, holm, rownames=genes
+#' @param topX number of genes to select
+#' @param bottom boolean if ture use the top x genes with - cvals
+#'
+#' @return vector of genes
+#'
+#' @export
+getClassGenes<-function(
+  diffRes,
+  topX=25,
+  bottom=TRUE)
+  {
+    #exclude NAs
+    xi<-which(!is.na(diffRes$cval))
+    diffRes<-diffRes[xi,]   
+    diffRes<-diffRes[order(diffRes$cval, decreasing=TRUE),]
+    ans<-rownames(diffRes[1:topX,])
+    if(bottom){
+      ans<-append(ans, rownames( diffRes[nrow(diffRes) - ((topX-1):0),]))
+    }
+    ans
+  }
+
+#' @export
 extractImport<-function
 (classifiers # from makeRFs
 ){
@@ -245,6 +274,33 @@ prebutter<-function
   stVal<-ttList[['stVal']]
 
   list(classRes=sc_classify(myRFs, expDat[predictors,rownames(stVal)], geneLists), stVal=stVal)
+}
+
+
+
+#' @export
+prebutter2<-function
+(geneLists,
+  expDat,
+  stDat, # with category partOn
+  propTrain=0.25,
+  partOn="group",
+  nTrees=200)
+  {
+    
+    cts<-as.vector(unique(stDat[,partOn]))
+    
+    # split into training and test data
+    ttList<-divide_sampTab(stDat, propTrain, partOn)
+    stTrain<-ttList[['stTrain']]
+
+    # make RFs
+    myRFs<-makeRFs(expDat[,rownames(stTrain)], stTrain, geneLists, dLevel=partOn,nTrees=nTrees)
+  
+    # classify held out data
+    stVal<-ttList[['stVal']]
+
+    list(classRes=sc_classify(myRFs, expDat[,rownames(stVal)], geneLists), stVal=stVal)
 }
 
 

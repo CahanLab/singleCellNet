@@ -1,84 +1,6 @@
 # Patrick Cahan (C) 2017
 # patrick.cahan@gmail.com
 
-#' @export
-gpa<-function
-(expDat,
- minClusterSize=20,
- nPCs=2,
- sdExpl=0.01,
- dThresh=0,
- zThresh=2,
- meanType="overall_mean",
- gMax=5){
-
-  # (1) gene stats
-  # (2) PCA
-  # (3) mclust
-
-  cat("Calculating gene statistics...\n")
-  geneStats<-sc_statTab(expDat, dThresh=dThresh)
-  cat("PCA...\n")
-  pcaRes<-vg_pca(expDat, geneStats, zThresh=zThresh, meanType=meanType)
-  ssdds<-pcaRes$pcaRes$sdev
-  ans<-0
-  if( sum(ssdds[1:nPCs]) / sum(ssdds) > sdExpl){
-    cat("MClust...\n")
-    res<-simple_steam_mclust(pcaRes$pcaRes$x[,1:nPCs],G=2:gMax)
-    sizes<-table(res)
-    if(min(sizes)>=minClusterSize){
-      ans<-res
-    }
-  }
-  groups<-ans
- # diffExp<-par_findSpecGenes(expDat[pcaRes$varGenes,], db_steamed$steamed$sampTab))
-  list(gs=geneStats, pcaRes=pcaRes, groups=groups)
-}
-
-
-#' @export
-gpa_recurse<-function
-(expAll,
-  nPCs=2,
-  sdExpl=0.01,
-  dThresh=0,
-  zThresh=2,
-  meanType="overall_mean",
-  nGrps=2,
-  method="pcromp",
-  max=10,
-  minClusterSize=42,
-  ariThresh=.95){
-
-  
-  grps<-rep("0", ncol(expAll))
-  isDone<-rep(0, ncol(expAll))
-
-  ansList<-list()
-  grp_list<-list()
-
-  count_i<-1
-  while(count_i <= max){
-    cat(count_i,"\n")
-    tmpAns<-gpa_break_tree(expAll, grps, isDone=isDone,nPCs=nPCs, minClusterSize=minClusterSize,sdExpl=sdExpl, dThresh=dThresh, zThresh=zThresh, meanType=meanType, nGrps=nGrps, method=method)
-    xgrps<-tmpAns$groups
-    grp_list[[count_i]]<-xgrps
-    ari<-adjustedRandIndex(grps, xgrps)
-    cat("Round ", count_i," ARI = ", ari,"\n")
-    if(ari>ariThresh | all(isDone==TRUE) ){
-      break
-    }
-    else{
-      ansList[[count_i]]<-tmpAns
-      grps<-xgrps
-      isDone<-tmpAns$isDone
-      count_i<-count_i+1
-    }
-  }
-  list(results=ansList, groups=grps, grp_list=grp_list)
-}
-
-
 
 #' @export
 gpa_break_tree<-function
@@ -319,7 +241,7 @@ vg_pca<-function
   else{
     # will not have a sdev item
     normDat<-prep(t(expDat[ans[['varGenes']],]), scale="uv", center=TRUE)
-    tmpAns<-rpca(normDat, trace=FALSE, max.iter=max.iter)
+    tmpAns<-rpca(normDat, trace=FALSE, max.iter=max.iter, term.delta=1e-6)
     tmpX<-tmpAns$L.svd$u
     rownames(tmpX)<-colnames(expDat)
     ans[['pcaRes']]<-list(x=tmpX)
