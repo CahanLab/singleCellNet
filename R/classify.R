@@ -95,6 +95,7 @@ mclust_Mat<-function
 #'
 harmonize<-function(
  expList,
+ trans,#vector of booleans indicating whether to downsample prior to prob
  dsVal=1e6,
  pres=TRUE){
 
@@ -147,9 +148,9 @@ randomize<-function(
 #' @param genes vector of genes to use as predictors
 #' @param groups named vector of cells to groups or classes
 #' @param nRand =50 num of randomized profiles to make
-#' @ntrees ntrees =2000 number of trees to build
+#' @param ntrees =2000 number of trees to build
 
-#' @return exp matrix random
+#' @return RF
 #' @export
 #'
 sc_makeClassifier<-function(
@@ -172,6 +173,17 @@ sc_makeClassifier<-function(
 
 }
 
+#
+#' classify samples
+#'
+#' classify samples
+#' @param rfObj result of running sc_makeClassifier
+#' @param expQuery expQuery
+#' @param numRand numRand
+
+#' @return classRes matrix
+#' @export
+#'
 rf_classPredict<-function(
   rfObj,
   expQuery,

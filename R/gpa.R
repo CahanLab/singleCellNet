@@ -1,8 +1,6 @@
 # Patrick Cahan (C) 2017
 # patrick.cahan@gmail.com
 
-
-
 # G: gene stats
 # P: PCA
 # A: assign cells to groups
@@ -24,10 +22,6 @@ bestPC<-function(
   ans
   
 }
-
-
-
-
 
 GP<-function(
 	expDat,
@@ -203,49 +197,6 @@ A_silhouette<-function(
 	list(overall=overalls, cluster.sils=clusterList)
 }
 
-# priority given to mclust
-if(FALSE){
-A_bundle<-function(
-  gpRes,
-  kvals=2:5,
-  methods=c("mclust", "kmeans", "cutree")
-){
-
-
-  aRes_list<-list()
-  silh_list<-list()
-  maxes<-rep(0, length(methods))
-  names(maxes)<-methods
-
-   mres <-A_mclust(gpRes, kvals=kvals)
-
-   if( mres$kvals == 1 ){
-
-    meths<-c("kmeans", "cutree")
-    for(mname in meths){
-      cat(mname,"\n")
-      aRes_list[[mname]] <- A_method(gpRes, kvals, mname)
-      silh_list[[mname]]<-A_silhouette(aRes_list[[mname]], gpRes$xdist)
-      maxes[mname]<-max(silh_list[[mname]]$overall)
-    }
-    xi<-which.max(maxes)
-    method.winner<-methods[xi]
-    sil.winner<-silh_list[[xi]]
-    k.winner<-which.max(sil.winner$overall)
-    method.winner<-methods[xi]
-    result.winner<-aRes_list[[xi]]$results[[k.winner]]
-  }
-  else{
-    method.winner<-"mclust"
-    sil.winner<-A_silhouette(mres, gpRes$xdist)
-    k.winner<-which.max(sil.winner$overall)
-    cat("Winner:: ",k.winner," ",method.winner,"\n")
-    result.winner<-mres$results[[k.winner]]
-  } 
-
-  list(method=method.winner, result=result.winner, k=k.winner, silh=list(overall=sil.winner$overall[k.winner], sil.clusters=sil.winner$cluster.sils[[k.winner]]))
-}
-}
 
 # can be used to iterate over 2:nmax PCs
 bundle_wrap<-function(
@@ -277,7 +228,6 @@ bundle_wrap<-function(
 
 }
 
-
 A_bundle<-function(
   gpRes,
   kvals=2:5,
@@ -301,12 +251,10 @@ A_bundle<-function(
     cat(mname," (",which.max(silh_list[[mname]]$overall),")\t", maxes[mname],"\n")
   }
 
-
   aai<-which(names(maxes)!='mclust')
   maxes[aai]<-maxes[aai]*(1-handicap)
   xi<-which.max(maxes)
   method.winner<-methods[xi]
-
 
   sil.winner<-silh_list[[xi]]
   k.winner<-which.max(sil.winner$overall)
@@ -320,68 +268,16 @@ A_bundle<-function(
 }
 
 
-if(FALSE){
-# orig
-
-A_bundle<-function(
-	gpRes,
-	kvals=2:5,
-  methods=c("mclust", "kmeans", "cutree"),
-  handicap=0.00 # how much to reduce other methods sil in comparison to mclust
-){
-
-
-  aRes_list<-list()
-  silh_list<-list()
-  maxes<-rep(0, length(methods))
-  names(maxes)<-methods
-  for(mname in methods){
-    
-    aRes_list[[mname]] <- A_method(gpRes, kvals, mname)
-    silh_list[[mname]]<-A_silhouette(aRes_list[[mname]], gpRes$xdist)
-    maxes[mname]<-max(silh_list[[mname]]$overall)
-    cat(mname," (",which.max(silh_list[[mname]]$overall),")\t", maxes[mname],"\n")
-  }
-
-
-
-  if(FALSE){
-  	cat("Mclust\n")
-  	mres <-A_mclust(gpRes, kvals=kvals)
-  	cat("kmeans\n")
-  	kres <-A_kmeans(gpRes, kvals=kvals)
-  	cat("cutree\n")
-  	ctres<-A_cutree(xdist, kvals=kvals)
-
-  	mcmax<-max(mcsilhs$overall)
-  	kmax <-max(ksilhs$overall)
-  	ctmax<-max(ctsilhs$overall)
-
-    cat("MClust max: ", mcmax,"\n")
-    cat("kmeans max: ", kmax,"\n")
-    cat("cutree max: ", ctmax,"\n")
-  }
-
-  aai<-which(names(maxes)!='mclust')
-  maxes[aai]<-maxes[aai]*(1-handicap)
-	xi<-which.max(maxes)
-	method.winner<-methods[xi]
-
-
-	sil.winner<-silh_list[[xi]]
-	k.winner<-which.max(sil.winner$overall)
-  cat("Winner:: ",k.winner," ",method.winner,"\n")
-
-	#method.winner<-methods[xi]
-	result.winner<-aRes_list[[xi]]$results[[k.winner]]
-
-	list(method=method.winner, result=result.winner, k=k.winner, silh=list(overall=sil.winner$overall[k.winner], sil.clusters=sil.winner$cluster.sils[[k.winner]]))
-
-}
-
-}
-
-
+#' find genes higher in a cluster compared to all other cells
+#'
+#' ind genes higher in a cluster compared to all other cells
+#'
+#' @param expDat expDat
+#' @param cellLabels named vector of cell groups
+#'
+#' @return list of diffExp data framnes
+#' 
+#' @export
 gnrAll<-function(
   expDat,
   cellLabels){
@@ -393,14 +289,13 @@ gnrAll<-function(
 }
 
 
-
 A_geneEnr<-function(
 	expDat,
 	gpaRes, 
 	bundleRes,
 	prune=FALSE, ### limit to genes exclusively detected as CT in one CT
-  	minSet=TRUE,
-  	ncore=4
+  minSet=TRUE,
+  ncore=4
 ){
 
 
@@ -439,10 +334,11 @@ gpa<-function(expDat,
  meanType="overall_mean",
  pcaMethod="prcomp",
  max.iter=30,
- methods=c("mclust", "kmeans", "cutree")){
+ methods=c("mclust", "kmeans", "cutree"),
+ pcAuto=TRUE){
 
 cat("nPCs ",nPCs,"\n") 
-  gpRes<-GP(expDat, nPCs=nPCs, dThresh=dThresh, zThresh=zThresh, meanType=meanType,  pcaMethod=pcaMethod, max.iter=max.iter)
+  gpRes<-GP(expDat, nPCs=nPCs, dThresh=dThresh, zThresh=zThresh, meanType=meanType,  pcaMethod=pcaMethod, max.iter=max.iter, pcAuto=pcAuto)
 	bundleRes<-A_bundle(gpRes, kvals=kvals, methods=methods)
   ### bundleRes<-bundle_wrap(gpRes, kvals=kvals, methods=methods)
 	diffExp<-A_geneEnr(expDat[gpRes$pcaRes$varGenes,], gpRes, bundleRes, minSet=FALSE)
@@ -466,9 +362,32 @@ makeNode<-function(
 }
 
 
-# run gpa_break while notDone==TRUE
+# run gpa while notDone==TRUE
 # give clusters good names
 # store results in a tree
+
+#' find clusters, agnostically (kind of)
+#'
+#'find clusters, agnostically (kind of). Run PAM and cutree, across range of ks, select best based on silhouette
+#'
+#' @param expAll expDat
+#' @param kvals kvals 2:5
+#' @param nPCs number of PCs to use (only used if pcAuto=FALSE)
+#' @param dThresh=0,
+#' @param zThresh=2,
+#' @param meanType="overall_mean",
+#' @param maxLevel=4,
+#' @param max.iter=30,
+#' @param SilhDrop=0.25,
+#' @param minClusterSize=42,
+#' @param methods=c("mclust", "cutree", "kmeans"),
+#' @param pcaMethod="prcomp",
+#' @param numGenes (5)
+#' @param silMin terminate clustering on a set of cells if the current min silh is < threshold. in contrast to using mean silh
+#' @param pcAuto TRUE auto select the best PCs based on difference in Stdev 
+#'
+#' @return a very complex object
+#' 
 #' @export
 gpa_recurse<-function(
   expAll,
@@ -483,7 +402,9 @@ gpa_recurse<-function(
   minClusterSize=42,
   methods=c("mclust", "cutree", "kmeans"),
   pcaMethod="prcomp",
-  numGenes=5){
+  numGenes=5,
+  silMin=TRUE,
+  pcAuto=TRUE){
   
 
   set.seed(42)
@@ -553,10 +474,19 @@ gpa_recurse<-function(
       # if overall_silhs[[uniGrp]] > tmpAns$bundleRes$silh$overall
       # this indicates that subsequent clustering is not meaningful
 ###      if(tmpAns$bundleRes$silh$overall < min( overall_silhs[[uniGrp]], 0.5)){
- ## 12-11-17-->    if(tmpAns$bundleRes$silh$overall <  (1-SilhDrop)*overall_silhs[[uniGrp]]){
- if( min(tmpAns$bundleRes$silh$sil.clusters) <  (1-SilhDrop)*overall_silhs[[uniGrp]]){
+
+  clusterFail<-TRUE
+  if( silMin ){
+    clusterFail <- as.logical( min(tmpAns$bundleRes$silh$sil.clusters) <  (1-SilhDrop)*overall_silhs[[uniGrp]])
+  }
+  else{
+      clusterFail <- as.logical(tmpAns$bundleRes$silh$overall <  (1-SilhDrop)*overall_silhs[[uniGrp]])
+  }
+    if(clusterFail){
+## 12-11-17-->    
       ##minCcount<-min(table(tmpAns$bundleRes$result))
        ## if(tmpAns$bundleRes$silh$overall <  (1-SilhDrop)*overall_silhs[[uniGrp]] || (minCcount < minClusterSize)){
+        cat( "failed because ...\nmin: ",min(tmpAns$bundleRes$silh$sil.clusters),"\n")
         notDone[cells_in_grp] <- 0
         grps[cells_in_grp] <- uniGrp
         ansList[[uniGrp]]<-NULL
@@ -609,381 +539,5 @@ gpa_recurse<-function(
     count_level<-count_level + 1
   }
   list(results=ansList, groups=grps, grp_list=grp_list, groupTree=myTree, geneList=gene_list)
-}
-
-
-#' @export
-gpa_recurse2<-function(
-  expAll,
-  nPCs=2,
-  sdExpl=0.01,
-  dThresh=0,
-  zThresh=2,
-  meanType="overall_mean",
-  nGrps=2,
-  max=10,
-  minClusterSize=42,
-  ariThresh=.95){
-
-  
-  grps<-rep("0", ncol(expAll))
-  isDone<-rep(0, ncol(expAll))
-
-  ansList<-list()
-  grp_list<-list()
-
-  count_i<-1
-  while(count_i <= max){
-    cat(count_i,"\n")
-    tmpAns<-gpa_break(expAll, 
-      grps, 
-      isDone=isDone,
-      nPCs=nPCs, 
-      minClusterSize=minClusterSize,
-      dThresh=dThresh,
-      zThresh=zThresh,
-      meanType=meanType,
-      nGrps=nGrps)
-    xgrps<-tmpAns$groups
-    grp_list[[count_i]]<-xgrps
-    ari<-adjustedRandIndex(grps, xgrps)
-    cat("Round ", count_i," ARI = ", ari,"\n")
-    if(ari>ariThresh | all(isDone==TRUE) ){
-      break
-    }
-    else{
-      ansList[[count_i]]<-tmpAns
-      grps<-xgrps
-      isDone<-tmpAns$isDone
-      count_i<-count_i+1
-    }
-  }
-  list(results=ansList, groups=grps, grp_list=grp_list)
-}
-
-
-
-#' @export
-# run gpa on each grp
-gpa_break<-function(
-  expDat,
-  grps, # vector of cluster labels
-  isDone, # bool vector indicating whether corresponding groups should be subjected to clustering
-  minClusterSize=20,
-  nPCs=2,
-  dThresh=0,
-  zThresh=2,
-  meanType="overall_mean",
-  kvals=2:5,
-  max.iter=20
- ){
-
-
-  ans_grp<-grps
-  ans_list<-list()
-  uniGrps<-unique(grps)
-  ##dontCluster<-unique(grps[which(isDone==TRUE)])
-  ##uniqGrps<-setdiff(uniGrps, dontCluster)
-
-##  pcs<-matrix(0, nrow=ncol(expDat), ncol=2)
- ## rownames(pcs)<-colnames(expDat)
-
-  for(i in 1:length(uniGrps)){
-    uniGrp<-uniGrps[i]
-    xi<-which(grps==uniGrp)
-   ## if(length(xi)>=minClusterSize){      
-      cat(uniGrp,":" ,length(xi),"\n")
-    ###ans_list[[uniGrp]]<-gpa(expDat[,xi], minClusterSize=minClusterSize,nPCs=nPCs,sdExpl=sdExpl,dThresh=dThresh,zThresh=zThresh,meanType=meanType,gMax=gMax)
-     
-     ##**## ans_list[[uniGrp]]<-gpa_tree(expDat[,xi],nPCs=nPCs,sdExpl=sdExpl,dThresh=dThresh,zThresh=zThresh,meanType=meanType,nGrps=nGrps, method=method)
-
-      gpaRes<-gpa(expDat[,xi],
-      	nPCs=nPCs,
-      	dThresh=dThresh,
-      	zThresh=zThresh,
-      	meanType=meanType,kvals=kvals,
-      	max.iter=max.iter)
-      
-      	ans_list[[i]]<-gpaRes
-if(FALSE){
-      if( (any(table(gpaRes$groups) < minClusterSize))){ ###|| ( gpaRes$avesilh < aveSilhs[[uniqGrp]])){ 
-        ans_list[[uniGrp]]<-""
-        ans_grp[xi]<-uniGrp
-        isDone[xi]<-1
-      }
-      else{
-        snames<-colnames(expDat[,xi])
-        pcs[snames,1:nPCs]<-gpaRes$pcs[,1:nPCs]
-        ans_list[[uniGrp]]<-gpaRes
-        ans_grp[xi]<-paste0(uniGrp,"_",ans_list[[uniGrp]]$groups)
-      }
-    }
-}
-#  list(groups=ans_grp, res=ans_list, isDone=isDone, pcs=pcs)#, aveSilhs=aveSils)
-ans_list
-}
-
-
-
-######################
-# plotting functions #
-######################
-
-
-hm_recRes<-function(
-  expDat,
-  recRes,
-  toLevel=1,
-  topx=10,
-  maxPerGrp=100,
-  toScale=FALSE,
-  cRow=FALSE,
-  cCol=FALSE,
-  fontsize_row=4,
-  limits=c(0,10))
-{
-  
-  tGenes<-vector()
-  nnames<-names(recRes$results)
-  nodeNames<-vector()
-
-  # find matching levels
-  for(i in 1:toLevel){
-    aa<-paste0("L",i)
-    x<-nnames[grep(aa, nnames)]
-    nodeNames<-append(nodeNames, x)
-  }
-
-  nodeNames<-sort(nodeNames)
-  geneGrps<-vector()
-  for(nodeName in nodeNames){
-    #cat(nodeName,"\n")
-    xres<-recRes$results[[nodeName]]
-    diffExp<-xres$diffExp
-    cluNames<-names(diffExp)
-    cluNames<-sort(cluNames)
-    ct1<-lapply( diffExp[cluNames], getTopGenes, topx)
-    ct1<-unique(unlist(ct1))
-    tGenes<-append(tGenes, ct1)
-  }
-
-  tGenes<-unique(tGenes)
-
-  value<-expDat[tGenes,]
-  if(toScale){
-      value <- t(scale(t(value)))
-  }
-
-  value[value < limits[1]] <- limits[1]
-  value[value > limits[2]] <- limits[2]
-
-###  grps<-recRes$groups
-  grps<-recRes$grp_list[[toLevel]]
-  grps<-sort(grps)
-  cells<-names(grps)
-  groupNames<-unique(grps)
-
-#  
-  
-
-###  bundleRes$result<-sort(bundleRes$result)
-
-  cells2<-vector()
-  for(groupName in groupNames){
-    #cat(groupName,"\n")
-    xi<-which(grps==groupName)
-    if(length(xi)>maxPerGrp){
-      tmpCells<-sample(cells[xi], maxPerGrp)
-    }
-    else{
-      tmpCells<-cells[xi]
-    }
-    cells2<-append(cells2, tmpCells)
-  }
-  value<-value[,cells2]
-
-  xcol <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(groupNames))
-    names(xcol) <- groupNames
-    anno_colors <- list(group = xcol)
-
-    xx<-data.frame(group=as.factor(grps))
-    rownames(xx)<-cells
-
-##    yy<-data.frame(group=as.factor(geneGrps))
-##    rownames(yy)<-tGenes
-
-
-  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol,
-        show_colnames = FALSE, annotation_names_row = FALSE,
-##        annotation_col = annTab,
-        annotation_col = xx,
-##        annotation_row = yy,
-        annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
-
-
-}
-
-hm_gpa<-function(
-	expDat,
-	gpaRes,
-	topx=10,
-	maxPerGrp=100,
-	toScale=FALSE,
-	limits=c(0,10),
-  fontsize_row=5)
-{
-	
-	hm_diff(expDat, gpaRes$diffExp, gpaRes$bundleRes, topx=topx, maxPerGrp=maxPerGrp, toScale=toScale, limits=limits, fontsize_row=fontsize_row)
-}
-
-
-hm_diff<-function(
-	expDat,
-	diffRes,
-	bundleRes,
-	maxPerGrp=100,
-	topx=10, 
-	cRow=FALSE,
-    cCol=FALSE,
-    limits=c(0,10),
-    toScale=FALSE,
- 	fontsize_row=3){
-  
-	ct1<-lapply( diffRes, getTopGenes, topx)
-	ct1<-unique(unlist(ct1))
-	value<-expDat[ct1,]
-	if(toScale){
-    	value <- t(scale(t(value)))
-  	}
-
-	value[value < limits[1]] <- limits[1]
-  	value[value > limits[2]] <- limits[2]
-
-  	bundleRes$result<-sort(bundleRes$result)
-
-
-  	cells<-names(bundleRes$result)
-
-#  	value<-value[,cells]
- 
- 	groupNames<-unique(bundleRes$result)
-
- 	cells2<-vector()
- 	for(groupName in groupNames){
- 		cat(groupName,"\n")
- 		xi<-which(bundleRes$result==groupName)
- 		cat(length(xi),"\n")
- 		if(length(xi)>maxPerGrp){
- 			cat(maxPerGrp,"\n")
- 			tmpCells<-sample(cells[xi], maxPerGrp)
- 		}
- 		else{
- 			tmpCells<-cells[xi]
- 		}
- 		cells2<-append(cells2, tmpCells)
- 	}
- 	value<-value[,cells2]
-
-	xcol <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(groupNames))
-  	names(xcol) <- groupNames
-    anno_colors <- list(group = xcol)
-
-	  xx<-data.frame(group=as.factor(bundleRes$result))
-	  rownames(xx)<-cells
-
-  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol,
-        show_colnames = FALSE, annotation_names_row = FALSE,
-##        annotation_col = annTab,
-        annotation_col = xx,
-        annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
-}
-
-hm_gpa_sel<-function(
-  expDat,
-  genes,
-  grps, ## vector of cellnames -> grp label
-  maxPerGrp=100,
-  cRow=FALSE,
-  cCol=FALSE,
-  limits=c(0,10),
-  toScale=FALSE,
-  fontsize_row=3){
-
-  
-  allgenes<-rownames(expDat)
-  missingGenes<-setdiff(genes, allgenes)
-  if(length(missingGenes)>0){
-    cat("Missing genes: ", paste0(missingGenes, collapse=","), "\n")
-    genes<-intersect(genes, allgenes)
-  }
-
-  value<-expDat[genes,]
-  if(toScale){
-      value <- t(scale(t(value)))
-    }
-
-  value[value < limits[1]] <- limits[1]
-  value[value > limits[2]] <- limits[2]
-
-  grps<-grps[order(grps)]
-  cells<-names(grps)
-  groupNames<-sort(unique(grps))
-
-  cells2<-vector()
-  for(groupName in groupNames){
-    xi<-which(grps==groupName)
-    if(length(xi)>maxPerGrp){
-      tmpCells<-sample(cells[xi], maxPerGrp)
-    }
-    else{
-      tmpCells<-cells[xi]
-    }
-    cells2<-append(cells2, tmpCells)
-  }
-  value<-value[,cells2]
-
-  xcol <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(groupNames))
-    names(xcol) <- groupNames
-    anno_colors <- list(group = xcol)
-
-    xx<-data.frame(group=as.factor(grps))
-    rownames(xx)<-cells
-
-  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol,
-        show_colnames = FALSE, annotation_names_row = FALSE,
-##        annotation_col = annTab,
-        annotation_col = xx,
-        annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
-}
-
-
-pcaPlot_recRes<-function(recRes, nodeName="L1_G1",legend=TRUE)
-{
-
-  gpaRes<-recRes$results[[nodeName]]$gpRes
-  bundleRes<-recRes$results[[nodeName]]$bundleRes  
-  aDat<-data.frame(pc1=gpaRes$pcaRes$pcaRes$x[,1], pc2=gpaRes$pcaRes$pcaRes$x[,2], group=as.character(bundleRes$result) )
-  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
-  if(legend){
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group, pch=group) ) + geom_point(alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
-  }
-  else{
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
-  }
-  ans
-}
-
-plot_bundle<-function(gpaRes, bundleRes, legend=TRUE)
-{
-
-  aDat<-data.frame(pc1=gpaRes$pcaRes$pcaRes$x[,1], pc2=gpaRes$pcaRes$pcaRes$x[,2], group=as.character(bundleRes$result) )
-  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
-  if(legend){
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
-  }
-  else{
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
-  }
-  ans
 }
 
