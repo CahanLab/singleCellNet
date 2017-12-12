@@ -3,9 +3,222 @@
 ### Introduction
 See [CellNet](https://github.com/pcahan1/CellNet) for an introduction to CellNet, how to use it on bulk RNA-Seq, and how to analyze scRNA-Seq data with classifiers trained on bulk RNA-Seq. Here, we illustrate how to cluster single cell RNA-Seq data, build single cell classifiers based on the clustering results, and use these classifiers to assign 'cell identity' to scNRA-Seq data.
 
-Shortcut to [wash/chop/steam/butter pipeline](#wcsb)
+Shortcut to original pipleine [wash/chop/steam/butter pipeline](#wcsb)
+Shortcut to second pipeline [gpa_recurse version 1](#gpa_rec1)
 
-#### New clustering pipeline
+#### Latest greatest clustering pipeline, plus cluster gene set enrichment and building single cell classifiers to analyze different studies. 12-12-17
+
+Compare data from mESC differentiated as Embryoid bodies for 4 days to data from mouse embryos at e6.5-e7.75. We will load the 2 data sets, harmonize them, cluster the mESC-derived data, and find genes and pathways high in each cluster. Then we will compare this data to the embryo data by both gene set enrichment and classification.
+
+
+DATA
+
+Data from differentiated mESC cells
+[MAGIC-treated expression data](https://s3.amazonaws.com/cellnet-rnaseq/ref/examples/singleCell/expDat_x4_Dec_09_2017.rda)
+[Counts expression data](https://s3.amazonaws.com/cellnet-rnaseq/ref/examples/singleCell/expQuery_Counts_Dec_12_2017.rda)
+[Meta data](https://s3.amazonaws.com/cellnet-rnaseq/ref/examples/singleCell/sampTab_x4_Dec_09_2017.rda)
+
+Data from mouse embryos (see http://gastrulation.stemcells.cam.ac.uk/scialdone2016).
+[Counts expression data](https://s3.amazonaws.com/cellnet-rnaseq/ref/examples/singleCell/Scialdone_Gottgens_expComplete_Dec_03_2017.rda)
+[Meta data](https://s3.amazonaws.com/cellnet-rnaseq/ref/examples/singleCell/Scialdone_Gottgens_stComplete_Dec_03_2017.rda)
+
+Mouse gene sets for enrichment analysis (see http://bioinf.wehi.edu.au/software/MSigDB/)
+[Gene ontology](https://s3.amazonaws.com/cellnet-rnaseq/ref/genesets/mouse_symbols_GO_c5_v5p2_Dec_11_2017.rda)
+[MSigDB hallmarks](https://s3.amazonaws.com/cellnet-rnaseq/ref/genesets/mouse_symbols_H_v5p2_Dec_11_2017.rda)
+[Immune-related](https://s3.amazonaws.com/cellnet-rnaseq/ref/genesets/mouse_symbols_Immune_c7_v5p2_Dec_11_2017.rda)
+
+#### Setup
+```R
+library(cluster)
+library(pcaMethods)
+library(rpca)
+library(data.tree)
+
+library(Rtsne)
+library(ggplot2)
+library(pheatmap)
+
+library(RColorBrewer)
+
+library(mclust)
+library(randomForest)
+library(singleCellNet)
+
+if(FALSE){
+    source("~/Dropbox/Code/singleCellNet/R/utils.R")
+    source("~/Dropbox/Code/singleCellNet/R/plots.R")
+    source("~/Dropbox/Code/singleCellNet/R/wash.R")
+    source("~/Dropbox/Code/singleCellNet/R/chop.R")
+    source("~/Dropbox/Code/singleCellNet/R/steam.R")
+    source("~/Dropbox/Code/singleCellNet/R/butter.R")
+    source("~/Dropbox/Code/singleCellNet/R/10x.R")
+    source("~/Dropbox/Code/singleCellNet/R/stats.R")
+    source("~/Dropbox/Code/singleCellNet/R/pipes.R")
+    source("~/Dropbox/Code/singleCellNet/R/gpa.R")
+    source("~/Dropbox/Code/singleCellNet/R/classify.R")
+    source("~/Dropbox/Code/singleCellNet/R/annotation.R")
+}
+
+mydate<-utils_myDate()
+```
+
+Load query data
+```R
+expDat<-utils_loadObject("expDat_x4_Dec_09_2017.rda")
+sampTab<-utils_loadObject("sampTab_x4_Dec_09_2017.rda")
+```
+
+Cluster. This takes about 20-30 seconds.
+```R
+system.time(xTree<-gpa_recurse(expDat, zThresh=2, maxLevel=3, nPCs=2, SilhDrop=0.5, methods=c("kmeans", "cutree"), dThresh=0.5, pcaMethod="prcomp",k=2:15, minClusterSize=100))
+
+# this is needed for later plotting
+sampTab<-cbind(sampTab, cluster=xTree$groups)
+```
+
+Print a tree of the clusters
+```R
+print(xTree$groupTree, "cells", "silh", "topGenes")
+  levelName cells        silh                                       topGenes
+1 L1_G1      1000  0.00000000                                               
+2  ¦--L2_G1   536  0.36359001                Slc39a8, Fgf5, Car4, Fgf8, Eras
+3  ¦--L2_G2   321  0.70227056              Fam181a, Ildr2, Rfx4, Ednrb, Hes5
+4  ¦--L2_G3    51 -0.03229656 Gm16551, Gm14207, A930011O12Rik, Ebf2, Neurod1
+5  °--L2_G4    92  0.58562889          Atp6v0a4, Aass, Gm2373, Gna15, Triml2
+```
+
+Show the top genes in each cluster
+```R
+xdiff<-gnrAll(expDat, xTree$groups)
+x1<-lapply( xdiff, getTopGenes, 10)
+x1<-x1[order(names(x1))]
+
+ hm_gpa_sel(expDat, c(unique(unlist(x1))), xTree$groups, maxPerGrp=50, toScale=T, cRow=F, font=4)
+```
+<img src="md_img/hm_example_12_12_17.jpg">
+
+
+Plot top 2 PCs
+```R
+plotGPALevel(xTree, "L1_G1", legend=T)
+```
+<img src="md_img/pca_example_12_12_17.jpg">
+
+t-SNE. See https://distill.pub/2016/misread-tsne/ for selecting perplexity and intepretation of t-sne
+```R
+ts1<-pca_to_tsne(xTree, perplexity=50, theta=0.75)
+plot_tsne(sampTab, ts1, cname="cluster")
+```
+<img src="md_img/tsne_cluster_example_12_12_17.jpg">
+
+More t-SNE
+```R
+tsneMultsimp(ts1, expDat, c("Fgf5", "Zfp42", "Tubb3", "Rfx4"))
+```
+<img src="md_img/tsne_genes_example_12_12_17.jpg">
+
+
+Gene set enrichment
+```R
+gsHallmarks<-utils_loadObject("mouse_symbols_H_v5p2_Dec_11_2017.rda")
+system.time(xresCC<-ks.wrapper.set(xdiff, gsHallmarks))
+
+# extract matrix of enrichment scores
+esMat_cc<-ks.extract(xresCC, sigThresh=1e-2)
+x<-esMat_cc[,sort(colnames(esMat_cc))]
+pheatmap(x, fontsize=5, cluster_cols=T)
+```
+<img src="md_img/hm_gsea_example_12_12_17.jpg">
+
+
+Other gene sets for enrichment are listed above.
+
+
+Now, compare this data set to embryo-derived data.
+
+Load the emryo data
+```R
+expScia<-utils_loadObject("embryo_Scialdone_Gottgens_2016/Scialdone_Gottgens_expComplete_Dec_03_2017.rda")
+stScia<-utils_loadObject("embryo_Scialdone_Gottgens_2016/Scialdone_Gottgens_stComplete_Dec_03_2017.rda")
+```
+
+We have to use the raw query data, so load that.
+```R
+expRaw<-utils_loadObject("expQuery_Counts_Dec_12_2017.rda")
+```
+
+Harmonize the data sets. This takes about 5-7 minutes.
+```R
+dsVal<-1e4
+system.time(hlistScia<-harmonize( list(query=expRaw, scia=expScia), trans=c(TRUE, TRUE), dsVal=dsVal))
+   user  system elapsed 
+349.578  16.416 366.160
+```
+
+Find genes as predictors for embryo cell type classifier. The cluaster assignment for these cells has been provided for us.
+```R
+cellgrps<-stScia$cluster
+names(cellgrps)<-rownames(stScia)
+xdiff_scia<-gnrAll(hlistScia[['transList']][['scia']], cellgrps)
+
+# plot the top 5 per group. Note that the color labels come from the provided cluster labels and don't correspond to the column color bar
+xScia<-lapply( xdiff_scia, getTopGenes, 5)
+xScia<-xScia[order(names(xScia))]
+hm_gpa_sel(hlistScia[['transList']][['scia']], c(unique(unlist(xScia))), cellgrps, maxPerGrp=100, toScale=T, cRow=F, font=5, limits=c(0,10))
+```
+<img src="md_img/hm_scia_diffGenes_12_12_17.jpg">
+
+
+Limit making classifier for groups with at least 20 cells.
+```R
+goodGrps<-names(which(table(stScia$cluster)>=20))
+stTmp<-data.frame()
+for(ggood in goodGrps){
+  stTmp<-rbind(stTmp, stScia[stScia$cluster==ggood,])
+}
+
+dim(stTmp)
+[1] 1156    7
+
+cellgrps<-stTmp$cluster
+names(cellgrps)<-rownames(stTmp)
+```
+
+Make the classifiers
+```R
+system.time(rf_scia<-sc_makeClassifier(hlistScia[['probList']][['scia']][,names(cellgrps)], genes=unique(unlist(cgenes_scia)), groups=cellgrps, nRand=50, ntrees=2000))
+  user  system elapsed 
+ 69.993   1.339  71.378 
+```
+
+Use this classifier to analyze the data from the differentiated mESC cells
+```R
+system.time(classRes_scia<-rf_classPredict(rf_scia, hlistScia[['probList']][['query']]))
+   user  system elapsed 
+  7.224   0.967   8.189
+```
+
+Plot this, to group by clusters we need another vector
+```R
+sla<-as.vector(sampTab$cluster)
+names(sla)<-rownames(sampTab)
+x<-rep("rand", 50)
+names(x)<- colnames(classRes_scia)[1001:ncol(classRes_scia)]
+sla<-append(sla, x)
+
+sc_hmClass(classRes_scia, sla, max=300, isBig=TRUE)
+```
+<img src="md_img/hm_scia_class_12_12_17.jpg">
+
+^^^ Need to add function to plot Box and whiskers ^^^
+
+
+Note that the there is a 'rand' column. This represents 50 randomized query profiles. There is also a 'rand' row, corresponding to a class of randomized training data. High classification scores for 'rand' samples in real classes could indicate an issue with data harmonization. High 'rand' classification scores for real data indicates that the query data does not fit into any of the classes. 
+
+
+
+#### <a name="gpa_rec1">gpa_recurse version 1</a>
+
 
 Sample data:
 
