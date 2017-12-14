@@ -335,11 +335,12 @@ gpa<-function(expDat,
  pcaMethod="prcomp",
  max.iter=30,
  methods=c("mclust", "kmeans", "cutree"),
- pcAuto=TRUE){
+ pcAuto=TRUE,
+ adjust=TRUE){
 
 cat("nPCs ",nPCs,"\n") 
   gpRes<-GP(expDat, nPCs=nPCs, dThresh=dThresh, zThresh=zThresh, meanType=meanType,  pcaMethod=pcaMethod, max.iter=max.iter, pcAuto=pcAuto)
-	bundleRes<-A_bundle(gpRes, kvals=kvals, methods=methods)
+	bundleRes<-A_bundle(gpRes, kvals=kvals, methods=methods, adjust=adjust)
   ### bundleRes<-bundle_wrap(gpRes, kvals=kvals, methods=methods)
 	diffExp<-A_geneEnr(expDat[gpRes$pcaRes$varGenes,], gpRes, bundleRes, minSet=FALSE)
   #names(diffExp)<-unique(bundleRes$result)
@@ -385,6 +386,7 @@ makeNode<-function(
 #' @param numGenes (5)
 #' @param silMin terminate clustering on a set of cells if the current min silh is < threshold. in contrast to using mean silh
 #' @param pcAuto TRUE auto select the best PCs based on difference in Stdev 
+#' @param adjust adjust TRUE whether to adjust silhouette based on the cluster size
 #'
 #' @return a very complex object
 #' 
@@ -404,7 +406,8 @@ gpa_recurse<-function(
   pcaMethod="prcomp",
   numGenes=5,
   silMin=TRUE,
-  pcAuto=TRUE){
+  pcAuto=TRUE,
+  adjust=TRUE){
   
 
   set.seed(42)
@@ -467,7 +470,8 @@ gpa_recurse<-function(
         meanType=meanType,
         max.iter=max.iter,
         methods=methods,
-        pcaMethod=pcaMethod)
+        pcaMethod=pcaMethod,
+        adjust=adjust)
 
 
       # UPDATE notDone to done if 
