@@ -374,15 +374,15 @@ makeNode<-function(
 #' @param expAll expDat
 #' @param kvals kvals 2:5
 #' @param nPCs number of PCs to use (only used if pcAuto=FALSE)
-#' @param dThresh=0,
-#' @param zThresh=2,
-#' @param meanType="overall_mean",
-#' @param maxLevel=4,
-#' @param max.iter=30,
-#' @param SilhDrop=0.25,
-#' @param minClusterSize=42,
-#' @param methods=c("mclust", "cutree", "kmeans"),
-#' @param pcaMethod="prcomp",
+#' @param dThresh 0,
+#' @param zThresh 2,
+#' @param meanType ="overall_mean",
+#' @param maxLevel maxLevel =4,
+#' @param max.iter 30,
+#' @param SilhDrop 0.25,
+#' @param minClusterSize =42,
+#' @param methods  methods =c("mclust", "cutree", "kmeans"),
+#' @param pcaMethod  "prcomp",
 #' @param numGenes (5)
 #' @param silMin terminate clustering on a set of cells if the current min silh is < threshold. in contrast to using mean silh
 #' @param pcAuto TRUE auto select the best PCs based on difference in Stdev 

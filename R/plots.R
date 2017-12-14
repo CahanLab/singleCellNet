@@ -30,18 +30,15 @@ pca_to_tsne<-function
 #'
 #' heatmap genes and groups
 #'
-#' @param expDat
-#' @param genes
+#' @param expDat expDat
+#' @param genes genes
 #' @param grps vector of cellnames -> grp label
 #' @param maxPerGrp 100
-#' @param cRow=FALSE,
-#' @param cCol=FALSE,
-#' @param limits=c(0,10),
-#' @param toScale=FALSE,
-#' @param fontsize_row=4
-#' @param 
-#' @param
-#' @param
+#' @param cRow =FALSE,
+#' @param cCol =FALSE,
+#' @param limits =c(0,10),
+#' @param toScale =FALSE,
+#' @param fontsize_row =4
 #'
 #' @return pheatmap
 #' 
@@ -755,7 +752,8 @@ if(FALSE){
 #'
 #' plot gpa res
 #'
-#' @param gpaRes,
+#' @param gpaRes gpRes
+#' @param llevel llevel
 #' @param legend whether to display it
 #'
 #' @return ggplot
@@ -784,7 +782,7 @@ plotGPALevel<-function(gpaRes, llevel="L1_G1",legend=FALSE)
 #'
 #' plot gpa res
 #'
-#' @param gpaRes,
+#' @param gpaRes gpRes
 #' @param legend whether to display it
 #'
 #' @return ggplot
@@ -815,7 +813,7 @@ plotGPApca<-function(xres, legend=FALSE)
 #'
 #' plot gpa res
 #'
-#' @param gpaRes,
+#' @param xtree xtree
 #' @param legend whether to display it
 #'
 #' @return ggplot
@@ -841,7 +839,7 @@ plot_pca_gpa<-function(xtree, legend=FALSE)
 #'
 #' plot gpa res
 #'
-#' @param gpaRes,
+#' @param gpaRes gpRES
 #' @param legend whether to display it
 #'
 #' @return ggplot

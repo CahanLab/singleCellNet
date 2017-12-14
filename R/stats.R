@@ -383,6 +383,36 @@ getTopGenes<-function
   rownames(xdat[order(xdat$cval, decreasing=TRUE),][1:topN,])
 }
 
+#' get the genes specific to each diffexp in a list of them
+#'
+#' get the genes specific to each diffexp in a list of them
+#'
+#' @param xdatList list of diffexp data frame, must have cval column
+#' @param topN 50 numb of genes to return per diffexp
+#'
+#' @return named list of genes
+#' 
+#' @export
+getSpecGenes<-function
+(xdatList,
+  topN=50)
+{
+  tmpAns<-lapply(xdatList, getTopGenes, topN=topN)
+  allgenes<-unique(unlist(tmpAns))
+  ans<-list()
+  cnames<-names(tmpAns)
+  for(cname in cnames){
+    a<-tmpAns[[cname]]
+    others<-setdiff(cnames, cname)
+    b<-unique(unlist(tmpAns[others]))
+    ans[[cname]]<-setdiff(a, b)
+  }
+  ans
+}
+
+
+
+
 #' @export
 getTopGenesList<-function
 (gpaResSortOf,

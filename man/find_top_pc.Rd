@@ -15,5 +15,5 @@ find_top_pc(vp, qtile = 0.25)
 index of PC at which _quantile_ of sd is included
 }
 \description{
-find topX PCs
+find topX PCs .don't use this
 }
