@@ -109,7 +109,7 @@ t-SNE. See https://distill.pub/2016/misread-tsne/ for selecting perplexity and i
 ts1<-pca_to_tsne(xTree, perplexity=50, theta=0.75)
 plot_tsne(sampTab, ts1, cname="cluster")
 ```
-<img src="md_img/tsne_cluster_example_12_12_17.jpg">
+<img src="md_img/tsne_clusters_example_12_12_17.jpg">
 
 More t-SNE
 ```R
