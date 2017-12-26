@@ -6,6 +6,21 @@
 # A: assign cells to groups
 
 
+
+#' project from pcs
+#'
+#' project from pcs
+#'
+#' @param recRes result of running gpaRecurse
+#' @param perplexity (30)
+#' @param theta (0.30)
+#'
+#' @return tsne matrix
+#' 
+#' @export
+
+
+
 bestGmc<-function(vect, grange){
   diffs<-diff(vect)
   grange[which.max(diffs)+1]

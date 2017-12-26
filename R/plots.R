@@ -7,24 +7,121 @@
 #'
 #' make tsne from pca
 #'
+#' @param expDat expDat
 #' @param recRes result of running gpaRecurse
 #' @param perplexity (30)
 #' @param theta (0.30)
+#' @param weighted (TRUE) whether to use PCs from deeper lelves, and to weight them
 #'
 #' @return tsne matrix
 #' 
 #' @export
 pca_to_tsne<-function
-(recRes, # result of running gpaRecurse
+(expDat,
+ recRes, # result of running gpaRecurse
  perplexity=30,
- theta=0.30){
-  datMat<-recRes$results[[1]]$gpRes$pcaRes$pcaRes$x
-  tres<-Rtsne(datMat, pca=FALSE, perplexity=perplexity, theta=theta)
+ theta=0.30,
+ weighted=TRUE){
+
+
+  if(weighted){
+    tmpMat<-pca_project_all(expDat, recRes)
+  
+    weights<-rep(1, ncol(tmpMat))
+    xi<- grep("L1_",colnames(tmpMat))
+    weights[xi]<-10
+
+    xi2<- grep("L2_",colnames(tmpMat))
+    weights[xi2]<-.5
+
+    xi3<- grep("L3_",colnames(tmpMat))
+    weights[xi3]<-.1
+    datMat <- tmpMat %*% diag(weights)
+  }
+  else{
+    datMat<-recRes$results[[1]]$gpRes$pcaRes$pcaRes$x
+  }
+
+  tres<-Rtsne(datMat, pca=FALSE, perplexity=perplexity, theta=theta, max_iter=2e3)
   xres<-tres$Y
   colnames(xres)<-c("TSNE.1", "TSNE.2")
   rownames(xres)<-rownames(datMat)
   xres
 }
+
+
+project_pca<-function
+(expDat,
+  pcRes,
+  pcs=FALSE){
+
+  if(length(pcs)==1){
+    if(!pcs){
+      pcs<-1:ncol(pcRes$rotation)
+    }
+  }
+  scale(t(expDat), pcRes$center, pcRes$scale) %*% pcRes$rotation[,pcs]
+}
+
+pca_project_gpa<-function
+(expDat,
+ gpaRecRes,
+ lName){
+
+  myResult<-gpaRecRes$results[[lName]]$gpRes$pcaRes
+
+  # get the varGenes
+  varGenes<-myResult$varGenes
+
+  # get the PCs
+  pcs<-1:ncol(myResult$pcaRes$x)
+
+  ans<-project_pca(expDat[varGenes,], myResult$pcaRes, pcs=pcs)
+  ans
+ }
+
+
+pca_project_all<-function
+(expDat,
+gpaRecRes){
+ 
+  resNames<-names(gpaRecRes$results)
+  tmpAns<-list()
+  colCount<-0
+
+  allCnames<-vector()
+  for(resName in resNames){
+    cat(resName,"\n")
+    tmpAns[[resName]]<-pca_project_gpa(expDat, gpaRecRes, resName)
+    cnames<-paste(resName, "_",colnames(tmpAns[[resName]]), sep='')
+    colnames(tmpAns[[resName]])<-cnames
+    colCount<-colCount + ncol(tmpAns[[resName]])
+    allCnames<-append(allCnames, cnames)
+  }
+
+  ans<-matrix(0, nrow=ncol(expDat), ncol=colCount)
+  rownames(ans)<-colnames(expDat)
+  stp<-0
+  for(resName in resNames){
+    str<-stp+1
+    stp<-str + ncol(tmpAns[[resName]]) - 1
+    ans[,str:stp]<-tmpAns[[resName]]
+  }
+  colnames(ans)<-allCnames
+  ans
+
+}
+
+
+
+
+
+
+
+
+
+
+
 
 #' heatmap genes and groups
 #'
