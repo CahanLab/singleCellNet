@@ -122,6 +122,11 @@ gpaRecRes){
 
 
 
+myGrpSort<-function(grps){
+  grpNames<-unique(grps)
+  xix<-as.numeric(unlist(lapply(strsplit(grpNames, "_G"), "[[",2)))
+   grpNames[order(xix)]
+}
 
 #' heatmap genes and groups
 #'
@@ -170,6 +175,11 @@ hm_gpa_sel<-function(
   grps<-grps[order(grps)]
   cells<-names(grps)
   groupNames<-sort(unique(grps))
+
+
+##
+  groupNames<-myGrpSort(grps)
+##
 
   cells2<-vector()
   for(groupName in groupNames){

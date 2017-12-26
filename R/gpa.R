@@ -300,7 +300,10 @@ gnrAll<-function(
   myPatternG<-sc_sampR_to_pattern(as.character(cellLabels))
   specificSets<-lapply(myPatternG, sc_testPattern, expDat=expDat)
   cat("Done testing\n")
-  specificSets
+
+  grpOrder<-myGrpSort(cellLabels)
+
+  specificSets[grpOrder]
 }
 
 

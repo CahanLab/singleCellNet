@@ -23,6 +23,66 @@ dumbfunc<-function(
   ans
 }
 
+#' row average (or median) based on groups
+#'
+#' row average (or median) based on groups
+#' @param exp expression df
+#' @param groupings groupings
+#' @param type mean or media
+#'
+#' @return return a dataframe of mean or median-ed data based on given groupings.  colnames become the column name of the first sample in each group from the original data
+#'
+#' @export
+GEP_makeMean<-function
+(exp,
+ groupings,
+ type='mean'
+){
+  
+  
+  ans<-data.frame();
+  grps<-unique(groupings);
+  if(type=='mean'){
+    for(grp in grps){
+      gi<-which(groupings==grp);
+      if(length(gi)==1){
+        
+        if(nrow(ans)==0){
+          ans<-data.frame(exp[,gi]);
+        }else{
+          ans<-cbind(ans, exp[,gi]);
+        }
+      }
+      else{
+        xxx<-apply(exp[,gi],1,mean);
+        if(nrow(ans)==0){
+          ans<-data.frame(xxx);
+        }
+        else{
+          ans<-cbind(ans, xxx);
+        }
+      }
+    }
+  }
+  else{
+    for(grp in grps){
+      gi<-which(groupings==grp);
+      xxx<-apply(exp[,gi],1,median);
+      if(nrow(ans)==0){
+        ans<-data.frame(xxx);
+      }
+      else{
+        ans<-cbind(ans, xxx);
+      }
+    }
+  }
+  
+  colnames(ans)<-grps;
+  ans;
+  ### data.frame of mean or median-ed data based on given groupings
+}
+
+
 
 # get GO:IDs
 #' @export
