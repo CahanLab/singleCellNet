@@ -23,10 +23,9 @@ pca_to_tsne<-function
  theta=0.30,
  weighted=TRUE){
 
-
+  tmpMat<-pca_project_all(expDat, recRes)
   if(weighted){
-    tmpMat<-pca_project_all(expDat, recRes)
-  
+      
     weights<-rep(1, ncol(tmpMat))
     xi<- grep("L1_",colnames(tmpMat))
     weights[xi]<-10
@@ -35,11 +34,17 @@ pca_to_tsne<-function
     weights[xi2]<-.5
 
     xi3<- grep("L3_",colnames(tmpMat))
-    weights[xi3]<-.1
+    weights[xi3]<-.25
+
+    xi4<- grep("L4_",colnames(tmpMat))
+    weights[xi4]<-.1
+   
     datMat <- tmpMat %*% diag(weights)
+
   }
   else{
-    datMat<-recRes$results[[1]]$gpRes$pcaRes$pcaRes$x
+    ###datMat<-recRes$results[[1]]$gpRes$pcaRes$pcaRes$x
+    datMat<-tmpMat
   }
 
   tres<-Rtsne(datMat, pca=FALSE, perplexity=perplexity, theta=theta, max_iter=2e3)
@@ -124,6 +129,7 @@ gpaRecRes){
 
 myGrpSort<-function(grps){
   grpNames<-unique(grps)
+###   llevels<- as.numeric(unlist(lapply(strsplit(grpNames, "L"), "[[",2))) NEED TO FIX THIS TO repeat over Ls
   xix<-as.numeric(unlist(lapply(strsplit(grpNames, "_G"), "[[",2)))
    grpNames[order(xix)]
 }
@@ -178,7 +184,7 @@ hm_gpa_sel<-function(
 
 
 ##
-  groupNames<-myGrpSort(grps)
+ ## groupNames<-myGrpSort(grps)
 ##
 
   cells2<-vector()
@@ -201,7 +207,10 @@ hm_gpa_sel<-function(
     xx<-data.frame(group=as.factor(grps))
     rownames(xx)<-cells
 
-  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol,
+   val_col <- colorRampPalette(rev(brewer.pal(n = 12,name = "Spectral")))(25)
+   #val_col <- colorRampPalette(brewer.pal(n = 12,name = "Spectral"))(100)
+
+  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol, color=val_col,
         show_colnames = FALSE, annotation_names_row = FALSE,
 ##        annotation_col = annTab,
         annotation_col = xx,
