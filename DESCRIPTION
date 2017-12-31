@@ -15,7 +15,8 @@ Requires:
     RColorBrewer,
     mclust,
     randomForest,
-    tidyr
+    tidyr,
+    dbscan
 License: PRIVATE
 Encoding: UTF-8
 LazyData: true

@@ -28,7 +28,7 @@ snn_iter<-function
 ##     colnames(params)<-c("eps", "minPts", "Silh")
   
   multClusters<-which(ks!=1)
-  cat("ZEROs:",length(which(ks==1)),"\n")
+
   override<-FALSE
   if(length(multClusters)==0){
     override<-TRUE
@@ -221,6 +221,7 @@ A_mclust<-function(
   kvals=2:5
 ){
 
+  cat("Mclust...\n")
   if(ngenes==0){
     ngenes<-nrow(gpRes$pcaRes$pcaRes$x)
   }
@@ -361,15 +362,30 @@ A_bundle<-function(
 
   maxes<-rep(0, length(methods))
   names(maxes)<-methods
+  cat("----------------------------------------\n")
   for(mname in methods){
     
+    if(mname=='sNN_clust'){
+      tabs<-"\t"
+    }
+    else{
+       tabs<-"\t\t"
+    }
+
     aRes_list[[mname]] <- A_method(gpRes, kvals, mname)
     if(!aRes_list[[mname]]$override){
       silh_list[[mname]]<-A_silhouette(aRes_list[[mname]], gpRes$xdist, adjust=adjust)
       maxes[mname]<-max(silh_list[[mname]]$overall)
-      cat(mname," (",which.max(silh_list[[mname]]$overall),")\t", maxes[mname],"\n")
+      cat(mname,tabs, maxes[mname],"\n")
     }
+    else{
+      silh_list[[mname]]<-list(overall = -1)
+      maxes[mname]<-max(silh_list[[mname]]$overall)
+      cat(mname,tabs, "-1\n")
+    }
+
   }
+  
 
   aai<-which(names(maxes)!='mclust')
   maxes[aai]<-maxes[aai]*(1-handicap)
@@ -379,6 +395,7 @@ A_bundle<-function(
     override<-TRUE
     silhOA<-''
     silClusters<-''
+    cat("Winner is none.\n")
   }
   else{
     method.winner<-methods[xi]
@@ -389,10 +406,13 @@ A_bundle<-function(
 
     silhOA<-sil.winner$overall[k.winner]
     silClusters<-sil.winner$cluster.sils[[k.winner]]
-    cat("Winner:: ",k.winner," ",method.winner,"\n")
+    
 
   #method.winner<-methods[xi]
     result.winner<-aRes_list[[xi]]$results[[k.winner]]
+    winning_kval<-length(unique(result.winner))
+    cat("Winner is ",method.winner," with ",winning_kval, " clusters.\n", sep='')
+    cat("----------------------------------------\n")
   }
 
   list(override=override,method=method.winner, result=result.winner, k=k.winner, silh=list(overall=silhOA, sil.clusters=silClusters))
@@ -446,16 +466,16 @@ if(FALSE){
 
   expDat<-expDat[, names(bundleRes$result)]
 
-  cat("Making patterns\n")
+  cat("Gene finding\n")
   ####myPatternG<-sc_sampR_to_pattern(as.vector(bundleRes$result))
   myPatternG<-sc_sampR_to_pattern(as.character(bundleRes$result))
 
   
-  cat("Testing patterns\n")
+  
  # aClust<-parallel::makeCluster(ncore, type='FORK')
   specificSets<-lapply(myPatternG, sc_testPattern, expDat=expDat)
  # stopCluster(aClust)
-  cat("Done testing\n")
+  
   specificSets
 }
 
@@ -473,7 +493,6 @@ gpa<-function(expDat,
  pcAuto=TRUE,
  adjust=TRUE){
 
-cat("nPCs ",nPCs,"\n") 
   gpRes<-GP(expDat, nPCs=nPCs, dThresh=dThresh, zThresh=zThresh, meanType=meanType,  pcaMethod=pcaMethod, max.iter=max.iter, pcAuto=pcAuto)
 	bundleRes<-A_bundle(gpRes, kvals=kvals, methods=methods, adjust=adjust)
   diffExp<-list()
@@ -540,7 +559,7 @@ gpa_recurse<-function(
   max.iter=30,
   SilhDrop=0.25,
   minClusterSize=42,
-  methods=c("mclust", "cutree", "kmeans"),
+  methods=c("mclust", "cutree", "kmeans", "sNN_clust"),
   pcaMethod="prcomp",
   numGenes=5,
   silMin=TRUE,
@@ -599,7 +618,6 @@ gpa_recurse<-function(
       cells_in_grp<-names(which(grps==uniGrp))
 
 
-      cat("GROUP!!!! ->>>> ",uniGrp,"\n")
       tmpAns<-gpa(expAll[,cells_in_grp],
         kvals=kvals,
         nPCs=nPCs,
@@ -631,7 +649,7 @@ gpa_recurse<-function(
 ## 12-11-17-->    
       ##minCcount<-min(table(tmpAns$bundleRes$result))
        ## if(tmpAns$bundleRes$silh$overall <  (1-SilhDrop)*overall_silhs[[uniGrp]] || (minCcount < minClusterSize)){
-        cat( "failed because ...\nmin: ",min(tmpAns$bundleRes$silh$sil.clusters),"\n")
+       ### cat( "failed because ...\nmin: ",min(tmpAns$bundleRes$silh$sil.clusters),"\n")
         notDone[cells_in_grp] <- 0
         grps[cells_in_grp] <- uniGrp
         ansList[[uniGrp]]<-NULL
@@ -649,7 +667,8 @@ gpa_recurse<-function(
           nnames<-append(nnames, newName)
           group_count<-group_count+1
           xi<-names(which(tmpGrps==oldName))
-          cat(oldName," :: ",newName," :: ", length(xi),  "\n")
+#          cat(oldName," :: ",newName," :: ", length(xi),  "\n")
+          cat("Cluster ",newName," has ", length(xi),  " cells.\n", sep='')
           tmpGrps[xi]<-newName
           overall_silhs[[newName]] <- tmpAns$bundleRes$silh$sil.clusters[ oldName ]
 
@@ -666,12 +685,12 @@ gpa_recurse<-function(
         tmpAns$bundleRes$result<-tmpGrps
 
         # UPDATE notDone those cells in clusters with sizes < minClusterSize
-        cat("testing here for group length hyp ...\n")
+
         grpLengths<-table( tmpGrps )
         if( any(grpLengths < minClusterSize )){
           smallClusters<-names(which(grpLengths<minClusterSize))
           for(smallCluster in smallClusters){
-          	cat("bye bye to ... ",smallCluster,"\n")
+          ##	cat("bye bye to ... ",smallCluster,"\n")
             xi<-names(which(tmpGrps==smallCluster))
             notDone[xi]<-0
           }
