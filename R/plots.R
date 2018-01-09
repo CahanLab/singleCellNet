@@ -2,6 +2,74 @@
 # patrick.cahan@gmail.com
 
 
+#' heatmap of the enrichment result
+#'
+#' Heatmap of tthe enrichment result
+#' @param esList returned from ks.extract.more
+#' @param threshold threshold 0.05 (holm-corrected pval)
+#'
+#' @return nothing
+#'
+#' @examples
+#' hm_enr(esList)
+#'
+#' @export
+hm_enr<-function
+(esList, # has ES and pval
+ threshold=0.05,
+ cRows=FALSE, 
+ cCols=FALSE,
+ fsr=4
+){
+ 
+  
+  cools <- colorRampPalette(rev(brewer.pal(n = 11,name = "RdBu")))(100)
+ # cools<-colorRampPalette(c("blue", "white", "yellow"))( 100 )
+
+  pes <- esList[['ES']]
+  pp  <- esList[['pval']]
+
+  pes[which(pp>threshold)]<-0
+  mmin<-min(pes)
+  mmax<-max(pes)
+  mmax<-max(abs(mmin), abs(mmax))
+
+
+    bcol<-"white"
+
+  pheatmap(pes,
+    col=cools,
+    breaks=seq(from= -1 * mmax, to=mmax, length.out=100),
+    border_color=bcol,
+    cluster_rows = cRows,
+    cluster_cols = cCols,
+    fontsize_row=fsr)
+}
+
+
+#' re-order cells for plotting
+#'
+#' re-order cells for plotting
+#'
+#' @param nvect named vector amed vector of cell-> grp
+#' @param newOrder vector of grp names in new order
+#'
+#' @return named vector new order
+#' 
+#' @export
+reorderCellsByGrp<-function(
+  nvect,# named vector of cell-> grp
+  newOrder # vector of grp names in new order
+){
+  newAns<-vector()
+  for(i in 1:length(newOrder)){
+    nname<-newOrder[i]
+    aib<-nvect[which(nvect==nname)]
+    cat(nname," ", length(aib),"\n")
+    newAns<-append(newAns, aib)
+  }
+  newAns
+}
 
 #' make tsne from pca
 #'
@@ -160,7 +228,8 @@ hm_gpa_sel<-function(
   cCol=FALSE,
   limits=c(0,10),
   toScale=FALSE,
-  fontsize_row=4){
+  fontsize_row=4,
+  reOrderCells=FALSE){
 
   
   allgenes<-rownames(expDat)
@@ -178,10 +247,13 @@ hm_gpa_sel<-function(
   value[value < limits[1]] <- limits[1]
   value[value > limits[2]] <- limits[2]
 
-  grps<-grps[order(grps)]
-  cells<-names(grps)
-  groupNames<-sort(unique(grps))
+  groupNames<-unique(grps)
+  if(reOrderCells){
+    grps<-grps[order(grps)]
+    groupNames<-sort(unique(grps))
+  }
 
+  cells<-names(grps)  
 
 ##
  ## groupNames<-myGrpSort(grps)
@@ -1220,6 +1292,7 @@ tsneMultsimp<-function(
   tsne<-cbind(tsne, t(value))
 
   tsneLong<-gather_(tsne, "gene", "expression", genesToPlot)
+  tsneLong$gene_f = factor(tsneLong$gene, levels=genesToPlot)
 
   if(revCol){
     ColorRamp <- rev(colorRampPalette(rev(brewer.pal(n = 7,name = colorPal)))(100))[10:100]
@@ -1231,8 +1304,11 @@ tsneMultsimp<-function(
   geom_point(pch=19, alpha=2/4, size=.25) + 
   theme_bw() + 
   scale_colour_gradientn(colours=ColorRamp) +
-  facet_wrap( ~ gene)
+#  facet_wrap( ~ gene)
+  facet_wrap( ~ gene_f)
  
+
+#   tsneLong
 }
 
 

@@ -130,6 +130,67 @@ ks.extract<-function(
 }
 
 
+# ks.extract.more
+
+#' extract a matrix of ES scores and -1log10(pvals) from rthe result of ks.wrapper.set
+#'
+#' get a matrix of ES scores for easy display
+#'
+#' @param enrRes for example from running ks.wrapper.set()
+#' @param sigType defaults to Holm
+#' @param sigThresh defaults to 1e-5
+#'
+#' @return atrix of ES for significant geneSets (cols=queryvectrs, rows=genesets),
+#' 
+#' @export
+ks.extract.more<-function(
+    enrRes,
+    sigType='holm',
+    sigThresh=1e-5)
+{
+
+    # first pass, determine the significant gene sets 
+    rnames<-names(enrRes)
+    sigGS<-vector()
+    for(rname in rnames){
+        x<-enrRes[[rname]]
+        ###tmpAns<-x[which(x[,sigType]<sigThresh),]
+        ###sigGS<-append(sigGS, as.vector(tmpAns$geneSet))
+        tmpAns<-which(x[,sigType]<sigThresh)
+        sigGS<-append(sigGS, tmpAns)
+    }
+
+    sigGS<-as.vector(x$geneSet)[sort(unique(sigGS))]
+
+    xi<-match(sigGS,x[,"geneSet"])
+
+    ans<-matrix(0, nrow=length(sigGS), ncol=length(rnames))
+    logPs<-matrix(0, nrow=length(sigGS), ncol=length(rnames))
+   
+    # make sure things are in the right order
+
+    rownames(ans)<-sigGS
+    colnames(ans)<-rnames
+
+    logPs<-ans
+
+
+    for(rname in rnames){
+        x<-enrRes[[rname]]        
+        vals<-x[xi,"ES"]    
+        ans[sigGS,rname]<-vals
+
+        pvals<-x[xi,"holm"]
+        logPs[sigGS,rname]<-pvals
+    }
+    ##logPs<- -1 * log10(logPs)
+
+    
+    
+    ##ans<-ans[rownames(enrRes[[1]]),]
+
+    list(ES=ans, pval=logPs)
+}
 
 
 

@@ -110,29 +110,57 @@ mergeLoad10x<-function
 		cat(pName,"\n")
 		ppath<-paste0(basePath,pName,"/",secPath)
 		tmpX<-load10x(ppath, pName)
-		cells<-sample(rownames(tmpX[['sampTab']]), nCells)
+		if(nCells>0){
+			cells<-sample(rownames(tmpX[['sampTab']]), nCells)
+		}
+		else{
+			cells<-rownames(tmpX[['sampTab']])
+		}
 		expList[[pName]]<- list(sampTab=tmpX[['sampTab']][cells,], expDat=tmpX[['expDat']][,cells])
+		cat(nrow(expList[[pName]][['expDat']]), "\n")
 	}
 	cgenes<-rownames(expList[[1]][['expDat']])
 	for(pName in pNames){
 		cgenes<-intersect(cgenes, rownames(expList[[pName]][['expDat']]))
 	}
-	cat(length(cgenes))
+	cat("Number of genes:",length(cgenes),"\n")
 
-	expAll<-matrix(0, nrow=length(cgenes), ncol=nCells*length(pNames))
+	if(nCells>0){
+		nCellsTotal<-nCells*length(pNames)
+	}
+	else{ # load them all
+		nCellsTotal<- sum( unlist(lapply(expList, function(alist){ ncol(alist[['expDat']])})))
+	}
+	cat("Number of cells: ",nCellsTotal,"\n")
+
+	expAll<-matrix(0, nrow=length(cgenes), ncol=nCellsTotal)
 	rownames(expAll)<-cgenes
 	stAll<-data.frame()
 	str<-1
-	stp<-nCells
-	for(pName in pNames){
+	##stp<-nCells
+	cat(pNames[1],"\n")
+	cat("named:",ncol(expList[[pNames[1]]][['expDat']]),"\n")
+	cat("numbered:",ncol(expList[[1]]),"\n")	
+	stp<-ncol(expList[[pNames[1]]][['expDat']])
+#	for(pName in pNames){
+	for(i in seq(length(pNames))){
+		pName<-pNames[i]
 		cat(str,"-",stp,"\n")
 		expAll[cgenes,str:stp]<-expList[[pName]][['expDat']][cgenes,]
 		stAll<-rbind(stAll, expList[[pName]][['sampTab']])
 		str<-stp+1
-		stp<-str+nCells-1
+
+		##stp<-str+nCells-1
+		if(i<length(pNames)){
+			inc<-ncol(expList[[ pNames[i+1] ]][['expDat']])
+		}
+		stp<-str+inc-1
 	}
 	colnames(expAll)<-rownames(stAll)
 	list(sampTab=stAll, expDat=expAll)
 
 }
+
+
+
 
