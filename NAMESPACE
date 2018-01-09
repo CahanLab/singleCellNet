@@ -71,7 +71,7 @@ export(pruneAndScan)
 export(ptsne)
 export(randomize)
 export(removeRed)
-export(reorderCellsByGrp
+export(reorderCellsByGrp)
 export(rf_classPredict)
 export(sc_classify)
 export(sc_compAlpha)
