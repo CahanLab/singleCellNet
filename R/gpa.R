@@ -438,9 +438,11 @@ gnrAll<-function(
   specificSets<-lapply(myPatternG, sc_testPattern, expDat=expDat)
   cat("Done testing\n")
 
-  grpOrder<-myGrpSort(cellLabels)
+#  grpOrder<-myGrpSort(cellLabels)
 
-  specificSets[grpOrder]
+#  specificSets[grpOrder]
+
+  specificSets
 }
 
 
