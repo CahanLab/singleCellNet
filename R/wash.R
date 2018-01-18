@@ -74,7 +74,7 @@ prewash<-function
 }
 
 
-
+if(FALSE){
 #' weighted subtraction from mapped reades
 #'
 #' Simulate expression profile of  _total_ mapped reads
@@ -90,12 +90,39 @@ total=1e5){
 
   totalSignal<-sum(vector)
   wAve<-vector/totalSignal
-  resid<-sum(vector)-total #num to subtract from sample
+###  resid<-sum(vector)-total #num to subtract from sample
+  resid<-totalSignal-total #num to subtract from sample
   residW<-wAve*resid # amount to substract from each gene
   ans<-vector-residW
   ans[which(ans<0)]<-0
   ans
 }
+}
+
+#' weighted subtraction from mapped reades
+#'
+#' Simulate expression profile of  _total_ mapped reads
+#' @param vector of total mapped reads per gene/transcript
+#' @param total post transformation sum of read counts
+#'
+#' @return vector of downsampled read mapped to genes/transcripts
+#'
+#' @export
+downSampleW<-function
+(vector,
+ total=1e5,
+ dThresh=0){ 
+
+  totalSignal<-sum(vector)
+  wAve<-vector/totalSignal
+###  resid<-sum(vector)-total #num to subtract from sample
+  resid<-totalSignal-total #num to subtract from sample
+  residW<-wAve*resid # amount to substract from each gene
+  ans<-vector-residW
+  ans[which(ans<dThresh)]<-0
+  ans
+}
+
 
 #' weighted subtraction from mapped reades, applied to all
 #'
@@ -108,9 +135,10 @@ total=1e5){
 #' @export
 weighted_down<-function
 (expRaw,
- total
+ total,
+ dThresh=0
  ){
-    expCountDnW<-apply(expRaw, 2, downSampleW, total)
+    expCountDnW<-apply(expRaw, 2, downSampleW, total=total, dThresh=dThresh)
     #log(1+expCountDnW)
     expCountDnW
   }

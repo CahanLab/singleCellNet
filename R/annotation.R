@@ -86,6 +86,75 @@ ks.wrapper.set<-function(
     ansList
 }
 
+# fgsea.wrapper.set
+
+#' run fgsea on list of diffExprs
+#'
+#' find gene sets enriched in provided ranked gene list
+#'
+#' @param diffExprList named list of diffExpr results, for example from running gnrAll()
+#' @param geneSets named list of gene sets
+#' @param minSize defaults to 10
+#' @param nPerm defaults to 1e-4
+#'
+#' @return list of  and (2) list of ks.wrapper results
+#' 
+#' @export
+#'
+fgsea.wrapper.set<-function(
+    diffExprList,
+    geneSets,
+    minSize=10,
+    nPerm=1e4)
+{
+
+
+    ansList<-list()
+    qnames<-names(diffExprList)
+    for(qname in qnames){
+        qdiffRes<-diffExprList[[qname]]
+        teststat<-qdiffRes$cval
+        names(teststat)<-rownames(qdiffRes)
+        fRes<-as.data.frame(fgsea(pathways=geneSets, stats=teststat, minSize=minSize, nperm=nPerm))
+        ansList[[qname]]<-fRes
+    }
+    ansList
+}
+
+
+#' compileGSEA
+#' 
+#' make a long table from fgsea.wrapper.set
+#'
+#' make a long table from fgsea.wrapper.set
+#'
+#' @param gseaEnr from rnunning gsea.wrapper.set
+#' @param thresh defaults 0.05
+#'
+#' @return df df
+#' 
+#' @export
+#'
+compileGSEA<-function(
+    gseaEnr,
+    thresh=0.05){
+  
+        longX<-data.frame()
+        for(xname in names(gseaEnr)){
+           tmpDF<-gseaEnr[[xname]]
+           tmpDF<-cbind(tmpDF, cluster=rep(xname, nrow(tmpDF)))
+           tmpDF<-tmpDF[order(tmpDF$NES, decreasing=TRUE),]
+           xi<-which(tmpDF$padj<thresh)
+           sig_gs<-rep(0, nrow(tmpDF))
+           sig_gs[xi]<-1
+           tmpDF<-cbind(tmpDF, isSig=sig_gs)
+           longX<-rbind(longX, tmpDF)
+        }
+        #longX<-longX[longX$padj<thresh,]
+        longX<-cbind(longX, lpval=log10(longX$padj))
+    longX[longX$NES>0,]$lpval<- -1 * longX[longX$NES>0,]$lpval
+    longX
+}
 
 # ks.extract
 
@@ -322,6 +391,8 @@ ks.test.2 <- function (x, y, ..., alternative = c("two.sided", "less", "greater"
     class(RVAL) <- "htest"
     return(RVAL)
 }
+
+
 
 
 
