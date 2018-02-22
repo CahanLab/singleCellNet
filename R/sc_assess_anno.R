@@ -11,7 +11,7 @@
 sc_classAssess<-function
 (stDat,
  washedDat,
- partOn = "description1",
+ dLevel = "description1",
  dLevelSID="sample_name",
  minCells = 40,
  dThresh = 0, 
@@ -21,16 +21,16 @@ sc_classAssess<-function
  resolution=0.005){
   
   #extract sample table and gene expression matrix of groups that are above minCells  
-  goodGrps<-names(which(table(stDat[,partOn])>=minCells))
+  goodGrps<-names(which(table(stDat[,dLevel])>=minCells))
   stTmp<-data.frame()
   for(ggood in goodGrps){
-    stTmp<-rbind(stTmp, stDat[stDat[,partOn]==ggood,])
+    stTmp<-rbind(stTmp, stDat[stDat[,dLevel]==ggood,])
   }
   dim(stTmp)
   expDat_good <- washedDat$expDat[,rownames(stTmp)]
 
   # split dataset into training and test data
-  ttList<-divide_sampTab(stTmp, propTrain, dLevel = partOn)
+  ttList<-divide_sampTab(stTmp, propTrain, dLevel = dLevel)
   stTrain<-ttList[['stTrain']]
   expTrain <- expDat_good[,row.names(stTrain)]
 
@@ -39,7 +39,7 @@ sc_classAssess<-function
   cat("Calculating varGenes...\n")
   varGenes <- findVarGenes(expDat_good, washedDat$geneStats)
 
-  cellgrps<-stTrain[,partOn]
+  cellgrps<-stTrain[,dLevel]
   names(cellgrps)<-rownames(stTrain)
 
   cat("Making classifiers...\n")
@@ -48,13 +48,11 @@ sc_classAssess<-function
   cat("classify held out data...\n")
   stVal<-ttList[['stVal']]
   ct_scores=rf_classPredict(testRFs, expDat_good[,row.names(stVal)])
-  
-  cat("obtaining some ROCs...\n")
-  assessed<-sc_ROCs(ct_scores, stVal, dLevel=partOn, dLevelSID=dLevelSID, threshs=seq(0,1,by=resolution, nRand = nRand)
-  
-  return(assessed) 
-}  
 
+  #cat("obtaining some ROCs...\n")
+  #assessed<-sc_ROCs(ct_scores, stVal, dLevel=dLevel, dLevelSID=dLevelSID, threshs=seq(0,1,by=resolution, nRand = nRand))
+
+}  
 
 #' Assess classifiers based on validation data
 #'
@@ -67,7 +65,8 @@ sc_classAssess<-function
 #'
 #' @return list of data frames with threshold, sens, precision
 #' @export 
-sc_ROCs<-function# make ROCs for each classifier
+
+sc_ROCs<-function# make ROCs for each classifier, pairwise comparison
 (ct_scores,# matrix of classification scores, rows = classifiers, columns = samples, colnames=sampleids
  stVal, # sampletable
  dLevel="description1",
@@ -76,7 +75,7 @@ sc_ROCs<-function# make ROCs for each classifier
  nRand = 50 # increment at which to evalutate classification
 ){
 
-  
+  sampIDs<-colnames(ct_scores)
 
   #make a new stVal with the rand cells added
   tmp <- as.data.frame(matrix("Rand", nrow = nRand, ncol=(ncol(stVal))))
@@ -87,9 +86,11 @@ sc_ROCs<-function# make ROCs for each classifier
   
   ans<-matrix(0,nrow=length(threshs), ncol=7);
 
+
+
   for(i in seq(length(threshs))){
     thresh<-threshs[i];
-    ans[i,1:4]<-sc_clPerf(ct_scores, stVal_tmp, dLevel, thresh, dLevelSID=dLevelSID);
+    ans[i,1:4]<-sc_Perf(ct_scores, stVal_tmp, dLevel, thresh, dLevelSID=dLevelSID);
   }
   ans[,5]<-threshs;
   colnames(ans)<-c("TP", "FN", "FP", "TN", "thresh","FPR", "TPR");
@@ -113,7 +114,7 @@ sc_ROCs<-function# make ROCs for each classifier
 #' @param dLevelSID column to indicate sample id
 #'
 #' @return vector of TP FN FP TN 
-sc_clPerf<-function # assumes rownames(sampTab) == sampTab identifier used as colname for vect
+sc_Perf<-function # assumes rownames(sampTab) == sampTab identifier used as colname for vect
 (ct_scores,
  sampTab,
  dLevel,
@@ -308,4 +309,81 @@ binGenes<-function
     binGroup[xnames]<-i;
   }
   cbind(geneStats, bin=binGroup);
+}
+
+#' compute AUPCR
+#'
+#' compute AUPCR
+#' @param perfDF a df
+#' @param precisionCol "Precision"
+#' @param recallCol "Recall"
+#' @param predCol "Predictions"
+#'
+#' @return auprs
+cn_computeAUCPR<-function
+(perfDF,
+ precisionCol="Precision",
+ recallCol="Recall",
+ predCol="Predictions"
+){
+  
+  ### Notes: starts at top left, and accumulates to max
+  str<-(nrow(perfDF)-1);
+  stp<-2;
+  
+  # sometimes you can still get NA in 
+  areas<-rep(0, nrow(perfDF));
+  
+  pts<-seq(str,stp,-1);
+  for(i in pts){
+    a<-(i+1);
+    cc<-(i-1);
+    ptA<-c(perfDF[a,recallCol], perfDF[a,precisionCol]);
+    ptB<-c(perfDF[i,recallCol], perfDF[i,precisionCol]);
+    ptC<-c(perfDF[cc,recallCol], perfDF[cc,precisionCol]);
+    tmpArea<-cn_rectArea(ptA, ptB, ptC);
+    if(is.nan(tmpArea)){
+      #cat(perfDF[i,]$Score,"\n");
+      tmpArea<-0;
+    }
+    areas[i]<-areas[(i+1)]+tmpArea;
+  }
+  
+  # far right point
+  a<-2;
+  b<-1;
+  cc<-1;
+  ptA<-c(perfDF[a,recallCol], perfDF[a,precisionCol]);
+  ptB<-c(perfDF[i,recallCol], perfDF[i,precisionCol]);
+  ptC<-c(perfDF[cc,recallCol], perfDF[cc,precisionCol]);
+  areas[b]<-areas[2]+cn_rectArea(ptA, ptB, ptC);
+  
+  # far left point
+  a<-nrow(perfDF);
+  b<-nrow(perfDF);
+  cc<-(b-1);
+  ptA<-c(perfDF[a,recallCol], perfDF[a,precisionCol]);
+  ptB<-c(perfDF[i,recallCol], perfDF[i,precisionCol]);
+  ptC<-c(perfDF[cc,recallCol], perfDF[cc,precisionCol]);
+  areas[b]<-cn_rectArea(ptA, ptB, ptC);
+  areas;
+}
+
+#' compute area of rect given by 
+#'
+#' compute area of rect given by 
+#' @param ptA point a
+#' @param ptB point b
+#' @param ptC point C
+#'
+#' @return area
+cn_rectArea<-function
+(ptA,
+ ptB,
+ ptC
+){
+  xRight <- ptB[1]+( (ptC[1]-ptB[1])/2);
+  xLeft  <- ptA[1]+( (ptB[1]-ptA[1])/2);
+  width<-abs(xRight - xLeft);
+  width*ptB[2];
 }
