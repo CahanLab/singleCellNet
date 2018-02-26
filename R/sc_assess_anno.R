@@ -86,12 +86,13 @@ sc_Accu<-function #calculate the accuracy of the data at each given classificati
   
   ans<-matrix(0,nrow=length(threshs), ncol=nrow(stVal_tmp));
   rownames(ans) <- threshs; #rownames is the classification threshold
+  colnames(ans) <- sampIDs
 
   for (sampID in sampIDs){
 
     vect <- ct_scores[,colnames(ct_scores) == sampID]
     classification <- as.vector(stVal_tmp[sampID, dLevel])
-    
+
     for (thresh in threshs) {  
       ans[thresh,sampID] <- sc_classThreshold(vect, classification, thresh)
 
