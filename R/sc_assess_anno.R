@@ -144,6 +144,21 @@ sc_classThreshold<-function # assumes rownames(sampTab) == sampTab identifier us
 
 }
 
+plot_accu <- function
+(accu_dat, #data from sc_Accu output
+ threshs){
+
+newDat <- cbind(threshs, accu_dat)
+newDat <- as.data.frame(newDat)
+
+#melt the data by the first colomn
+dat.m = melt(newDat, id = "threshs")
+
+col=colorRampPalette(rev(brewer.pal(n = 11,name = "RdYlBu")))(length(threshs))
+
+ggplot(data = dat.m,aes(x=as.character(threshs), y=value)) + geom_boxplot(fill = col) +labs(title="Plot of Accuracy per Classification Threshold",x="Classification Thresholds", y = "Accuracy")
+
+}
 
 #' Plot results of sc_classAssess
 #'
