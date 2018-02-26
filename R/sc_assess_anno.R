@@ -90,7 +90,7 @@ sc_Accu<-function #calculate the accuracy of the data at each given classificati
   for (sampID in sampIDs){
 
     for (thresh in threshs) {
-      
+
       vect <- ct_scores[,colnames(ct_scores) == sampID]
       classification <- as.vector(stVal_tmp[sampID, dLevel])
       ans[thresh,sampID] <- sc_classThreshold(vect, classification, thresh)
@@ -123,9 +123,6 @@ sc_classThreshold<-function # assumes rownames(sampTab) == sampTab identifier us
   FN<-0;
   FP<-0;
   TN<-0;
-
-  actualPos
-  actualNeg<-setdiff(sampIDs, actualPos); 
   
   calledPos <- names(which(vect>thresh))
   calledNeg <- names(which(vect<=thresh))
