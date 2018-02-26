@@ -63,10 +63,10 @@ sc_classAssess<-function
 #' @param threshs seq of pval cutoffs
 #' @param dLevelSID column to indicate sample id
 #'
-#' @return list of data frames with threshold, sens, precision
+#' @return list of data frames with threshold
 #' @export 
 
-sc_ROCs<-function# make ROCs for each classifier, pairwise comparison
+sc_Accu<-function #calculate the accuracy of the data at each given classification threshold
 (ct_scores,# matrix of classification scores, rows = classifiers, columns = samples, colnames=sampleids
  stVal, # sampletable
  dLevel="description1",
@@ -84,70 +84,67 @@ sc_ROCs<-function# make ROCs for each classifier, pairwise comparison
   rownames(tmp) <- tmp[,dLevelSID]
   stVal_tmp <- rbind(stVal, tmp)
   
-  ans<-matrix(0,nrow=length(threshs), ncol=7);
+  ans<-matrix(0,nrow=length(threshs), ncol=nrow(stVal_tmp));
+  rownames(ans) <- threshs; #rownames is the classification threshold
 
+  for (sampID in sampIDs){
 
+    for (thresh in threshs) {
+      
+      vect <- ct_scores[,colnames(ct_scores) == sampID]
+      classification <- as.vector(stVal_tmp[sampID, dLevel])
+      ans[thresh,sampID] <- sc_classThreshold(vect, classification, thresh)
 
-  for(i in seq(length(threshs))){
-    thresh<-threshs[i];
-    ans[i,1:4]<-sc_Perf(ct_scores, stVal_tmp, dLevel, thresh, dLevelSID=dLevelSID);
+    }
+
   }
-  ans[,5]<-threshs;
-  colnames(ans)<-c("TP", "FN", "FP", "TN", "thresh","FPR", "TPR");
-  TPR<-ans[,'TP']/(ans[,'TP']+ans[,'FN']);
-  FPR<-ans[,'FP']/(ans[,'TN']+ans[,'FP']);
-  ans[,'TPR']<-TPR;
-  ans[,'FPR']<-FPR;
+  
   ans;
 
 }
 
 
-#' determine performance of classification at given threshold
+#' determine performance of classification at given class threshold
 #'
 #' determine performance of classification at given threshold
-#' @param ct_scores matrix of classification scores, rows = classifiers, columns = samples, colnames=sampleids
-#' @param sampTab sample table
-#' @param dLevel colname
+#' @param vect, classifcation score for each given cell
 #' @param classification actual classification
 #' @param thresh threshold above which to make a call
-#' @param dLevelSID column to indicate sample id
 #'
-#' @return vector of TP FN FP TN 
-sc_Perf<-function # assumes rownames(sampTab) == sampTab identifier used as colname for vect
-(ct_scores,
- sampTab,
- dLevel,
- classification, # actual classification
+#' @return accuracy
+
+sc_classThreshold<-function # assumes rownames(sampTab) == sampTab identifier used as colname for vect
+(vect,
+ classification, #actual classification
  thresh,
- dLevelSID="sample_name"){
+{
+
   TP<-0;
   FN<-0;
   FP<-0;
   TN<-0;
 
-  sampIDs<-colnames(ct_scores);  
+  actualPos
+  actualNeg<-setdiff(sampIDs, actualPos); 
   
-  ###actualPos<-as.vector(sampTab[sampTab[,dLevel]==classification,]$sample_id);#which(classes==classification));
-  actualPos<-as.vector(sampTab[sampTab[,dLevel],dLevelSID])
-  actualNeg<-setdiff(sampIDs, actualPos);
-  calledPos<-vector()
-  calledNeg<-vector() 
-  
-  classifications<-rownames(ct_scores);
+  calledPos <- names(which(vect>thresh))
+  calledNeg <- names(which(vect<=thresh))
 
-  for (classification in classifications){
-    vect <- ct_scores[rownames(ct_scores) == classification,]
-    calledPos <- c(calledPos, names(which(vect>thresh)))
-    calledNeg<-c(calledNeg, names(which(vect<=thresh)))
-
+  if (classification %in%  calledPos){
+      TP = 1
+      FN = 0
+      FP = length(calledPos) - 1
+      TN = length(calledNeg)
+    } else {
+      TP = 0
+      FN = 1
+      FP = length(calledPos)
+      TN = length(calledNeg) -1
+    }
   }
-  
-  TP <- length(intersect(actualPos, calledPos));
-  FP <- length(intersect(actualNeg, calledPos));
-  FN <- length(actualPos)-TP;
-  TN <- length(actualNeg)-FP;
-  c(TP, FN, FP, TN);  
+
+  Accu <- (TP + TN)/(TP + TN + FP + FN)
+
 }
 
 
