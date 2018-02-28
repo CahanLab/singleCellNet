@@ -48,11 +48,9 @@ sc_classAssess<-function
   cat("classify held out data...\n")
   stVal<-ttList[['stVal']]
   ct_scores=rf_classPredict(testRFs, expDat_good[,row.names(stVal)])
+  
+} 
 
-  #cat("obtaining some ROCs...\n")
-  #assessed<-sc_ROCs(ct_scores, stVal, dLevel=dLevel, dLevelSID=dLevelSID, threshs=seq(0,1,by=resolution, nRand = nRand))
-
-}  
 
 #' Assess classifiers based on validation data
 #'
