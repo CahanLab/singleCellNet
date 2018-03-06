@@ -49,7 +49,7 @@ sc_classAssess<-function
   stVal<-ttList[['stVal']]
   ct_scores=rf_classPredict(testRFs, expDat_good[,row.names(stVal)])
 
-  assessed <- list(ct_scores = ct_scores, stVal = stVal, stTrain = stTrain)
+  assessed <- list(ct_scores = ct_scores, stVal_tmp = stVal_tmp, stTrain = stTrain)
   
 } 
 
