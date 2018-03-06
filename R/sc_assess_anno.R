@@ -78,7 +78,7 @@ sc_Accu<-function #calculate the accuracy of the data at each given classificati
   sampIDs<-colnames(ct_scores)
 
   #make a new stVal with the rand cells added
-  tmp <- as.data.frame(matrix("Rand", nrow = nRand, ncol=(ncol(stVal))))
+  tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stVal))))
   colnames(tmp) <- colnames(stVal)
   tmp$sample_name <- sampIDs[(length(sampIDs) - nRand + 1):length(sampIDs)]
   rownames(tmp) <- tmp[,dLevelSID]
