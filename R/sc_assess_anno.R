@@ -48,6 +48,8 @@ sc_classAssess<-function
   cat("classify held out data...\n")
   stVal<-ttList[['stVal']]
   ct_scores=rf_classPredict(testRFs, expDat_good[,row.names(stVal)])
+
+  assessed <- list(ct_scores = ct_scores, stVal = stVal, stTrain = stTrain)
   
 } 
 
