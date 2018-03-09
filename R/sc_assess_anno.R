@@ -39,7 +39,7 @@ sc_classAssess<-function
   cat("Calculating varGenes...\n")
   varGenes <- findVarGenes(expDat_good, washedDat$geneStats)
 
-  cellgrps<-stTrain[,dLevel]
+  cellgrps<-as.character(stTrain[,dLevel])
   names(cellgrps)<-rownames(stTrain)
 
   cat("Making classifiers...\n")
