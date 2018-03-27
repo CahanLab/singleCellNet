@@ -519,3 +519,16 @@ cn_clPerf<-function # assumes rownames(sampTab) == sampTab identifier used as co
   c(TP, FN, FP, TN);  
 }
 
+
+makeSampleTable <- function(ct_scores, stQuery, nRand, dLevelSID){
+  
+  sampIDs<-colnames(ct_scores)
+  tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stQuery))))
+  colnames(tmp) <- colnames(stQuery)
+  tmp[,dLevelSID] <- sampIDs[(length(sampIDs) - nRand + 1):length(sampIDs)]
+  rownames(tmp) <- tmp[, dLevelSID]
+  stVal_tmp <- rbind(stQuery, tmp)
+  rownames(stVal_tmp) <- stVal_tmp[,dLevelSID]
+
+  return(stVal_tmp)
+}
