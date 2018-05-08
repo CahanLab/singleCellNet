@@ -21,6 +21,26 @@ makeMultiTSP<-function(expDat, sampTab, topN=NULL){
   classList
 }
 
+selectTrain <- function(expDat, stDat, nCells, dLevel, sample_name){
+  classes <- unique(stDat[,dLevel])
+  goodClasses <- vector()
+  newstTrain <- data.frame()
+  
+  for (i in 1: length(classes)){
+    if(nrow(stDat[which(stDat[,dLevel] == classes[i]),]) > nCells){
+      goodClasses <- c(goodClasses, classes[i])
+      rowindex <- sample(rownames(stDat[which(stDat[,dLevel] == classes[i]),]), nCells)
+      newstTrain <- rbind(newstTrain, stDat[rowindex,])
+    }
+  }
+  
+  newexpTrain <- expDat[,newstTrain[,sample_name]]
+  
+  selTrain <- list(goodClasses = goodClasses, expTrain = newexpTrain, stTrain = newstTrain)
+  
+  return(selTrain)
+}
+
 # make a matrix indicating gene vs gene props
 sub_tsp_prep<-function(expDat, stX){
 	#stX<-stTrain[stTrain$description1==desc,]
