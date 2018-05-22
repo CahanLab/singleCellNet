@@ -529,6 +529,66 @@ makeSampleTable <- function(ct_scores, stQuery, nRand, dLevelSID){
   rownames(tmp) <- tmp[, dLevelSID]
   stVal_tmp <- rbind(stQuery, tmp)
   rownames(stVal_tmp) <- stVal_tmp[,dLevelSID]
-
   return(stVal_tmp)
 }
+
+#external clustering comparison
+#cluster comparison between different clustering methods with ARI
+#also test cluster stability
+cal_ARI <- function(expDat, sampTab, topPC, maxLevel, dThresh, true_lable, nIter){
+  geneStats <- sc_statTab(expDat, dThresh)
+  washedDat_tmp <- list(expDat= expDat, geneStats= geneStats)
+  
+  tmp <- pipe_steam_list(washedDat_tmp, sampTab, topPC = topPC)
+  gpa <- gpa_recurse(expDat, maxLevel = maxLevel, dThresh = dThresh)
+  ARI_score <- as.data.frame(matrix(0, nrow = 3, ncol = 4))
+  colnames(ARI_score) <- c("gpa","dbscan","mclust","cutTree")
+  
+  for (i in 1: nIter){
+    ARI_score[i,1] <- adjustedRandIndex(gpa$grp_list[[length(gpa$grp_list)]], true_lable)
+    ARI_score[i,2] <- adjustedRandIndex(tmp$dbscan$group, true_lable)
+    ARI_score[i,3] <- adjustedRandIndex(tmp$mc$group, true_lable)
+    ARI_score[i,4] <- adjustedRandIndex(tmp$dtree$group, true_lable)  
+  }
+  
+  #return(list(ARI_score, gpa_label = gpa$grp_list[[length(maxLevel)]], dbscan_label = tmp$dbscan$group, mclust_label = tmp$mclust$group, cutTree_label = tmp$dtree$group))
+  
+  return(ARI_score)
+  
+}
+
+#internal cluster comparison
+#internal control by comparing the performance of ARI for using only one of the clustering method alone
+#also test cluster stability
+
+cal_ARI_internal <- function(expDat, 
+                             sampTab, 
+                             maxLevel, 
+                             dThresh, 
+                             true_lable, 
+                             nIter, 
+                             meanType="overall_mean",
+                             pcaMethod="prcomp"){
+  
+  ARI_score_internal <- as.data.frame(matrix(0, nrow = nIter, ncol = 5))
+  colnames(ARI_score_internal) <- c("mixed","mclust", "kmeans", "cutree", "sNN_clust")
+  
+  for (i in 1: nIter){
+    gpa_mixed <- gpa_recurse(expDat, maxLevel = maxLevel, methods = c("mclust", "kmeans", "cutree", "sNN_clust"))
+    gpa_mclust <- gpa_recurse(expDat, maxLevel = maxLevel, methods = "mclust")
+    gpa_kmeans <- gpa_recurse(expDat, maxLevel = maxLevel, methods = "kmeans")
+    gpa_cutree <- gpa_recurse(expDat, maxLevel = maxLevel, methods = "cutree")
+    gpa_sNN <- gpa_recurse(expDat, maxLevel = maxLevel, methods = "sNN_clust")
+    
+    ARI_score_internal[i,1] <- adjustedRandIndex(gpa_mixed$grp_list[[length(gpa_mixed$grp_list)]], true_lable)
+    ARI_score_internal[i,2] <- adjustedRandIndex(gpa_mclust$grp_list[[length(gpa_mclust$grp_list)]], true_lable)
+    ARI_score_internal[i,3] <- adjustedRandIndex(gpa_kmeans$grp_list[[length(gpa_kmeans$grp_list)]], true_lable)
+    ARI_score_internal[i,4] <- adjustedRandIndex(gpa_cutree$grp_list[[length(gpa_cutree$grp_list)]], true_lable)
+    ARI_score_internal[i,5] <- adjustedRandIndex(gpa_sNN$grp_list[[length(gpa_sNN$grp_list)]], true_lable)
+  }
+  
+  return(ARI_score_internal)
+  
+}
+
+
