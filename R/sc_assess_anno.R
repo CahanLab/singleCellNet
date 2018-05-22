@@ -535,12 +535,12 @@ makeSampleTable <- function(ct_scores, stQuery, nRand, dLevelSID){
 #external clustering comparison
 #cluster comparison between different clustering methods with ARI
 #also test cluster stability
-cal_ARI <- function(expDat, sampTab, topPC, maxLevel, dThresh, true_lable, nIter){
+cal_ARI <- function(expDat, sampTab, topPC, maxLevel, dThresh, true_lable, nIter, methods = c("mclust", "kmeans", "cutree", "sNN_clust")){
   geneStats <- sc_statTab(expDat, dThresh)
   washedDat_tmp <- list(expDat= expDat, geneStats= geneStats)
   
   tmp <- pipe_steam_list(washedDat_tmp, sampTab, topPC = topPC)
-  gpa <- gpa_recurse(expDat, maxLevel = maxLevel, dThresh = dThresh)
+  gpa <- gpa_recurse(expDat, maxLevel = maxLevel, dThresh = dThresh, methods = methods)
   ARI_score <- as.data.frame(matrix(0, nrow = 3, ncol = 4))
   colnames(ARI_score) <- c("gpa","dbscan","mclust","cutTree")
   
