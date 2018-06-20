@@ -591,4 +591,135 @@ cal_ARI_internal <- function(expDat,
   
 }
 
+#building assessment report
+assessmentReport <- function(ct_scores, #matrix of classification scores, rows = classifiers, columns = samples, colnames=sampleids
+                             stVal, #the true label, be sure to include random cells if were used, names
+                             nRand = 50,
+                             resolution = 0.005,# increment at which to evalutate classification
+                             classLevels = "cell_ontology_class",
+                             dLevelSID = "sample_name"){
+  
+  true_label <- c(stVal[, classLevels], rep("rand", nRand))
+  tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stVal))))
+  colnames(tmp) <- colnames(stVal)
+  tmp[,dLevelSID] <- colnames(ct_scores)[(ncol(ct_scores) - nRand + 1):ncol(ct_scores)]
+  rownames(tmp) <- tmp[,dLevelSID]
+  stVal_Tmp <- rbind(stVal, tmp)
+  
+  ct_scores_t <- t(ct_scores)
+  
+  report <- list()
+  
+  #cohen's kappa, accuracy
+  pred_label <- c()
 
+  for(i in 1:nrow(ct_scores_t)){
+    max <- max(ct_scores_t[i,])
+    for(j in 1:ncol(ct_scores_t)){
+      if(ct_scores_t[i,j] == max){
+        pred_label <- c(pred_label, colnames(ct_scores_t)[j])
+      }
+    }
+  }
+
+  cm = as.matrix(table(Actual = pred_label, Predicted = true_label))
+  
+  cm = as.matrix(table(Actual = pred_label, Predicted = true_label))
+
+  n = sum(cm) # number of instances
+  nc = nrow(cm) # number of classes
+  diag = diag(cm) # number of correctly classified instances per class 
+  rowsums = apply(cm, 1, sum) # number of instances per class
+  colsums = apply(cm, 2, sum) # number of predictions per class 
+  p = rowsums / n # distribution of instances over the actual classes
+  q = colsums / n # distribution of instances over the predicted classes
+  expAccuracy = sum(p*q)
+  accuracy = sum(diag) / n 
+  report[['kappa']] <- (accuracy - expAccuracy) / (1 - expAccuracy)
+  report[['accuracy']] <- accuracy
+  
+  #multiLogLoss
+  names(true_label) <- rownames(ct_scores_t)
+  report[['multiLogLoss']]<- MultiLogLoss(y_true = true_label, y_pred = ct_scores_t)
+  
+  #PR
+  confusionMatrix <- cn_classAssess(ct_scores, stVal_Tmp, classLevels= classLevels, dLevelSID=dLevelSID, resolution=resolution)
+  report[['confusionMatrix']] <- confusionMatrix
+  report[['PR_ROC']] <- cal_class_PRs(confusionMatrix)
+ 
+  return(report)
+}
+
+cal_class_ROCs<-function
+(assessed
+){
+  ctts<-names(assessed);
+  df<-data.frame();
+  for(ctt in ctts){
+    tmp<-assessed[[ctt]];
+    tmp<-cbind(tmp, ctype=ctt);
+    df<-rbind(df, tmp);
+  }
+  
+  prsAll<-transform(df, TP = as.numeric(as.character(TP)), 
+                    TN = as.numeric(as.character(TN)), 
+                    FN = as.numeric(as.character(FN)), 
+                    FP = as.numeric(as.character(FP)));
+  
+  FPRfunc<-function(df){
+    ans<-vector();
+    for(i in 1:nrow(df)){
+      ans<-append(ans, df[i,"FP"]/(df[i,"TN"]+df[i,"FP"]));
+    }
+    ans;
+  }
+  
+  TPRfunc<-function(df){
+    ans<-vector();
+    for(i in 1:nrow(df)){
+      ans<-append(ans, df[i,"TP"]/(df[i,"TP"]+df[i,"FN"]));
+    }
+    ans;
+  }
+  
+  FPR<-FPRfunc(prsAll)
+  TPR<-TPRfunc(prsAll)
+  prsAll2<-cbind(prsAll, data.frame( TPR=TPR, FPR=FPR));
+}
+
+cal_class_PRs<-function
+(assessed
+  ){
+  ctts<-names(assessed);
+  df<-data.frame();
+  for(ctt in ctts){
+    tmp<-assessed[[ctt]];
+    tmp<-cbind(tmp, ctype=ctt);
+    df<-rbind(df, tmp);
+  }
+
+  prsAll<-transform(df, TP = as.numeric(as.character(TP)), 
+    TN = as.numeric(as.character(TN)), 
+    FN = as.numeric(as.character(FN)), 
+    FP = as.numeric(as.character(FP)));
+
+    precfunc<-function(df){
+      ans<-vector();
+      for(i in 1:nrow(df)){
+        ans<-append(ans, df[i,"TP"]/(df[i,"TP"]+df[i,"FP"]));
+      }
+      ans;
+    }
+
+    sensfunc<-function(df){
+      ans<-vector();
+      for(i in 1:nrow(df)){
+        ans<-append(ans, df[i,"TP"]/(df[i,"TP"]+df[i,"FN"]));
+      }
+      ans;
+    }
+
+  precs<-precfunc(prsAll)
+  sens<-sensfunc(prsAll)
+  prsAll2<-cbind(prsAll, data.frame(recall=sens, precision=precs));
+}
