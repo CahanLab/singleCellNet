@@ -3,6 +3,63 @@
 
 # commonly used or misc functions
 
+
+ctMerge<-function(sampTab, annCol, ctVect, newName){
+  oldann<-as.vector(sampTab[,annCol])
+  newann<-oldann
+  for(oldName in ctVect){
+    xi<-which(oldann==oldName)
+    newann[xi]<-newName
+  }
+  xnot<-which(colnames(sampTab)!=annCol)
+  ans<-sampTab[,xnot]
+  cbind(ans, newAnn=newann)
+}
+
+ctRename<-function(sampTab, annCol, oldName, newName){
+  oldann<-as.vector(sampTab[,annCol])
+  newann<-oldann
+  xi<-which(oldann==oldName)
+  newann[xi]<-newName
+  xnot<-which(colnames(sampTab)!=annCol)
+  ans<-sampTab[,xnot]
+  cbind(ans, newAnn=newann)
+} 
+
+splitCommon<-function(sampTab, ncells, dLevel="cell_ontology_class"){
+  cts<-unique(as.vector(sampTab[,dLevel]))
+  trainingids<-vector()
+  for(ct in cts){
+    cat(ct,": ")
+    stX<-sampTab[sampTab[,dLevel]==ct,]
+    ccount<-nrow(stX)-3
+    ccount<-min(ccount, ncells)
+    cat(nrow(stX),"\n")
+    trainingids<-append(trainingids, sample(rownames(stX), ccount))
+  }
+  val_ids<-setdiff(rownames(sampTab), trainingids)
+  list(train=sampTab[trainingids,], val=sampTab[val_ids,])
+}
+
+
+#' @export
+loadLoomExp<-function# load a loom object containing expression data
+(path,
+  cellNameCol='obs_names'
+  ){
+
+  lfile <- connect(filename = path)
+  geneNames<-lfile[["row_attrs"]][["var_names"]][]
+  cellNames<-lfile[["col_attrs"]][["obs_names"]][]
+  expMat<- t(lfile[["matrix"]][1:length(cellNames),])
+  rownames(expMat)<-geneNames
+  colnames(expMat)<-cellNames
+  expMat
+}
+
+
+
+
 #' @export
 getGenesFromGO<-function# return the entrez gene ids of a given a GOID, for now assumes mouse
 (GOID, # GO id to find genes for

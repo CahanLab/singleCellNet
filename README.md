@@ -1,31 +1,27 @@
 # singleCellNet
 
 ### Introduction
-See [CellNet](https://github.com/pcahan1/CellNet) for an introduction to CellNet, how to use it on bulk RNA-Seq, and how to analyze scRNA-Seq data with classifiers trained on bulk RNA-Seq. Here, we illustrate how to cluster single cell RNA-Seq data, build single cell classifiers based on the clustering results, and use these classifiers to assign 'cell identity' to scNRA-Seq data.
+See [CellNet](https://github.com/pcahan1/CellNet) for an introduction to CellNet, how to use it on bulk RNA-Seq, and how to analyze single cell RNA-Seq (scRNA-Seq) data with classifiers trained on bulk RNA-Seq. Here, we illustrate
 
-Shortcut to original pipleine [wash/chop/steam/butter pipeline](#wcsb)
-Shortcut to second pipeline [gpa_recurse version 1](#gpa_rec1)
+- how to build and assess single cell classifiers
 
-#### Latest greatest clustering pipeline, plus cluster gene set enrichment and building single cell classifiers to analyze different studies. 12-12-17
+- how to use these classifiers to quantify 'cell identity' from query scRNA-Seq data
 
-Compare data from mESC differentiated as Embryoid bodies for 4 days to data from mouse embryos at e6.5-e7.75. We will load the 2 data sets, harmonize them, cluster the mESC-derived data, and find genes and pathways high in each cluster. Then we will compare this data to the embryo data by both gene set enrichment and classification.
+- how to cluster scRNA-Seq data using our 'cluster by competition' method
+
+### DATA
+
+In this example, we use a subset of the Tabula Muris data to train singleCellNet. To learn more about the Tabula Muris project, see the [manuscript])(https://www.biorxiv.org/content/early/2018/03/29/237446). As query data, we use scRNA-Seq of kidney cells as reported in [Park et al 2018](https://www.ncbi.nlm.nih.gov/pubmed/29622724). You can download this data here:
+
+| APPLICATION | METADATA | EXPRESSION |
+|-------------------------------------|
+| Query       | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_Park_MouseKidney_062118.rda) | [expression data*](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/GSE107585_Mouse_kidney_single_cell_datamatrix.txt.gz) |
+| Training    | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_TM_053018.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expTM_Raw_053018.rda) |
+
+*N.B. The query expression data needs to be decompressed before loading it into R. 
 
 
-DATA
 
-Data from differentiated mESC cells
-[MAGIC-treated expression data](https://s3.amazonaws.com/cellnet-rnaseq/ref/examples/singleCell/expDat_x4_Dec_09_2017.rda)
-[Counts expression data](https://s3.amazonaws.com/cellnet-rnaseq/ref/examples/singleCell/expQuery_Counts_Dec_12_2017.rda)
-[Meta data](https://s3.amazonaws.com/cellnet-rnaseq/ref/examples/singleCell/sampTab_x4_Dec_09_2017.rda)
-
-Data from mouse embryos (see http://gastrulation.stemcells.cam.ac.uk/scialdone2016).
-[Counts expression data](https://s3.amazonaws.com/cellnet-rnaseq/ref/examples/singleCell/Scialdone_Gottgens_expComplete_Dec_03_2017.rda)
-[Meta data](https://s3.amazonaws.com/cellnet-rnaseq/ref/examples/singleCell/Scialdone_Gottgens_stComplete_Dec_03_2017.rda)
-
-Mouse gene sets for enrichment analysis (see http://bioinf.wehi.edu.au/software/MSigDB/)
-[Gene ontology](https://s3.amazonaws.com/cellnet-rnaseq/ref/genesets/mouse_symbols_GO_c5_v5p2_Dec_11_2017.rda)
-[MSigDB hallmarks](https://s3.amazonaws.com/cellnet-rnaseq/ref/genesets/mouse_symbols_H_v5p2_Dec_11_2017.rda)
-[Immune-related](https://s3.amazonaws.com/cellnet-rnaseq/ref/genesets/mouse_symbols_Immune_c7_v5p2_Dec_11_2017.rda)
 
 #### Setup
 ```R

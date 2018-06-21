@@ -1,6 +1,65 @@
 # Patrick Cahan (C) 2017
 # patrick.cahan@gmail.com
 
+#' Skyline waterfall
+#'
+#' Skyline waterfall of classification result
+#' @param classRes
+#' @param cellType
+#' @param sampTab
+#' @param dLevel
+#' @param yval
+#'
+#' @return nothing
+#'
+#' @examples
+#' skylineClass(classRes, "blood",sampTab, "timepoint", 0.25)
+#'
+#' @export
+skylineClass<-function(
+  classRes, 
+  cellType,
+  sampTab, 
+  dLevel,
+  yval,
+  reorder=TRUE){
+
+
+
+  cellVals<-as.vector(sampTab[,dLevel])
+  cellAnns<-unique(cellVals)
+
+  # assign cols somehow
+  xdf<-cbind(sampTab, t(classRes))
+
+  newXdf<-data.frame();
+
+  # re-order by cellAnn then by classification of cellType
+  if(reorder){
+    for(group in cellAnns){
+      xDat<-xdf[which(xdf[,dLevel]==group),]
+     xDat<-xDat[ order(xDat[,cellType]),]
+     newXdf<-rbind(newXdf, xDat)
+    }
+  }
+  else{
+    newXdf<-xdf
+  }
+  
+
+  xi<-which(colnames(newXdf) == cellType)
+  colnames(newXdf)[xi] <- "vals"
+
+  xi<-which(colnames(newXdf) == dLevel)
+  colnames(newXdf)[xi] <- "group"
+
+  newXdf$cell_name<-factor(newXdf$cell_name, as.vector(newXdf$cell_name))
+  #ggplot(data=newXdf, aes(x=cell_name, y=vals, fill=cellAnns)) + geom_bar(stat="identity") + theme_bw()
+  ggplot(data=newXdf, aes(x=cell_name, y=vals, fill=group)) + geom_bar(stat="identity", width = 1) + theme_bw() + geom_hline(aes(yintercept=yval), colour="#990000", linetype="dashed") + scale_x_discrete(breaks=NULL) + theme(panel.grid.minor=element_blank(),panel.grid.major=element_blank()) + scale_fill_viridis(discrete=TRUE) + ylim(c(0,1))
+  #newXdf
+}
+
+
 
 #' heatmap of the enrichment result
 #'

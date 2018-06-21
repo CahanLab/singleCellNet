@@ -169,7 +169,7 @@ sc_makeClassifier<-function(
 	missingGenes<-setdiff(unique(genes), allgenes)
 	cat("Number of mussing genes ", length(missingGenes),"\n")
 	ggenes<-intersect(unique(genes), allgenes)
-	randomForest(t(expTrain[ggenes,]), as.factor(c(groups, rep("rand", ncol(randDat)))), ntree=2000)
+	randomForest(t(expTrain[ggenes,]), as.factor(c(groups, rep("rand", ncol(randDat)))), ntree=ntrees)
 
 }
 

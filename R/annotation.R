@@ -2,6 +2,27 @@
 # patrick.cahan@gmail.com
 
 
+getTopTen<-function
+(longTab,
+ cluster,
+ topx=10,
+ direction=1,
+ thresh=0.05){
+ x<-longTab[longTab$cluster==cluster & longTab$padj<thresh,]
+ if(direction>0){ 
+    x<-x[x$NES>0,]
+    x<-x[order(x$NES,  decreasing=TRUE),]
+ }
+  else{
+    x<-x[x$NES<0,]
+     x<-x[order(x$NES,  decreasing=FALSE),]
+ }
+ 
+ xmax<-min(topx, nrow(x))
+x[1:xmax,c("pathway", "padj", "NES", "size")]
+
+}
+
 ann_eidToSym<-function# convert a gene symbols to a [single] eid
 (syms,
  species='MM'){
@@ -145,14 +166,20 @@ compileGSEA<-function(
            tmpDF<-cbind(tmpDF, cluster=rep(xname, nrow(tmpDF)))
            tmpDF<-tmpDF[order(tmpDF$NES, decreasing=TRUE),]
            xi<-which(tmpDF$padj<thresh)
-           sig_gs<-rep(0, nrow(tmpDF))
-           sig_gs[xi]<-1
-           tmpDF<-cbind(tmpDF, isSig=sig_gs)
-           longX<-rbind(longX, tmpDF)
+           if(length(xi)>0){
+               sig_gs<-rep(0, nrow(tmpDF))
+         #  cat(xname,"\t",length(xi),"\n")
+               sig_gs[xi]<-1
+               tmpDF<-cbind(tmpDF, isSig=sig_gs)
+               longX<-rbind(longX, tmpDF)
+           }
         }
         #longX<-longX[longX$padj<thresh,]
         longX<-cbind(longX, lpval=log10(longX$padj))
-    longX[longX$NES>0,]$lpval<- -1 * longX[longX$NES>0,]$lpval
+        # correct for NES == NaN
+        xiNAN<-rownames(longX[is.nan(longX$NES),])
+        longX[xiNAN,]$NES<-longX[xiNAN,]$ES
+        longX[longX$NES>0,]$lpval<- -1 * longX[longX$NES>0,]$lpval
     longX
 }
 
@@ -172,7 +199,9 @@ compileGSEA<-function(
 ks.extract<-function(
     enrRes,
     sigType='holm',
-    sigThresh=1e-5)
+    sigThresh=1e-5,
+    gsColName="geneSet",
+    esColName="ES")
 {
 
     # first pass, determine the significant gene sets 
@@ -181,18 +210,18 @@ ks.extract<-function(
     for(rname in rnames){
         x<-enrRes[[rname]]
         tmpAns<-x[which(x[,sigType]<sigThresh),]
-        sigGS<-append(sigGS, as.vector(tmpAns$geneSet))
+        sigGS<-append(sigGS, as.vector(tmpAns[,gsColName]))
     }
     sigGS<-unique(sigGS)
 
-    xi<-match(sigGS,x[,"geneSet"])
+    xi<-match(sigGS,x[,gsColName])
 
     ans<-matrix(0, nrow=length(sigGS), ncol=length(rnames))
     rownames(ans)<-sigGS
     colnames(ans)<-rnames
     for(rname in rnames){
         x<-enrRes[[rname]]        
-        vals<-x[xi,"ES"]    
+        vals<-x[xi,esColName]    
         ans[sigGS,rname]<-vals
     }
     ans
@@ -215,7 +244,9 @@ ks.extract<-function(
 ks.extract.more<-function(
     enrRes,
     sigType='holm',
-    sigThresh=1e-5)
+    sigThresh=1e-5,
+    gsColName="geneSet",
+    esColName="ES")
 {
 
     # first pass, determine the significant gene sets 
@@ -229,9 +260,9 @@ ks.extract.more<-function(
         sigGS<-append(sigGS, tmpAns)
     }
 
-    sigGS<-as.vector(x$geneSet)[sort(unique(sigGS))]
+    sigGS<-as.vector(x[,gsColName])[sort(unique(sigGS))]
 
-    xi<-match(sigGS,x[,"geneSet"])
+    xi<-match(sigGS,x[,gsColName])
 
     ans<-matrix(0, nrow=length(sigGS), ncol=length(rnames))
     logPs<-matrix(0, nrow=length(sigGS), ncol=length(rnames))
@@ -246,10 +277,10 @@ ks.extract.more<-function(
 
     for(rname in rnames){
         x<-enrRes[[rname]]        
-        vals<-x[xi,"ES"]    
+        vals<-x[xi,esColName]    
         ans[sigGS,rname]<-vals
 
-        pvals<-x[xi,"holm"]
+        pvals<-x[xi,sigType]
         logPs[sigGS,rname]<-pvals
     }
     ##logPs<- -1 * log10(logPs)
