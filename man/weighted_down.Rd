@@ -4,7 +4,7 @@
 \alias{weighted_down}
 \title{weighted subtraction from mapped reades, applied to all}
 \usage{
-weighted_down(expRaw, total)
+weighted_down(expRaw, total, dThresh = 0)
 }
 \arguments{
 \item{expRaw}{matrix of total mapped reads per gene/transcript}

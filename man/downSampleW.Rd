@@ -4,7 +4,7 @@
 \alias{downSampleW}
 \title{weighted subtraction from mapped reades}
 \usage{
-downSampleW(vector, total = 1e+05)
+downSampleW(vector, total = 1e+05, dThresh = 0)
 }
 \arguments{
 \item{vector}{of total mapped reads per gene/transcript}

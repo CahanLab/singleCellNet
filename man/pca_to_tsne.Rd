@@ -4,14 +4,18 @@
 \alias{pca_to_tsne}
 \title{make tsne from pca}
 \usage{
-pca_to_tsne(recRes, perplexity = 30, theta = 0.3)
+pca_to_tsne(expDat, recRes, perplexity = 30, theta = 0.3, weighted = TRUE)
 }
 \arguments{
+\item{expDat}{expDat}
+
 \item{recRes}{result of running gpaRecurse}
 
 \item{perplexity}{(30)}
 
 \item{theta}{(0.30)}
+
+\item{weighted}{(TRUE) whether to use PCs from deeper lelves, and to weight them}
 }
 \value{
 tsne matrix
