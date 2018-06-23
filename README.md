@@ -23,6 +23,7 @@ N.B. The query expression data needs to be decompressed before loading it into R
 
 #### Setup
 ```R
+library(fgsea)
 library(devtools)
 install_github("pcahan1/singleCellNet", ref="tsp_rf_pc", auth="your_token")
 library(singleCellNet)
@@ -179,6 +180,114 @@ sc_hmClass(crParkall, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 <img src="md_img/hmClass_Park.png">
 
 
+### Skyline plot of classification results
+```R
+stKid2<-addRandToSampTab(crParkall, stPark, "description1", "sample_name")
+skylineClass(crParkall, "T cell", stKid2, "description1",.25, "sample_name")
+```
+<img src="md_img/skyline_Tcell_Park.png">
+
+
+
+#### Determine cell groups yourself using Cluster by Competition (CBC)
+```R
+library(cluster)
+library(pcaMethods)
+library(rpca)
+library(data.tree)
+library(dbscan)
+library(Rtsne)
+
+gstats<-sc_statTab(expTrain, dThresh=1)
+ggenes<-sc_filterGenes(gstats, alpha1=0.025, alpha2=.001, mu=2)
+length(ggenes)
+[1] 7777
+
+system.time(xTree_auto<-gpa_recurse(expTrain[ggenes,], zThresh=2, maxLevel=3, nPCs=2, SilhDrop=0.5, methods=c("cutree","sNN_clust","kmeans"), dThresh=1, pcaMethod="prcomp",k=2:8, minClusterSize=20, silMin=FALSE, pcAuto=TRUE))
+
+   user  system elapsed 
+ 77.129   4.513  81.654 
+
+system.time(ts3<-pca_to_tsne(expTrain[ggenes,], xTree_auto, perplexity=30, theta=0.25, weighted=FALSE))
+ user  system elapsed 
+ 44.945   0.410  45.370
+
+
+stT1<-stTrain
+stT1<-cbind(stT1, cluster=xTree_auto$groups)
+sampTab<-cbind(sampTab, cluster2=xTree_auto$grp_list[[2]])
+sampTab<-cbind(sampTab, cluster3=xTree_auto$grp_list[[3]])
+
+plot_tsne(stT1, ts3, cname="cluster")
+```
+<img src="md_img/tsne_TM_cluster.png">
+
+#### Black background; good for presentations
+```R
+plot_tsne(stT1, ts3, cname="cluster", themeWhite=FALSE)
+```
+<img src="md_img/tsne_TM_cluster_black.png">
+
+
+Color by category provided by Tabula Muris
+```R
+plot_tsne(stT1, ts3, cname="newAnn")
+```
+<img src="md_img/tsne_TM_label.png">
+
+ 
+#### Differential expression
+```R
+system.time(xdiff<-gnrAll(expTrain[ggenes,], xTree_auto$groups))
+   user  system elapsed 
+ 71.072  16.591  87.684 
+
+x1<-lapply( xdiff, getTopGenes, 5)
+newOrder<-reorderCellsByGrp( xTree_auto$groups , names(x1))
+
+hm_gpa_sel(expTrain, c(unique(unlist(x1))), newOrder, maxPerGrp=20, toScale=T, cRow=F, cCol=F,font=5)
+```
+<img src="md_img/hm_diffExp_TM.png">
+
+#### tsne plot specific genes 
+```R 
+tsneMultsimp(ts3, expTrain, c("Ear2","Tnnt2","Cd3e","Apoc3"))
+```
+<img src="md_img/tsne_4_genes.png">
+
+#### tsne plot specific genes; black background
+```R 
+tsneMultsimp(ts3, expTrain, c("Ear2","Tnnt2","Cd3e","Apoc3"), revCol=FALSE,themeWhite=FALSE)
+```
+<img src="md_img/tsne_4_genes_black.png">
+
+#### Gene set enrichment analysis
+
+Download and install fgsea (https://github.com/ctlab/fgsea) if you don't already have it
+```R
+install_github("ctlab/fgsea")
+```
+
+Enrichment analysis
+```R
+# download mouse symbol hallmarks gene sets
+download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/resources/mouse_symbols_H_v5p2_Dec_11_2017.rda")
+
+gsHallmarks<-utils_loadObject("mouse_symbols_H_v5p2_Dec_11_2017.rda")
+
+# limit to genes included in both the expression data and in the hallmarks lists
+gsHall<-lapply(gsHallmarks, intersect, rownames(xdiff[[1]]))
+
+system.time(enrPatt<-fgsea.wrapper.set(xdiff, gsHall, minSize=20, nPerm=1e3))
+  user  system elapsed 
+ 34.546   0.814   6.781 
+
+esMatPat<-ks.extract.more(enrPatt, sigThresh=1.1, sigType='padj', gsColName='pathway', esColName='NES')
+
+# heatmap the enrichment scores, color only those that are significant
+hm_enr(esMatPat, 0.05, cRows=T, cCols=T, fsr=6)
+```
+<img src="md_img/hm_fgsea_tm.png">
 
 
 

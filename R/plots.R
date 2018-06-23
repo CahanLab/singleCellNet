@@ -22,6 +22,7 @@ skylineClass<-function(
   sampTab, 
   dLevel,
   yval,
+  cellIdLab="cell_name",
   reorder=TRUE){
 
 
@@ -53,7 +54,9 @@ skylineClass<-function(
   xi<-which(colnames(newXdf) == dLevel)
   colnames(newXdf)[xi] <- "group"
 
-  newXdf$cell_name<-factor(newXdf$cell_name, as.vector(newXdf$cell_name))
+  newXdf[,cellIdLab]<-factor(newXdf[,cellIdLab], as.vector(newXdf[,cellIdLab]))
+  xxi<-which(colnames(newXdf)==cellIdLab)
+  colnames(newXdf)[xxi]<-"cell_name"
   #ggplot(data=newXdf, aes(x=cell_name, y=vals, fill=cellAnns)) + geom_bar(stat="identity") + theme_bw()
   ggplot(data=newXdf, aes(x=cell_name, y=vals, fill=group)) + geom_bar(stat="identity", width = 1) + theme_bw() + geom_hline(aes(yintercept=yval), colour="#990000", linetype="dashed") + scale_x_discrete(breaks=NULL) + theme(panel.grid.minor=element_blank(),panel.grid.major=element_blank()) + scale_fill_viridis(discrete=TRUE) + ylim(c(0,1))
   #newXdf
@@ -1239,13 +1242,21 @@ ptsne<-function(xres, cname="study_id")
 }
 
 #' @export
-plot_tsne<-function(sampTab, tsRes, cname="study_id")
+plot_tsne<-function(sampTab, tsRes, cname="study_id", themeWhite=TRUE)
 {
   xres<-cbind(sampTab, tsRes)
   xi<-which(colnames(xres)==cname)
   colnames(xres)[xi]<-"group"
   ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(xres$group)))
-  ggplot(xres, aes(x=TSNE.1, y=TSNE.2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=1) + theme_bw() + scale_colour_manual(values=ColorRamp) #+ facet_wrap( ~ k, nrow=3)
+
+  res<-ggplot(xres, aes(x=TSNE.1, y=TSNE.2, colour=group, fill=group) ) + geom_point(pch=21, alpha=3/4, size=1, stroke=0) + scale_colour_manual(values=ColorRamp) + scale_fill_manual(values=ColorRamp) #+ facet_wrap( ~ k, nrow=3)
+  if(themeWhite){
+    res <- res + theme_bw()
+  }
+  else{
+    res <- res + theme_black()
+  }
+  res
 }
 
 
@@ -1327,7 +1338,8 @@ tsneMultsimp<-function(
   colorPal="BuPu",
   revCol=TRUE,
   toScale=TRUE,
-  limits=c(-3,3)
+  limits=c(-3,3),
+  themeWhite=TRUE
  ){
 
   require(tidyr)
@@ -1359,13 +1371,18 @@ tsneMultsimp<-function(
   else{
     ColorRamp <- colorRampPalette(rev(brewer.pal(n = 7,name = colorPal)))(100)
   }
-  ggplot(tsneLong, aes(x=TSNE.1, y=TSNE.2, colour=expression) ) + 
-  geom_point(pch=19, alpha=2/4, size=.25) + 
-  theme_bw() + 
-  scale_colour_gradientn(colours=ColorRamp) +
-#  facet_wrap( ~ gene)
-  facet_wrap( ~ gene_f)
- 
+  res<- ggplot(tsneLong, aes(x=TSNE.1, y=TSNE.2, colour=expression) ) + 
+    geom_point(pch=19, alpha=2/4, size=.25) + 
+    scale_colour_gradientn(colours=ColorRamp) +
+    facet_wrap( ~ gene_f)
+
+  if(themeWhite){
+    res<-res + theme_bw()
+  }
+  else{
+    res<-res + theme_black()
+ }
+ res
 
 #   tsneLong
 }
@@ -1803,6 +1820,54 @@ plot_bundle<-function(gpaRes, bundleRes, legend=TRUE)
     ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
   }
   ans
+}
+
+
+
+# theme_black from https://gist.github.com/jslefche/eff85ef06b4705e6efbc
+theme_black = function(base_size = 12, base_family = "") { 
+  library(gridExtra) 
+theme_grey(base_size = base_size, base_family = base_family) %+replace% 
+theme( 
+# Specify axis options
+axis.line = element_blank(), 
+axis.text.x = element_text(size = base_size*0.8, color = "white", lineheight = 0.9), 
+axis.text.y = element_text(size = base_size*0.8, color = "white", lineheight = 0.9), 
+axis.ticks = element_line(color = "white", size = 0.2), 
+#axis.title.x = element_text(size = base_size, color = "white", margin = margin(0, 10, 0, 0)), 
+#axis.title.y = element_text(size = base_size, color = "white", angle = 90, margin = margin(0, 10, 0, 0)), 
+axis.ticks.length = unit(0.3, "lines"), 
+# Specify legend options
+legend.background = element_rect(color = NA, fill = "black"), 
+legend.key = element_rect(color = "white", fill = "black"), 
+legend.key.size = unit(1.2, "lines"), 
+legend.key.height = NULL, 
+legend.key.width = NULL, 
+legend.text = element_text(size = base_size*0.8, color = "white"), 
+legend.title = element_text(size = base_size*0.8, face = "bold", hjust = 0, color = "white"), 
+legend.position = "right", 
+legend.text.align = NULL, 
+legend.title.align = NULL, 
+legend.direction = "vertical", 
+legend.box = NULL, 
+# Specify panel options
+panel.background = element_rect(fill = "black", color = NA), 
+panel.border = element_rect(fill = NA, color = "white"), 
+panel.grid.major = element_line(color = "grey35"), 
+panel.grid.minor = element_line(color = "grey20"), 
+#panel.margin = unit(0.5, "lines"), 
+# Specify facetting options
+###strip.background = element_rect(fill = "grey30", color = "grey10"), 
+strip.background = element_blank(),
+###strip.text.x = element_text(size = base_size*0.8, color = "white"), 
+strip.text.x = element_text(size = base_size, color = "white"), 
+strip.text.y = element_text(size = base_size*0.8, color = "white",angle = -90), 
+# Specify plot options
+plot.background = element_rect(color = "black", fill = "black"), 
+###plot.title = element_text(size = base_size*1.2, color = "white"), 
+plot.title = element_text(size = base_size, color = "white"), 
+##plot.margin = unit(rep(1, 4), "lines") 
+) 
 }
 
 
