@@ -15,7 +15,7 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 
 | APPLICATION | METADATA | EXPRESSION |
 |-------------|----------|------------|
-| Query       | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_Park_MouseKidney_062118.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/GSE107585_Mouse_kidney_single_cell_datamatrix.txt.gz) |
+| Query       | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_Park_MouseKidney_062118.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expDat_Park_MouseKidney_062218.rda") |
 | Training    | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_TM_053018.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expTM_Raw_053018.rda) |
 
 N.B. The query expression data needs to be decompressed before loading it into R. 
