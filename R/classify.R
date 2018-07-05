@@ -7,7 +7,7 @@
 #' transform mclust class res to expression prob estimates
 #' @param mcRes what is returned by running Mclust
 #' @param expDat matrix used as input to Mclust
-#' @param pres bool whehter to report prob of expression (highest 2 classes) or not (only highest class)
+#' @param pres bool whehter to report prob of expression highest 2 classes or not only highest class
 #'
 #' @return matrix of probabilities of expression class for each cell and gene
 #' @export
@@ -67,7 +67,7 @@ sc_trans_rnaseq<-function
 #' @param pres boolean 
 #' 
 #' @return matrix rows=genes, cols=cells values 
-#' @export bool whehter to report prob of expression (highest 2 classes) or not (only highest class)
+#' @export
 #'
 mclust_Mat<-function
 (expDat,
@@ -88,7 +88,7 @@ mclust_Mat<-function
 #' harmonize data sets
 #' @param expList list of expression matricies
 #' @param dsVal target expression count
-#' @param pres bool whehter to report prob of expression (highest 2 classes; default) or not (only highest class)
+#' @param pres bool whehter to report prob of expression highest 2 classes; default or not only highest class
 #'
 #' @return list1=list of normalized expression matricies, list2=list of prob of exp matricies
 #' @export

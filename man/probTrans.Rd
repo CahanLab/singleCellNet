@@ -11,7 +11,7 @@ probTrans(mcRes, expDat, pres = TRUE)
 
 \item{expDat}{matrix used as input to Mclust}
 
-\item{pres}{bool whehter to report prob of expression (highest 2 classes) or not (only highest class)}
+\item{pres}{bool whehter to report prob of expression highest 2 classes or not only highest class}
 }
 \value{
 matrix of probabilities of expression class for each cell and gene

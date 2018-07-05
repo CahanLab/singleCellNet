@@ -1,8 +1,8 @@
 Package: singleCellNet
 Title: cell identity from single cell RNA-Seq data
-Version: 0.0.0.9500
-Authors@R: person("Patrick", "Cahan", email = "patrick.cahan@gmail.com", role = c("aut", "cre"))
-Description: cell identity from single cell RNA-Seq data
+Version: 0.1.0
+Authors@R: c(person("Patrick", "Cahan", email = "patrick.cahan@gmail.com", role = c("aut", "cre")), person("Yuqi", "Tan", email="ytan19@jhmi.edu", role=c("aut")))
+Description: Determining cell identity from single cell RNA-Seq data
 Depends: R (>= 3.3.1)
 Requires:
     cluster,

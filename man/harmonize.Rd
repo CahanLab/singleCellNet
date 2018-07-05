@@ -11,7 +11,7 @@ harmonize(expList, trans, dsVal = 1e+06, pres = TRUE)
 
 \item{dsVal}{target expression count}
 
-\item{pres}{bool whehter to report prob of expression (highest 2 classes; default) or not (only highest class)}
+\item{pres}{bool whehter to report prob of expression highest 2 classes; default or not only highest class}
 }
 \value{
 list1=list of normalized expression matricies, list2=list of prob of exp matricies

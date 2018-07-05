@@ -16,7 +16,7 @@ fgsea.wrapper.set(diffExprList, geneSets, minSize = 10, nPerm = 10000)
 \item{nPerm}{defaults to 1e-4}
 }
 \value{
-list of  and (2) list of ks.wrapper results
+list of and list of ks.wrapper results
 }
 \description{
 find gene sets enriched in provided ranked gene list

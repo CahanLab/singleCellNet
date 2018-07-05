@@ -16,7 +16,7 @@ ks.wrapper.set(diffExprList, geneSets)
 \item{sigThresh}{defaults to 1e-5}
 }
 \value{
-list of  and (2) list of ks.wrapper results
+list of and list of ks.wrapper results
 }
 \description{
 find gene sets enriched in provided ranked gene list

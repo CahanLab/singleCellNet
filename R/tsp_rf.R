@@ -28,7 +28,21 @@ gnrBP<-function(
 }
 
 
-
+#' find candidate classifier-worthy genes
+#'
+#' find candidate classifier-worthy genes
+#'
+#' @param expDat expDat
+#' @param sampTab sampTab
+#' @param dLevel dLevel
+#' @param topX topX
+#' @param dThresh dThresh
+#' @param alpha1 alpha1
+#' @param alpha2 alpha2
+#' @param mu mu
+#'
+#' @return list of cgenes and grps
+#' 
 #' @export
 findClassyGenes<-function
 (expDat,
@@ -90,6 +104,13 @@ pair_transform<-function # convert to a vector of length = length(vect)^2 - 1 /2
 }
 
 
+#' makes complete gene-to-gene comparison
+#'
+#' @param expDat expDat
+#' @param genePairs genePairs
+#'
+#' @return matrix indicating which gene of a pair is greater
+#'
 #' @export
 query_transform<-function # convert to a vector of length = length(vect)^2 - 1 /2
 (expDat,
@@ -108,7 +129,14 @@ query_transform<-function # convert to a vector of length = length(vect)^2 - 1 /
 	ans
 }
 
-
+#' finds the best pairs to use
+#'
+#' @param xdiff xdiff
+#' @param n number of pairs
+#' @param maxPer indicates the number of pairs that a gene is allowed to be in
+#'
+#' @return vector of good pairs
+#'
 #' @export
 findBestPairs<-function # find best and diverse set of pairs
 (xdiff,
@@ -149,10 +177,11 @@ addRandToSampTab<-function(classRes, sampTab, desc, id="cell_name"){
 	cat("number of random samples: ",length(rnames), "\n")
 
 	stNew<-data.frame(rid=rnames, rdesc=rep("rand", length(rnames)))
-
 	stTop<-sampTab[,c(id, desc)]
 	colnames(stNew)<-c(id, desc)
-	rbind(stTop, stNew)
+	ans<-rbind(stTop, stNew)
+	rownames(ans)<-colnames(classRes)
+	ans
 }
 
 

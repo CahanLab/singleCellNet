@@ -86,7 +86,7 @@ ks.wrapper<-function(
 #' @param sigType defaults to Holm
 #' @param sigThresh defaults to 1e-5
 #'
-#' @return list of  and (2) list of ks.wrapper results
+#' @return list of and list of ks.wrapper results
 #' 
 #' @export
 #'
@@ -118,7 +118,7 @@ ks.wrapper.set<-function(
 #' @param minSize defaults to 10
 #' @param nPerm defaults to 1e-4
 #'
-#' @return list of  and (2) list of ks.wrapper results
+#' @return list of and list of ks.wrapper results
 #' 
 #' @export
 #'
