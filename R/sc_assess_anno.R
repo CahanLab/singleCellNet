@@ -684,7 +684,7 @@ cal_class_ROCs<-function
   
   FPR<-FPRfunc(prsAll)
   TPR<-TPRfunc(prsAll)
-  prsAll2<-cbind(prsAll, data.frame( TPR=TPR, FPR=FPR));
+  prsAll2<-cbind(prsAll, data.frame(TPR=TPR, FPR=FPR));
 }
 
 cal_class_PRs<-function
@@ -722,4 +722,63 @@ cal_class_PRs<-function
   precs<-precfunc(prsAll)
   sens<-sensfunc(prsAll)
   prsAll2<-cbind(prsAll, data.frame(recall=sens, precision=precs));
+}
+
+plot_class_ROCs<-function
+(assessed
+  ){
+  ctts<-names(assessed);
+  df<-data.frame();
+  for(ctt in ctts){
+    tmp<-assessed[[ctt]];
+    tmp<-cbind(tmp, ctype=ctt);
+    df<-rbind(df, tmp);
+  }
+
+  prsAll<-transform(df, TP = as.numeric(as.character(TP)), 
+    TN = as.numeric(as.character(TN)), 
+    FN = as.numeric(as.character(FN)), 
+    FP = as.numeric(as.character(FP)));
+
+  FPRfunc<-function(df){
+    ans<-vector();
+    for(i in 1:nrow(df)){
+      ans<-append(ans, df[i,"FP"]/(df[i,"TN"]+df[i,"FP"]));
+    }
+    ans;
+  }
+  
+  TPRfunc<-function(df){
+    ans<-vector();
+    for(i in 1:nrow(df)){
+      ans<-append(ans, df[i,"TP"]/(df[i,"TP"]+df[i,"FN"]));
+    }
+    ans;
+  }
+  
+  FPR<-FPRfunc(prsAll)
+  TPR<-TPRfunc(prsAll)
+  prsAll2<-cbind(prsAll, data.frame(TPR=TPR, FPR=FPR));
+
+  ggplot(data=prsAll2, aes(x=as.numeric(as.vector(FPR)), y=as.numeric(as.vector(TPR)))) + geom_point(size = .5, alpha=.5) +  geom_path(size=.5, alpha=.75) +
+  theme_bw() + xlab("False Positive Rate") + ylab("True Positive Rate") + facet_wrap( ~ ctype, ncol=4) +
+  theme(axis.text = element_text(size=5)) + ggtitle("Classification performance")
+}
+
+plot_multiAssess <- function(assessed, method = "tsp_rf"){
+  metric <- matrix(0, ncol = 1, nrow = 3)
+  rownames(metric) <- c("cohen's kappa", "accuracy", "multiLogLoss")
+  colnames(metric) <- method
+  metric[1:3,] <- c(assessed$kappa, assessed$accuracy, assessed$multiLogLoss) 
+  metric <- as.data.frame(metric)
+  test <- melt(data = t(metric))
+  p1 <- ggplot(test, aes(x=Var2, y= value, fill = Var2)) + geom_bar(stat="identity") + scale_fill_brewer(palette="Set2") +xlab("") + ylab("Value") + theme(axis.text=element_text(size=14), axis.title=element_text(size=14)) + labs(fill = method)
+  p2 <- ggplot(data=assessed$PR_ROC, aes(x=as.numeric(as.vector(recall)), y=as.numeric(as.vector(precision)))) + geom_point(size = .5, alpha=.5) +  geom_path(size=.5, alpha=.75) +
+    theme_bw() + xlab("Recall") + ylab("Precision") + facet_wrap( ~ ctype, ncol=4) +
+    theme(axis.text = element_text(size=5)) + ggtitle("Classification performance_PR Curve")
+  p3 <- ggplot(data=assessed$PR_ROC, aes(x=as.numeric(as.vector(FPR)), y=as.numeric(as.vector(TPR)))) + geom_point(size = .5, alpha=.5) +  geom_path(size=.5, alpha=.75) +
+    theme_bw() + xlab("False Positive Rate") + ylab("True Positive Rate") + facet_wrap( ~ ctype, ncol=4) +
+    theme(axis.text = element_text(size=5)) + ggtitle("Classification performance_ROC Curve")
+  
+  p1 + p2 + p3 + plot_layout(ncol = 1)
 }
