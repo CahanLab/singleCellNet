@@ -772,7 +772,7 @@ plot_multiAssess <- function(assessed, method = "tsp_rf"){
   metric[1:3,] <- c(assessed$kappa, assessed$accuracy, assessed$multiLogLoss) 
   metric <- as.data.frame(metric)
   test <- melt(data = t(metric))
-  p1 <- ggplot(test, aes(x=Var2, y= value, fill = Var2)) + geom_bar(stat="identity") + scale_fill_brewer(palette="Set2") +xlab("") + ylab("Value") + theme(axis.text=element_text(size=14), axis.title=element_text(size=14)) + labs(fill = method)
+  p1 <- ggplot(test, aes(x=Var2, y= value, fill = Var2)) + geom_bar(stat="identity") + scale_fill_brewer(palette="Set2") +xlab("") + ylab("Value") + theme(axis.text=element_text(size=14), axis.title=element_text(size=14)) + labs(fill = method) + ylim(0,1)
   p2 <- ggplot(data=assessed$PR_ROC, aes(x=as.numeric(as.vector(recall)), y=as.numeric(as.vector(precision)))) + geom_point(size = .5, alpha=.5) +  geom_path(size=.5, alpha=.75) +
     theme_bw() + xlab("Recall") + ylab("Precision") + facet_wrap( ~ ctype, ncol=4) +
     theme(axis.text = element_text(size=5)) + ggtitle("Classification performance_PR Curve")
