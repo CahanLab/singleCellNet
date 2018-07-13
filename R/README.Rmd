@@ -4,12 +4,6 @@ author: "Yuqi Tan"
 date: "7/12/2018"
 output: html_document
 ---
----
-title: "classifier_comparsion"
-author: "Yuqi Tan"
-date: "7/12/2018"
-output: html_document
----
 
 ##Assessment and BenchMark Implementation
 
