@@ -599,33 +599,41 @@ assessmentReport <- function(ct_scores, #matrix of classification scores, rows =
                              classLevels = "cell_ontology_class",
                              dLevelSID = "sample_name"){
   
-  true_label <- c(stVal[, classLevels], rep("rand", nRand))
+  
   tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stVal))))
   colnames(tmp) <- colnames(stVal)
   tmp[,dLevelSID] <- colnames(ct_scores)[(ncol(ct_scores) - nRand + 1):ncol(ct_scores)]
   rownames(tmp) <- tmp[,dLevelSID]
   stVal_Tmp <- rbind(stVal, tmp)
   
-  ct_scores_t <- t(ct_scores)
-  
+  true_label <- stVal_Tmp[, classLevels]
+
   report <- list()
   
   #cohen's kappa, accuracy
   pred_label <- c()
-
-  for(i in 1:nrow(ct_scores_t)){
-    max <- max(ct_scores_t[i,])
-    for(j in 1:ncol(ct_scores_t)){
-      if(ct_scores_t[i,j] == max){
-        pred_label <- c(pred_label, colnames(ct_scores_t)[j])
+  
+  for(i in 1:ncol(ct_scores)){
+    max <- max(ct_scores[,i])
+    for(j in 1:nrow(ct_scores)){
+      if(ct_scores[j,i] == max){
+        pred_label <- c(pred_label, rownames(ct_scores)[j])
       }
+      
     }
   }
-
-  cm = as.matrix(table(Actual = pred_label, Predicted = true_label))
   
-  cm = as.matrix(table(Actual = pred_label, Predicted = true_label))
-
+  cm = as.matrix(table(Actual = true_label, Predicted = pred_label))
+  
+  if(length(unique(pred_label)) < length(unique(true_label))){
+    misCol <- unique(true_label)[(unique(true_label) %in% unique(pred_label)) == FALSE]
+    cm <- cbind(cm, rep(0, nrow(cm)))
+    colnames(cm)[ncol(cm)] <- misCol
+    cm <- cm[,colnames(cm)[match(rownames(cm),colnames(cm))]]
+  }
+  
+  #sort table names accordigly
+  
   n = sum(cm) # number of instances
   nc = nrow(cm) # number of classes
   diag = diag(cm) # number of correctly classified instances per class 
@@ -639,6 +647,7 @@ assessmentReport <- function(ct_scores, #matrix of classification scores, rows =
   report[['accuracy']] <- accuracy
   
   #multiLogLoss
+  ct_scores_t <- t(ct_scores)
   names(true_label) <- rownames(ct_scores_t)
   report[['multiLogLoss']]<- MultiLogLoss(y_true = true_label, y_pred = ct_scores_t)
   
@@ -646,9 +655,10 @@ assessmentReport <- function(ct_scores, #matrix of classification scores, rows =
   confusionMatrix <- cn_classAssess(ct_scores, stVal_Tmp, classLevels= classLevels, dLevelSID=dLevelSID, resolution=resolution)
   report[['confusionMatrix']] <- confusionMatrix
   report[['PR_ROC']] <- cal_class_PRs(confusionMatrix)
- 
+  
   return(report)
 }
+
 
 cal_class_ROCs<-function
 (assessed
