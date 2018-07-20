@@ -75,6 +75,7 @@ length(cgenesA)
 
 hm_gpa_sel(expTrain, cgenesA, grps, maxPerGrp=5, toScale=T, cRow=F, cCol=F,font=4)
 ```
+![ ](img/heatmap.png)
 
 ```{r, warning=FALSE}
 #subset data
@@ -99,7 +100,10 @@ names(slaRand)<-paste("rand_", 1:40, sep='')
 sla<-append(sla, slaRand)
 
 sc_hmClass(classRes_val_all, sla, max=300, isBig=TRUE)
+```
+![ ](/img/classification_heatmap.png)
 
+```{r}
 #multiclass assessment 
 source("~/Desktop/gpa_assess/sc_assess_anno.R")
 newSampTab<-makeSampleTable(classRes_val_all, stTest, 40, "sample_name")
@@ -107,3 +111,5 @@ tm_heldoutassessment <- assessmentReport(classRes_val_all, stTest, nRand=40)
 #plot all the assessmentReport
 plot_multiAssess(tm_heldoutassessment)
 ```
+
+![ ](/img/assess_tsp_rf.png)
