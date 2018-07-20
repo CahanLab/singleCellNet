@@ -5,9 +5,9 @@ date: "7/12/2018"
 output: html_document
 ---
 
-##Assessment and BenchMark Implementation
+## Assessment and BenchMark Implementation
 
-###laoding the packages
+### Loading the packages
 ```{r,message=FALSE, warning=FALSE}
 library(cluster)
 library(pcaMethods)
@@ -42,8 +42,8 @@ mydate<-utils_myDate()
 | CrossSpecies & platform|    :octocat:    |
 
 
-##Multiclass Assessment Demo 
-###dataset use subset tm
+## Multiclass Assessment Demo 
+### dataset use subset tm
 ```{r}
 expDat <- utils_loadObject("~/Dropbox (CahanLab)/Yuqi.Tan.2/singleCellNet/ Gold Standard Datasets/app1_expDat_tm_10x_cgenes_Jun1_10x.rda")
 stDat <- utils_loadObject("~/Dropbox (CahanLab)/Yuqi.Tan.2/singleCellNet/ Gold Standard Datasets/app1_stDat_tm_10x_cgenes_Jun1.rda")
@@ -53,7 +53,7 @@ stDat_sub <- stDat[which(stDat$tissue %in% c("Kidney")),]
 expDat_sub <- expDat[,which(colnames(expDat) %in% row.names(stDat_sub))]
 ```
 
-##test tsp_rf classifiers
+## test tsp_rf classifiers
 ```{r}
 #normalize data 
 expTMnorm<-trans_prop(weighted_down(expDat_sub, 1.5e3), 1e4)
