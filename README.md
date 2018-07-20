@@ -1,196 +1,115 @@
-# singleCellNet
+---
+title: "README"
+author: "Yuqi Tan"
+date: "7/12/2018"
+output: html_document
+---
 
-### Introduction
-See [CellNet](https://github.com/pcahan1/CellNet) for an introduction and bulk RNA-Seq version. Here, we illustrate how to make single cell classifiers.
+## Assessment and BenchMark Implementation
 
-#### Processing pipeline
+### Loading the packages
+```{r,message=FALSE, warning=FALSE}
+library(cluster)
+library(pcaMethods)
+library(rpca)
+library(data.tree)
+library(Rtsne)
+library(ggplot2)
+library(pheatmap)
+library(RColorBrewer)
+library(mclust)
+library(randomForest)
+library(singleCellNet)
+library(reshape2)
+library(patchwork)
+library(MLmetrics)
+library(cellrangerRkit)
+library(dbscan)
+library(tidyr)
+library(CellNet)
+library(pROC)
+library(viridis)
+library(fgsea)
 
-1. Load
-2. Wash 
-  * down sample
-  * exclude undetected genes
-  * apply selected transform
-    * proportional (default)
-    * rank
-    * zscore
-    * binarize
-  * results in object that has
-    * arg list
-    * expMatrix
-    * transMethod
-3. Chop (dimension reduction)
-  * methods
-    * PCA
-    * tSNE
-  * results in a list of
-    * choppedData
-    * arg lis
-    * varGenes
-4. Steam (assign cells to groups)
-  * methods
-    * manual
-    * mclust
-    * dynamic tree cut
-  * results in a list of
-    * sample table
-    * arg list
-    * optimized parameters (mclust=G and model shape, dt=minModSize and deepSplit, dbscan=eps and minPts)
-    * method name
-5. Butter (make and assess classifiers)
-6. Toss (classify new samples)
-7. Mix (integrate new training data)
-
-
-#### Setup
-
-```R
-    library(devtools)
-    install_github("pcahan1/singleCellNet", ref="master")
-    library(singleCellNet)
-    library(cellrangerRkit)
-    library(Rtsne)
-    library(ggplot2)
-    library(pheatmap)
-    library(dbscan)
-    library(RColorBrewer)
-    library(WGCNA)
-    library(mclust)
-    library(randomForest)
-```
-    
-#### Load data
-```R
-    rawDat<-mergeLoad10x("pathTo/10x_public/Zheng_2016/bead_purified/", c("bcell_cd19", "cd34", "monocytes_cd14", "nkcell_cd56", "tcell_cd4_helper", "tcell_cd8_cytotoxic"), nCells=1e3))
-```
-#### Basic transform: normalize to total counts, then Log(1+norm), after down sampling
-```R
-    expDat<-rawDat[['expDat']]
-    stDat<-rawDat[['sampTab']]
-
+mydate<-utils_myDate()
 ```
 
-#### Wash
-```R
-    pwashed<-prewash(expDat, stDat, countDepth = 1e3)
-    washedProp<-wash(pwashed, transMethod="prop"))
+
+|         **Item**       |    **Status**   |
+|------------------------|-----------------|
+| Multiclass assessment  | code :thumbsup: |
+| Cluster comparison     | code :thumbsup: |
+| CrossSpecies & platform|    :octocat:    |
+
+
+## Multiclass Assessment Demo 
+### dataset use subset tm
+```{r}
+expDat <- utils_loadObject("~/Dropbox (CahanLab)/Yuqi.Tan.2/singleCellNet/ Gold Standard Datasets/app1_expDat_tm_10x_cgenes_Jun1_10x.rda")
+stDat <- utils_loadObject("~/Dropbox (CahanLab)/Yuqi.Tan.2/singleCellNet/ Gold Standard Datasets/app1_stDat_tm_10x_cgenes_Jun1.rda")
+
+#subset data
+stDat_sub <- stDat[which(stDat$tissue %in% c("Kidney")),]
+expDat_sub <- expDat[,which(colnames(expDat) %in% row.names(stDat_sub))]
 ```
 
-#### Chop, Steam, and assess classifiers based only on expProp
-```R
-    cAssAll<-pipe_cAss(washedProp, stDat)
-    ggplot(cAssAll, aes(x=group, y=classDiff)) + geom_boxplot(alpha=.75,colour="black", outlier.colour="#BDBDBD", outlier.size=.5) + xlab("cluster") + theme_bw() + facet_wrap( ~ method)
-```
-![](md_img/cAssAll_1.jpg)
+## test tsp_rf classifiers
+```{r}
+#normalize data 
+expTMnorm<-trans_prop(weighted_down(expDat_sub, 1.5e3), 1e4)
 
-#### Chop and Steam, useful when assessing various wash methods
-```R
-    steamed<-pipe_steam_list(washedProp, stDat, topPC=20)
-```
-
-#### make classifiers and assess -- expProp
-```R
-    classAssProp<-pipe_cAss_all(steamed, washedProp, stDat)
-    ggplot(classAssProp, aes(x=method, y=classDiff)) + geom_boxplot(alpha=.75,colour="black", outlier.colour="#BDBDBD", outlier.size=.5) + xlab("cluster") + theme_bw()
-```
-#### Binary data
-```R
-    washedBinary<-wash(pwashed, transMethod="binary"))
-    cAssBinary<-pipe_cAss_all(steamed, washedBinary$expDat, stDat)
+#no splitCommon
+source("~/Desktop/singleCellNet_rf_tsp_sourceFunction.R")
+stList<-splitCommon(stDat_sub, ncells=40, dLevel="cell_ontology_class") #equal number of cells to train 
+stTrain<-stList[[1]]
+expTrain<-expTMnorm[,rownames(stTrain)]
 ```
 
-#### zscore data
-```R
-    washedZscore<-wash(pwashed, transMethod="zscore"))
-    # make sure gene names are here
-    rownames(washedZscore$expDat) <- rownames(washedBinary$expDat)
-    cAssZscore<-pipe_cAss_all(steamed, washedZscore$expDat, stDat)
-````
+```{r, warning=FALSE}
+#finding top pairs
+system.time(cgenes2<-findClassyGenes(expTrain, stTrain, "cell_ontology_class", topX=10))
 
-#### compare all methods
-```R
-    cAssBound<-cbind(classAssProp, wash=rep("prop", nrow(classAssProp)))
-    cAssBound<-rbind(cAssBound, cbind(cAssBinary, wash=rep("binary", nrow(cAssBinary))))
-    cAssBound<-rbind(cAssBound, cbind(cAssZscore, wash=rep("zscore", nrow(cAssZscore))))
+cgenesA<-cgenes2[['cgenes']]
+grps<-cgenes2[['grps']]
+length(cgenesA)
 
-    ggplot(cAssBound, aes(x=method, y=classDiff,fill=wash )) + geom_boxplot(alpha=.75,colour="black", outlier.colour="#BDBDBD", outlier.size=.5) + xlab("Steam method") + theme_bw()
+hm_gpa_sel(expTrain, cgenesA, grps, maxPerGrp=5, toScale=T, cRow=F, cCol=F,font=4)
 ```
-![](md_img/classDiff_wash_by_steam.jpg)
+![ ](img/heatmap.png)
 
-Added on 06-01-17
+```{r, warning=FALSE}
+#subset data
+system.time(pairDat<-pair_transform(expTrain[cgenesA,]))
 
-Instructions for loading package, making a dbscan/binary data classifier, and applying it to a new data set
+system.time(xpairs<-gnrBP(pairDat, grps))
+length(xpairs)
 
-```R
-    library(devtools)
-    devtools::install_github("pcahan1/singleCellNet")
-    library(singleCellNet)
-    library(cellrangerRkit)
-    library(Rtsne)
-    library(ggplot2)
-    library(pheatmap)
-    library(dbscan)
-    library(RColorBrewer)
-    library(WGCNA)
-    library(mclust)
-    library(randomForest)
+#train classifiers
+system.time(rf_tspAll<-sc_makeClassifier(pairDat[xpairs,], genes=xpairs, groups=grps, nRand=40, ntrees=1000)) 
+
+#apply heldout data
+stTest<-stList[[2]]
+system.time(expQtransAll<-query_transform(expDat_sub[cgenesA,rownames(stTest)], xpairs))
+system.time(classRes_val_all<-rf_classPredict(rf_tspAll, expQtransAll, numRand=40))
+
+#make new sample table with random cells added to the mix
+sla<-as.vector(stTest$cell_ontology_class)
+names(sla)<-rownames(stTest)
+slaRand<-rep("rand", 40)
+names(slaRand)<-paste("rand_", 1:40, sep='')
+sla<-append(sla, slaRand)
+
+sc_hmClass(classRes_val_all, sla, max=300, isBig=TRUE)
 ```
+![ ](img/classification_heatmap.png)
 
-Load training data -- takes 2-3 minutes
-```R
-    system.time(rawDat<-mergeLoad10x("yourPathTo/10x_public/Zheng_2016/bead_purified/", c("bcell_cd19", "cd34", "monocytes_cd14", "nkcell_cd56", "tcell_cd4_helper", "tcell_cd8_cytotoxic"), nCells=1e3))
-
-    expDat<-rawDat[['expDat']]
-    stDat<-rawDat[['sampTab']]
-```
-
-wash, steam, butter
-```R
-    system.time(pWashed<-prewash(expDat, stDat, countDepth=1e3))
-    system.time(washedProp<-wash(pWashed, transMethod="prop"))
-    system.time(db_steamed<-pipe_dbscan(washedProp, stDat, topPC=6, zThresh=2))
-    system.time(washedBinary<-wash(pWashed, transMethod="binary"))
-    system.time(binClassifiers<-pipe_butter(db_steamed, washedBinary))
-    hmClass(binClassifiers[['classResVal']][['classRes']], isBig=T)
-```
-![](md_img/hm1.jpg)
-
-Load query data and classify
-```R
-    ppath<-paste0("yourPathTo/10x_public/Zheng_2016/frozen_a/filtered_matrices_mex/hg19")
-    tmpX<-load10x(ppath, "frozen_a")
-
-    expRaw_FA<-tmpX[['expDat']]
-    stFA<-tmpX[['sampTab']]
-    system.time(pWashed_FA<-prewash(expRaw_FA, stFA, countDepth=1e3))
-    system.time(washedBinary_FA<-wash(pWashed_FA, transMethod="binary",removeBad=FALSE))
-    fa_class<-butter_classify(washedBinary_FA,binClassifiers)
-    hmClass(fa_class, isBig=T, cluster_cols=TRUE) 
+```{r}
+#multiclass assessment 
+source("~/Desktop/gpa_assess/sc_assess_anno.R")
+newSampTab<-makeSampleTable(classRes_val_all, stTest, 40, "sample_name")
+tm_heldoutassessment <- assessmentReport(classRes_val_all, stTest, nRand=40)
+#plot all the assessmentReport
+plot_multiAssess(tm_heldoutassessment)
 ```
 
-![](md_img/hm2.jpg)
-
-
-#### some plotting functions
-
-```R
-    dotplot_pipesteamed(db_steamed)
-```
-
-![](md_img/tsne_train.jpg)
-
-```R
-   washedProp_query<-wash(pWashed_FA, transMethod="prop")
-    db_steamed_query<-pipe_dbscan(washedProp_query, stFA, nClusters=c(3,10),topPC=12, zThresh=1.5)
-    dotplot_pipesteamed(db_steamed_query)
-```
-
-![](md_img/tsne_query.jpg)
-
-Overlay classification results
-```R
-    library(tidyr)
-    tsneClass(fa_class, db_steamed_query)
-```
-
-![](md_img/tsne_class.jpg)
-
+![ ](img/assess_tsp_rf.png)
