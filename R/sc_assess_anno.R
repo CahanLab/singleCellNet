@@ -607,29 +607,55 @@ assessmentReport <- function(ct_scores, #matrix of classification scores, rows =
   stVal_Tmp <- rbind(stVal, tmp)
   
   true_label <- stVal_Tmp[, classLevels]
-
+  
   report <- list()
+  ct_scores_t <- t(ct_scores)
   
   #cohen's kappa, accuracy
   pred_label <- c()
   
-  for(i in 1:ncol(ct_scores)){
-    max <- max(ct_scores[,i])
-    for(j in 1:nrow(ct_scores)){
-      if(ct_scores[j,i] == max){
-        pred_label <- c(pred_label, rownames(ct_scores)[j])
-      }
+  pred_label <- colnames(ct_scores_t)[max.col(ct_scores_t,ties.method="random")]
+  
+  if(length(setdiff(unique(pred_label), unique(true_label))) == 0){
+    cm = as.matrix(table(Actual = true_label, Predicted = pred_label))
+  } else {
+    commonLabel <- intersect(unique(true_label), unique(pred_label))
+    #label_comm <- findCommon(ct_scores, stVal_Tmp, commonLabel, classLevels, dLevelSID)
+    true_comm <- stVal_Tmp[which(stVal_Tmp[,classLevels] %in% commonLabel),classLevels]
+    cells_sub <- as.character(stVal_Tmp[which(stVal_Tmp[,classLevels] %in% commonLabel),dLevelSID])
+    
+    #subsetting the ct_scores where the cells' true identity is within the range of the classifiers
+    ct_score_tmp <- ct_scores[, cells_sub] %>% t()
+    pred_comm <- c()
+    
+    #how to deal with the tie max value situation
+    pred_comm <- colnames(ct_score_tmp)[max.col(ct_score_tmp,ties.method="random")]
+    
+    cm = as.matrix(table(Predicted = pred_comm,Actual = true_comm))
+    
+    #in case of misclassfication where there are classifiers that are not used
+    if(length(unique(pred_comm)) > length(unique(true_comm))){
       
+      misCol <- unique(pred_comm)[(unique(pred_comm) %in% unique(true_comm)) == FALSE]
+      for(i in 1:length(misCol)){
+        cm <- cbind(cm, rep(0, nrow(cm)))
+      }
+      colnames(cm)[(ncol(cm) - length(misCol) +1) : ncol(cm)] <- misCol
+      cm <- cm[,colnames(cm)[match(rownames(cm),colnames(cm))]]
     }
-  }
   
-  cm = as.matrix(table(Actual = true_label, Predicted = pred_label))
   
-  if(length(unique(pred_label)) < length(unique(true_label))){
-    misCol <- unique(true_label)[(unique(true_label) %in% unique(pred_label)) == FALSE]
-    cm <- cbind(cm, rep(0, nrow(cm)))
-    colnames(cm)[ncol(cm)] <- misCol
+  if(length(unique(pred_comm)) < length(unique(true_comm))) {
+    
+    misCol <- unique(true_comm)[(unique(true_comm) %in% unique(pred_comm)) == FALSE]
+    
+    for(i in 1:length(misCol)){
+      cm <- rbind(cm, rep(0, nrow(cm)))
+    }
+    rolnames(cm)[(ncol(cm) - length(misCol) +1) : ncol(cm)] <- misCol
     cm <- cm[,colnames(cm)[match(rownames(cm),colnames(cm))]]
+  }
+    
   }
   
   #sort table names accordigly
@@ -647,7 +673,6 @@ assessmentReport <- function(ct_scores, #matrix of classification scores, rows =
   report[['accuracy']] <- accuracy
   
   #multiLogLoss
-  ct_scores_t <- t(ct_scores)
   names(true_label) <- rownames(ct_scores_t)
   report[['multiLogLoss']]<- MultiLogLoss(y_true = true_label, y_pred = ct_scores_t)
   
@@ -658,6 +683,7 @@ assessmentReport <- function(ct_scores, #matrix of classification scores, rows =
   
   return(report)
 }
+
 
 
 cal_class_ROCs<-function
