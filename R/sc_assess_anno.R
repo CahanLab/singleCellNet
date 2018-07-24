@@ -829,3 +829,20 @@ plot_multiAssess <- function(assessed, method = "tsp_rf"){
       p4
 
 }
+
+#select balanced training sample
+selectTrain <- function(stDat, nCells, dLevel, sample_name){
+  classes <- unique(stDat[,dLevel])
+  goodClasses <- vector()
+  newstTrain <- data.frame()
+  
+  for (i in 1: length(classes)){
+    if(nrow(stDat[which(stDat[,dLevel] == classes[i]),]) > nCells){
+      goodClasses <- c(goodClasses, classes[i])
+      rowindex <- sample(rownames(stDat[which(stDat[,dLevel] == classes[i]),]), nCells)
+      newstTrain <- rbind(newstTrain, stDat[rowindex,])
+    }
+  }
+  
+  return(newstTrain)
+} 
