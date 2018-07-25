@@ -609,7 +609,11 @@ assessmentReport <- function(ct_scores, #matrix of classification scores, rows =
   true_label <- stVal_Tmp[, classLevels]
   
   report <- list()
-  ct_scores_t <- t(ct_scores)
+  ct_scores_t <- t(ct_scores) %>% as.data.frame() #the as.data.frame was not here originally
+  
+  #multiLogLoss
+  names(true_label) <- rownames(ct_scores_t) 
+  report[['multiLogLoss']]<- MultiLogLoss(y_true = true_label, y_pred = ct_scores_t)
   
   #cohen's kappa, accuracy
   pred_label <- c()
@@ -672,15 +676,25 @@ assessmentReport <- function(ct_scores, #matrix of classification scores, rows =
   report[['kappa']] <- (accuracy - expAccuracy) / (1 - expAccuracy)
   report[['accuracy']] <- accuracy
   
-  #multiLogLoss
-  names(true_label) <- rownames(ct_scores_t)
-  report[['multiLogLoss']]<- MultiLogLoss(y_true = true_label, y_pred = ct_scores_t)
-  
+  #report[['multiLogLoss']]<- MultiLogLoss(y_true = true_comm, y_pred = ct_scores_t)
+
   #PR
   confusionMatrix <- cn_classAssess(ct_scores, stVal_Tmp, classLevels= classLevels, dLevelSID=dLevelSID, resolution=resolution)
   report[['confusionMatrix']] <- confusionMatrix
   report[['PR_ROC']] <- cal_class_PRs(confusionMatrix)
-  
+
+  nonNA_PR <- report[['PR_ROC']][which(!is.nan(report[['PR_ROC']]$recall)),]
+
+  AUCPR_w <- 0
+  for(i in 1: length(unique(nonNA_PR$ctype))){
+    tmp <- nonNA_PR[which(nonNA_PR$ctype %in% unique(nonNA_PR$ctype)[i]),]
+    area <- cn_computeAUCPR(tmp, precisionCol = "precision", recallCol = "recall")
+    AUCPR_w <- AUCPR_w + sum(area)*nrow(tmp)
+  }
+  AUCPR_w <- AUCPR_w / nrow(nonNA_PR)
+
+  report[['AUCPR_w']] <- AUCPR_w
+  report[['cm']] <- cm
   return(report)
 }
 
@@ -827,7 +841,7 @@ plot_multiAssess <- function(assessed, method = "tsp_rf"){
 
   (p1 | p2 | p3) /
       p4
-
+  
 }
 
 #select balanced training sample
@@ -846,3 +860,73 @@ selectTrain <- function(stDat, nCells, dLevel, sample_name){
   
   return(newstTrain)
 } 
+
+cn_computeAUCPR<-function
+(perfDF,
+ precisionCol="Precision",
+ recallCol="Recall",
+ predCol="Predictions"
+){
+  
+  ### Notes: starts at top left, and accumulates to max
+  str<-(nrow(perfDF)-1);
+  stp<-2;
+  
+  # sometimes you can still get NA in 
+  areas<-rep(0, nrow(perfDF));
+  
+  pts<-seq(str,stp,-1);
+  for(i in pts){
+    a<-(i+1);
+    cc<-(i-1);
+    ptA<-c(perfDF[a,recallCol], perfDF[a,precisionCol]);
+    ptB<-c(perfDF[i,recallCol], perfDF[i,precisionCol]);
+    ptC<-c(perfDF[cc,recallCol], perfDF[cc,precisionCol]);
+    tmpArea<-cn_rectArea(ptA, ptB, ptC);
+    if(is.nan(tmpArea)){
+      #cat(perfDF[i,]$Score,"\n");
+      tmpArea<-0;
+    }
+    areas[i]<-areas[(i+1)]+tmpArea;
+  }
+  
+  # far right point
+  a<-2;
+  b<-1;
+  cc<-1;
+  ptA<-c(perfDF[a,recallCol], perfDF[a,precisionCol]);
+  ptB<-c(perfDF[i,recallCol], perfDF[i,precisionCol]);
+  ptC<-c(perfDF[cc,recallCol], perfDF[cc,precisionCol]);
+  areas[b]<-areas[2]+cn_rectArea(ptA, ptB, ptC);
+  
+  # far left point
+  a<-nrow(perfDF);
+  b<-nrow(perfDF);
+  cc<-(b-1);
+  ptA<-c(perfDF[a,recallCol], perfDF[a,precisionCol]);
+  ptB<-c(perfDF[i,recallCol], perfDF[i,precisionCol]);
+  ptC<-c(perfDF[cc,recallCol], perfDF[cc,precisionCol]);
+  areas[b]<-cn_rectArea(ptA, ptB, ptC);
+  areas;
+}
+
+#' compute area of rect given by 
+#'
+#' compute area of rect given by 
+#' @param ptA point a
+#' @param ptB point b
+#' @param ptC point C
+#'
+#' @return area
+cn_rectArea<-function
+(ptA,
+ ptB,
+ ptC
+){
+  xRight <- ptB[1]+( (ptC[1]-ptB[1])/2);
+  xLeft  <- ptA[1]+( (ptB[1]-ptA[1])/2);
+  width<-abs(xRight - xLeft);
+  width*ptB[2];
+}
+
+
