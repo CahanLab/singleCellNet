@@ -815,7 +815,7 @@ plot_class_ROCs<-function
   theme(axis.text = element_text(size=5)) + ggtitle("Classification performance")
 }
 
-plot_multiAssess <- function(assessed, method = "tsp_rf"){
+plot_multiAssess <- function(assessed, method = "tsp_rf", ylimForMultiLogLoss = x){
   #metric <- matrix(0, ncol = 3, nrow = 1)
   #colnames(metric) <- c("cohen's kappa", "accuracy", "multiLogLoss")
   #colnames(metric) <- method
@@ -823,24 +823,27 @@ plot_multiAssess <- function(assessed, method = "tsp_rf"){
   #metric <- as.data.frame(metric)
   #test <- melt(data = t(metric))
   #p1 <- ggplot(test, aes(x=Var2, y= value, fill = Var2)) + geom_bar(stat="identity") + scale_fill_brewer(palette="Set2") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) + labs(fill = method) + ylim(0,1)
-  metric <- matrix(0, ncol = 3, nrow = 1)
-  colnames(metric) <- c("cohen's kappa", "accuracy", "multiLogLoss")
+  metric <- matrix(0, ncol = 4, nrow = 1)
+  colnames(metric) <- c("cohen's kappa", "accuracy", "multiLogLoss", "weighted-AUPRC")
   rownames(metric) <- "value"
-  metric[,1:3] <- c(tm_heldoutassessment$kappa, tm_heldoutassessment$accuracy, tm_heldoutassessment$multiLogLoss) 
+  metric[,1:4] <- c(assessed$kappa, assessed$accuracy, assessed$multiLogLoss, assessed$AUPRC_w) 
   metric <- as.data.frame(metric)
 
   p1<-ggplot(metric, aes(x="cohen's kappa", y = metric[1,1])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) +  ylim(0,1) + theme(legend.position="none")
 
-  p2<-ggplot(metric, aes(x="ccuracy", y = metric[1,2])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) + ylim(0,1) + theme(legend.position="none")
+  p2<-ggplot(metric, aes(x="accuracy", y = metric[1,2])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) + ylim(0,1) + theme(legend.position="none")
 
-  p3<-ggplot(metric, aes(x="multiLogLoss", y = metric[1,3])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) + ylim(0,25)+ theme(legend.position="none")
+  p3<-ggplot(metric, aes(x="multiLogLoss", y = metric[1,3])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) + ylim(0,ylimForMultiLogLoss)+ theme(legend.position="none")
 
-  p4 <- ggplot(data=assessed$PR_ROC, aes(x=as.numeric(as.vector(recall)), y=as.numeric(as.vector(precision)))) + geom_point(size = .5, alpha=.5) +  geom_path(size=.5, alpha=.75) +
+  p4<-ggplot(metric, aes(x="weighted-AUPRC", y = metric[1,4])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) + ylim(0,1) + theme(legend.position="none")
+
+
+  p5 <- ggplot(data=assessed$nonNA_PR, aes(x=as.numeric(as.vector(recall)), y=as.numeric(as.vector(precision)))) + geom_point(size = .5, alpha=.5) +  geom_path(size=.5, alpha=.75) +
     theme_bw() + xlab("Recall") + ylab("Precision") + facet_wrap( ~ ctype, ncol=4) +
     theme(axis.text = element_text(size=5)) + ggtitle("Classification performance_PR Curve")
 
-  (p1 | p2 | p3) /
-      p4
+  (p1 | p2 | p4 | p3) /
+      p5
   
 }
 
