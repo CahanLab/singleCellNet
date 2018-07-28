@@ -113,3 +113,11 @@ plot_multiAssess(tm_heldoutassessment)
 ```
 
 ![ ](img/assess_tsp_rf.png)
+
+#multiclass assessment v2
+source("~/Desktop/gpa_assess/assessed.R")
+comm <- SubsetQueryBasedOnTraining(stQuery_kid, stTrain = stDat_tm, classTrain = "cell_ontology_class", classQuery = "description2",ct_scores = classRes_val_all,nRand = 50)
+tm_heldoutassessment <- assessmentReport_comm(comm$ct_score_com, classLevels = "description2",comm$stVal_com)
+plot_multiAssess(tm_heldoutassessment, method = "tsp_rf", ylimForMultiLogLoss = 500) 
+
+![ ](img/assess_tsp_rf_v2.png)
