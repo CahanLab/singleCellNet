@@ -121,3 +121,10 @@ tm_heldoutassessment <- assessmentReport_comm(comm$ct_score_com, classLevels = "
 plot_multiAssess(tm_heldoutassessment, method = "tsp_rf", ylimForMultiLogLoss = 500) 
 
 ![ ](img/assess_tsp_rf_v2.png)
+
+source("~/Desktop/gpa_assess/scmap_assessment.R")
+scmap_intermediate <- prep_SimilarityMatrix(sce_test, expTest = expQuery_kid)
+tm_park_scmap_pearson<- assessmentReport_comm(t(scmap_intermediate$res_pearson), classLevels = "description3",stQuery_kid, dLevelSID = "sample_name")
+plot_multiAssess(tm_park_scmap_pearson, method = "scmap", ylimForMultiLogLoss = 200)
+
+![ ](img/tm_park_pearson.png)
