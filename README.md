@@ -114,17 +114,19 @@ plot_multiAssess(tm_heldoutassessment)
 
 ![ ](img/assess_tsp_rf.png)
 
+```{r}
 #multiclass assessment v2
 source("~/Desktop/gpa_assess/assessed.R")
 comm <- SubsetQueryBasedOnTraining(stQuery_kid, stTrain = stDat_tm, classTrain = "cell_ontology_class", classQuery = "description2",ct_scores = classRes_val_all,nRand = 50)
 tm_heldoutassessment <- assessmentReport_comm(comm$ct_score_com, classLevels = "description2",comm$stVal_com)
 plot_multiAssess(tm_heldoutassessment, method = "tsp_rf", ylimForMultiLogLoss = 500) 
-
+```
 ![ ](img/assess_tsp_rf_v2.png)
 
+```{r}
 source("~/Desktop/gpa_assess/scmap_assessment.R")
 scmap_intermediate <- prep_SimilarityMatrix(sce_test, expTest = expQuery_kid)
 tm_park_scmap_pearson<- assessmentReport_comm(t(scmap_intermediate$res_pearson), classLevels = "description3",stQuery_kid, dLevelSID = "sample_name")
 plot_multiAssess(tm_park_scmap_pearson, method = "scmap", ylimForMultiLogLoss = 200)
-
+```
 ![ ](img/tm_park_pearson.png)
