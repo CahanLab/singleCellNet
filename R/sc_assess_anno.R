@@ -599,13 +599,15 @@ SubsetQueryBasedOnTraining <- function(stQuery,
                                        classTrain = "cell_ontology_class",
                                        classQuery = "description2"){
   
-  stVal <- stQuery[which(stQuery[,classQuery] %in% unique(stTrain[,classTrain])),]
+  stVal_com <- stQuery[which(stQuery[,classQuery] %in% unique(stTrain[,classTrain])),]
   
-  tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stVal))))
-  colnames(tmp) <- colnames(stVal)
-  tmp[,dLevelSID] <- colnames(ct_scores)[(ncol(ct_scores) - nRand + 1):ncol(ct_scores)]
-  rownames(tmp) <- tmp[,dLevelSID]
-  stVal_com <- rbind(stVal, tmp)
+  if(nRand > 0){
+    tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stVal))))
+    colnames(tmp) <- colnames(stVal)
+    tmp[,dLevelSID] <- colnames(ct_scores)[(ncol(ct_scores) - nRand + 1):ncol(ct_scores)]
+    rownames(tmp) <- tmp[,dLevelSID]
+    stVal_com <- rbind(stVal, tmp)
+  }
   
   cells_sub <- as.character(stVal_com[,dLevelSID])
   
