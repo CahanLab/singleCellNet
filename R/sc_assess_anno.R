@@ -629,7 +629,7 @@ assessmentReport_comm <- function(ct_score_com, #matrix of classification scores
   report <- list()
   ct_scores_t <- t(ct_score_com)
   
-  true_label <- stVal_com[, classLevels]
+  true_label <- as.character(stVal_com[, classLevels])
   
   #multiLogLoss
   names(true_label) <- rownames(ct_scores_t) 
