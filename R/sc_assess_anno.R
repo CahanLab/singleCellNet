@@ -952,7 +952,7 @@ plot_multiAssess <- function(assessed, method = "tsp_rf", ylimForMultiLogLoss = 
   metric <- matrix(0, ncol = 5, nrow = 1)
   colnames(metric) <- c("cohen's kappa", "accuracy", "multiLogLoss", "mean_AUPRC","weighted-AUPRC")
   rownames(metric) <- "value"
-  metric[,1:4] <- c(assessed$kappa, assessed$accuracy, assessed$multiLogLoss, assessed$AUPRC_w, assessed$AUPRC_wc) 
+  metric[,1:5] <- c(assessed$kappa, assessed$accuracy, assessed$multiLogLoss, assessed$AUPRC_w, assessed$AUPRC_wc) 
   metric <- as.data.frame(metric)
 
   p1<-ggplot(metric, aes(x="cohen's kappa", y = metric[1,1])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) +  ylim(0,1) + theme(legend.position="none")
