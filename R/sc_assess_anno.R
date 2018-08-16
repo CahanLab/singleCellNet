@@ -621,10 +621,11 @@ SubsetQueryBasedOnTraining <- function(stQuery,
 
 
 assessmentReport_comm <- function(ct_score_com, #matrix of classification scores, rows = classifiers, columns = samples, colnames=sampleids || where query cells is in the training
-                            stVal_com, #sample table where cells in query are in the training 
-                            resolution = 0.005,# increment at which to evalutate classification
-                            classLevels = "description2",
-                            dLevelSID = "sample_name"){
+                                  stVal_com, #sample table where cells in query are in the training 
+                                  resolution = 0.005,# increment at which to evalutate classification
+                                  classLevels = "description2",
+                                  dLevelSID = "sample_name",
+                                  AUCmethod = "trapezoid"){
   
   report <- list()
   ct_scores_t <- t(ct_score_com)
@@ -645,9 +646,9 @@ assessmentReport_comm <- function(ct_score_com, #matrix of classification scores
   #cohen's kappa, accuracy
   pred_label <- c()
   pred_label <- colnames(ct_scores_t)[max.col(ct_scores_t,ties.method="random")]
-
+  
   cm = as.matrix(table(Actual = true_label, Predicted = pred_label))
-
+  
   #in case of misclassfication where there are classifiers that are not used
   if(length(setdiff(unique(true_label), unique(pred_label))) != 0){
     misCol <- setdiff(unique(true_label), unique(pred_label))
@@ -689,24 +690,28 @@ assessmentReport_comm <- function(ct_score_com, #matrix of classification scores
   report[['confusionMatrix']] <- confusionMatrix
   
   #confusionMatrix_comm <- confusionMatrix[c(colnames(cm))]
-    
+  
   report[['PR_ROC']] <- cal_class_PRs(confusionMatrix)
   
   nonNA_PR <- report[['PR_ROC']][which(!is.nan(report[['PR_ROC']]$recall)),]
-  nonNA_PR <- nonNA_PR[which(!is.nan(nonNA_PR$precision)),]
+  nonNA_PR[which((nonNA_PR$TP == 0 & nonNA_PR$FP ==0)), "precision"] <- 1
   report[['nonNA_PR']] <- nonNA_PR
   
-  totalN <- nrow(nonNA_PR)
+  #totalN <- nrow(nonNA_PR)
   w <- c()
   areas <- c()
   for(i in 1: length(unique(nonNA_PR$ctype))){
     tmp <- nonNA_PR[which(nonNA_PR$ctype %in% unique(nonNA_PR$ctype)[i]),]
-    area <- cn_computeAUCPR(tmp, precisionCol = "precision", recallCol = "recall")
+    #area <- cn_computeAUCPR(tmp, precisionCol = "precision", recallCol = "recall")
+    area <- AUC(tmp$recall, tmp$precision, method = AUCmethod)
     areas <- c(areas,area[1])
-    w <- c(w,nrow(tmp)/totalN)
-   }
+    #w <- c(w,nrow(tmp)/totalN)
+    w <- c(w, sum(stVal_com[,classLevels] %in% unique(nonNA_PR$ctype)[i])/nrow(stVal_com))
+  }
   
-  report[['AUPRC_w']] <- weighted.mean(areas, w)
+  #report[['AUPRC_w']] <- weighted.mean(areas, w)
+  report[['AUPRC_w']] <- mean(areas)
+  report[['AUPRC_wc']] <- weighted.mean(areas, w)
   
   return(report)
   
