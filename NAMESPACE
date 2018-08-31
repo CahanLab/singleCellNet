@@ -3,6 +3,7 @@
 export()
 export(.steam_dbscan)
 export(.steam_dt)
+export(splitCommon)
 export(GEP_makeMean)
 export(addRandToSampTab)
 export(annSetUp)

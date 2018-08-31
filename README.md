@@ -18,9 +18,6 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 | Query       | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_Park_MouseKidney_062118.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expDat_Park_MouseKidney_062218.rda") |
 | Training    | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_TM_053018.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expTM_Raw_053018.rda) |
 
-N.B. The query expression data needs to be decompressed before loading it into R. 
-
-
 #### Setup
 ```R
 library(fgsea)
@@ -37,7 +34,7 @@ library(ggplot2)
 mydate<-utils_myDate()
 ```
 
-#### Fetch the data (optional if you have alread done this)
+#### Fetch the data if you have not already done so
 ```R
 download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_Park_MouseKidney_062118.rda", "sampTab_Park_MouseKidney_062118.rda")
 
@@ -78,10 +75,9 @@ length(commonGenes)
 [1] 13831
 ```
 
-
 #### Normalize the training data
 ```R
-expTMnorm<-trans_prop(weighted_down(expTMraw[commonGenes,], 1.5e3), 1e4)
+expTMnorm<-trans_prop(weighted_down(expTMraw[commonGenes,], 1.5e3, dThresh=0.25), 1e4)
 ```
 
 #### Find the best set of classifier genes
@@ -104,30 +100,33 @@ hm_gpa_sel(expTrain, cgenesA, grps, maxPerGrp=5, toScale=T, cRow=F, cCol=F,font=
 ```
 <img src="md_img/hm_tabulaMuris.png">
 
-#### TSP transform the training data
-```R
-system.time(pairDat<-pair_transform(expTrain[cgenesA,]))
-   user  system elapsed 
- 83.668  30.796 114.485
- ```
-
 ####  Find the best pairs
  ```R
- system.time(xpairs<-gnrBP(pairDat, grps)) # will take ~ 35 minutes
-    user   system  elapsed 
-1662.301  413.081 2124.899 
+ system.time(xpairs<-ptGetTop(expTrain[cgenesA,], grps, topX=50, sliceSize=100))
+   user   system  elapsed 
+1020.057  375.750 1396.290
 
 length(xpairs)
-[1] 1562
+[1] 1547
 ```
+
+#### TSP transform the training data
+```R
+system.time(pdTrain<-query_transform(expTrain[cgenesA, ], xpairs))
+  user  system elapsed 
+  0.352   0.061   0.414 
+
+dim(pdTrain)
+[1] 1547 3036
+
+ ```
+
 
 #### Train the classifier
 ```R
-system.time(rf_tspAll<-sc_makeClassifier(pairDat[xpairs,], genes=xpairs, groups=grps, nRand=100, ntrees=1000))    
-   user  system elapsed 
-700.098   1.090 701.430
+system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=100, ntrees=1000))       user  system elapsed 
+560.335   0.884 561.432
 ```
-
 
 #### Apply to held out data -- this is the place to add the multi-class assessment
 ```R

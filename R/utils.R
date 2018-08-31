@@ -3,7 +3,7 @@
 
 # commonly used or misc functions
 
-
+#' @export
 ctMerge<-function(sampTab, annCol, ctVect, newName){
   oldann<-as.vector(sampTab[,annCol])
   newann<-oldann
@@ -16,6 +16,7 @@ ctMerge<-function(sampTab, annCol, ctVect, newName){
   cbind(ans, newAnn=newann)
 }
 
+#' @export
 ctRename<-function(sampTab, annCol, oldName, newName){
   oldann<-as.vector(sampTab[,annCol])
   newann<-oldann
@@ -26,6 +27,7 @@ ctRename<-function(sampTab, annCol, oldName, newName){
   cbind(ans, newAnn=newann)
 } 
 
+#' @export
 splitCommon<-function(sampTab, ncells, dLevel="cell_ontology_class"){
   cts<-unique(as.vector(sampTab[,dLevel]))
   trainingids<-vector()
