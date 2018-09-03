@@ -602,11 +602,11 @@ SubsetQueryBasedOnTraining <- function(stQuery,
   stVal_com <- stQuery[which(stQuery[,classQuery] %in% unique(stTrain[,classTrain])),]
   
   if(nRand > 0){
-    tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stVal))))
-    colnames(tmp) <- colnames(stVal)
+    tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stQuery))))
+    colnames(tmp) <- colnames(stQuery)
     tmp[,dLevelSID] <- colnames(ct_scores)[(ncol(ct_scores) - nRand + 1):ncol(ct_scores)]
     rownames(tmp) <- tmp[,dLevelSID]
-    stVal_com <- rbind(stVal, tmp)
+    stVal_com <- rbind(stQuery, tmp)
   }
   
   cells_sub <- as.character(stVal_com[,dLevelSID])
@@ -970,7 +970,7 @@ plot_multiAssess <- function(assessed, method = "tsp_rf", ylimForMultiLogLoss = 
     theme_bw() + xlab("Recall") + ylab("Precision") + facet_wrap( ~ ctype, ncol=4) +
     theme(axis.text = element_text(size=5)) + ggtitle("Classification performance_PR Curve")
 
-  (p1 | p2 | p4 | p3 | p5) /
+  (p1 | p2 | p4 | p5 | p3) /
       p6
   
 }
