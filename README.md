@@ -3,7 +3,9 @@
 ### Introduction
 See [CellNet](https://github.com/pcahan1/CellNet) for an introduction to CellNet, how to use it on bulk RNA-Seq, and how to analyze single cell RNA-Seq (scRNA-Seq) data with classifiers trained on bulk RNA-Seq. Here, we illustrate
 
-- how to build and assess single cell classifiers
+- how to build and assess single cell classifiers 
+
+- how to build and assess cross-species single cell classifiers
 
 - how to use these classifiers to quantify 'cell identity' from query scRNA-Seq data
 
@@ -11,12 +13,13 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction to CellNet
 
 ### DATA
 
-In this example, we use a subset of the Tabula Muris data to train singleCellNet. To learn more about the Tabula Muris project, see the [manuscript])(https://www.biorxiv.org/content/early/2018/03/29/237446). As query data, we use scRNA-Seq of kidney cells as reported in [Park et al 2018](https://www.ncbi.nlm.nih.gov/pubmed/29622724). You can download this data here:
+In this example, we use a subset of the Tabula Muris data to train singleCellNet. To learn more about the Tabula Muris project, see the [manuscript])(https://www.biorxiv.org/content/early/2018/03/29/237446). As query data, we use scRNA-Seq of kidney cells as reported in [Park et al 2018](https://www.ncbi.nlm.nih.gov/pubmed/29622724). We also provide an example of classifying human, bead enriched PBMCs (from https://www.ncbi.nlm.nih.gov/pubmed/28091601). You can download this data here:
 
 | APPLICATION | METADATA | EXPRESSION |
 |-------------|----------|------------|
 | Query       | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_Park_MouseKidney_062118.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expDat_Park_MouseKidney_062218.rda") |
 | Training    | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_TM_053018.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expTM_Raw_053018.rda) |
+| cross-species | [human-mouse orthologs](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/human_mouse_genes_Jul_24_2018.rda)| Query (human bead-purified PBMC from 10x) | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/stDat_beads_mar22.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/6k_beadpurfied_raw.rda) |
 
 #### Setup
 ```R
@@ -30,6 +33,8 @@ library(pheatmap)
 library(randomForest)
 library(viridis)
 library(ggplot2)
+library(dplyr)
+
 
 mydate<-utils_myDate()
 ```
@@ -43,6 +48,14 @@ download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expDat_
 download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expTM_Raw_053018.rda", "expTM_Raw_053018.rda")
 
 download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_TM_053018.rda", "sampTab_TM_053018.rda")
+
+## For cross-species analyis:
+download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/human_mouse_genes_Jul_24_2018.rda", "human_mouse_genes_Jul_24_2018.rda")
+
+download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/6k_beadpurfied_raw.rda", "6k_beadpurfied_raw.rda")
+
+download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/stDat_beads_mar22.rda", "stDat_beads_mar22.rda")
+
 ```
 
 #### Load query data
@@ -287,6 +300,143 @@ esMatPat<-ks.extract.more(enrPatt, sigThresh=1.1, sigType='padj', gsColName='pat
 hm_enr(esMatPat, 0.05, cRows=T, cCols=T, fsr=6)
 ```
 <img src="md_img/hm_fgsea_tm.png">
+
+### Cross-species classification
+
+Load the human query data
+```R
+stQuery<-utils_loadObject("10x_human_pmbcs_68k/beads/stDat_beads_mar22.rda")
+expQuery<-utils_loadObject("6k_beadpurfied_raw.rda")
+dim(expQuery)
+[1] 32643  6000
+```
+
+Load the ortholog table and convert human gene names to mouse ortholog names, and limit analysis to genes in common between the training and query data.
+```R
+oTab<-utils_loadObject("human_mouse_genes_Jul_24_2018.rda")
+dim(oTab)
+[1] 16688     3
+
+aa = csRenameOrth(expQuery, expRawTM, oTab)
+expQuery <- aa[['expQuery']]
+expTrain <- aa[['expTrain']]
+```
+
+Limit anlaysis to a subset of the TM cell types
+```R
+cts<-c("B cell",  "cardiac muscle cell", "endothelial cell", "erythroblast", "granulocyte", "hematopoietic precursor cell", "late pro-B cell", "limb_mesenchymal", "macrophage", "mammary_basal_cell", "monocyte", "natural killer cell", "T cell", "trachea_epithelial", "trachea_mesenchymal")
+
+stTM2<-filter(stTM, newAnn %in% cts)
+stTM2<-droplevels(stTM2)
+rownames(stTM2)<-as.vector(stTM2$cell) # filter strips rownames
+
+expTrain<-expTrain[,rownames(stTM2)]
+dim(expTrain)
+[1] 14550 15161
+```
+
+Normalize training data. Split into trainin and validation, and find classy genes
+```R
+expTMnorm<-trans_prop(weighted_down(expTrain, 1.5e3, dThresh=0.25), 1e4)
+
+stList<-splitCommon(stTM2, ncells=100, dLevel="newAnn")
+stTrain<-stList[[1]]
+dim(stTrain)
+[1]  1457  17
+
+
+expTrainSS<-expTMnorm[,rownames(stTrain)]
+
+system.time(cgenes2<-findClassyGenes(expTrainSS, stTrain, "newAnn", topX=30))
+   user  system elapsed 
+ 10.610   1.332  11.941
+
+cgenesA<-cgenes2[['cgenes']]
+grps<-cgenes2[['grps']]
+length(cgenesA)
+[1] 650
+```
+
+find best pairs and transform query data, and train classifier
+```R
+system.time(xpairs<-ptGetTop(expTrainSS[cgenesA,], grps, topX=75, sliceSize=5000))
+nPairs =  210925
+  user  system elapsed 
+597.289 169.932 767.181
+
+
+pdTrain<-query_transform(expTrainSS[cgenesA, ], xpairs)
+
+system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=50, ntrees=1000))
+   user  system elapsed 
+ 59.171   0.122  59.285
+ ```
+
+Apply to held out data
+```R
+stTest<-stList[[2]]
+
+system.time(expQtransAll<-query_transform(expRawTM[cgenesA,rownames(stTest)], xpairs))
+   user  system elapsed 
+  1.294   0.240   1.534 
+
+nrand<-50
+system.time(classRes_val_all<-rf_classPredict(rf_tspAll, expQtransAll, numRand=nrand))
+  user  system elapsed 
+ 13.356   0.723  14.078 
+
+
+sla<-as.vector(stTest$newAnn)
+names(sla)<-rownames(stTest)
+slaRand<-rep("rand", nrand)
+names(slaRand)<-paste("rand_", 1:nrand, sep='')
+
+sla<-append(sla, slaRand)
+
+# heatmap classification result
+sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
+```
+<img src="md_img/hmClass_CS_heldOut_090618.png">
+
+Apply to human query data
+```R
+pdTrain<-query_transform(expTrainSS[cgenesA, ], xpairs)
+
+system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=50, ntrees=1000))
+   user  system elapsed 
+ 59.171   0.122  59.285 
+
+
+system.time(expQueryTrans<-query_transform(expQuery[cgenesA,], xpairs))
+  user  system elapsed 
+  0.519   0.074   0.593
+  
+nqRand<-50
+system.time(crHS<-rf_classPredict(rf_tspAll, expQueryTrans, numRand=nqRand))
+   user  system elapsed 
+  5.941   0.222   6.162 
+
+
+
+sgrp<-as.vector(stQuery$prefix)
+names(sgrp)<-rownames(stQuery)
+grpRand<-rep("rand", nqRand)
+names(grpRand)<-paste("rand_", 1:nqRand, sep='')
+sgrp<-append(sgrp, grpRand)
+
+
+# heatmap classification result
+sc_hmClass(crHS, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
+```
+<img src="md_img/hmClass_CS_090618.png">
+
+
+
+
+
+
+
+
 
 
 

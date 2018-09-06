@@ -1,6 +1,48 @@
 # for TSP-RF
 # (C) 2018 Patrick Cahan
 
+
+
+#' enable cross-species comparison
+#'
+#' rename and subset query expDat to orthologs in training data
+#'
+#' @param expQuery expQuery
+#' @param expTrain expTrain
+#' @param orthTable orthTable
+#' @param speciesQuery speciesQuery default human
+#' @param speciesTrain speciesTrain default mouse
+#' 
+#' @return list (expQuery, expTrain)
+#' 
+#' @export
+csRenameOrth<-function(
+	expQuery,
+	expTrain,
+	orthTable,
+	speciesQuery='human',
+	speciesTrain='mouse'){
+
+ 	# what genes in the orth table are in the query table?
+	rownames(orthTable)<-as.vector(orthTable[,speciesQuery])
+	cgenes<-intersect(rownames(expQuery), rownames(orthTable))
+	cat("query genes in ortholog table = ",length(cgenes),"\n")
+
+	# of these, which are in training data?
+	oTab<- orthTable[cgenes,]
+	rownames(oTab) <- as.vector(oTab[,speciesTrain])
+	ccGenes<- intersect(rownames(expTrain), rownames(oTab))
+	cat("training genes in ortholog table and query data = ",length(ccGenes),"\n")
+	# should put a check here for sufficient number of genes 
+	oTab<-oTab[ccGenes,]
+	qGenes<-as.vector(oTab[,speciesQuery])
+	expQuery <- expQuery[qGenes,]
+	rownames(expQuery) <- rownames(oTab) 
+	expTrain <- expTrain[rownames(oTab),]
+	list(expQuery=expQuery, expTrain=expTrain)
+}
+
+
 #' find best pairs
 #'
 #' find best pairs
@@ -88,7 +130,7 @@ ptGetTop<-function
 	genes<-rownames(expDat)
 	genes1<-vector()
 	genes2<-vector()
-	for(i in 1:ngenes){
+	for(i in 1:ngenes){ # replace with combn?
 		for(j in 1:ngenes){
 			if(j>i){
 				genes1<-append(genes1, genes[i])

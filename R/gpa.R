@@ -446,7 +446,7 @@ gnrAll<-function(
 }
 
 
-A_geneEnr<-function(
+geneEnr<-function(
 	expDat,
 	gpaRes, 
 	bundleRes,
