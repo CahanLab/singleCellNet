@@ -305,7 +305,7 @@ hm_enr(esMatPat, 0.05, cRows=T, cCols=T, fsr=6)
 
 Load the human query data
 ```R
-stQuery<-utils_loadObject("10x_human_pmbcs_68k/beads/stDat_beads_mar22.rda")
+stQuery<-utils_loadObject("stDat_beads_mar22.rda")
 expQuery<-utils_loadObject("6k_beadpurfied_raw.rda")
 dim(expQuery)
 [1] 32643  6000
@@ -398,15 +398,10 @@ sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
 ```
 <img src="md_img/hmClass_CS_heldOut_090618.png">
 
+@YT: Add the PR -> AUPR assessment here
+
 Apply to human query data
 ```R
-pdTrain<-query_transform(expTrainSS[cgenesA, ], xpairs)
-
-system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=50, ntrees=1000))
-   user  system elapsed 
- 59.171   0.122  59.285 
-
-
 system.time(expQueryTrans<-query_transform(expQuery[cgenesA,], xpairs))
   user  system elapsed 
   0.519   0.074   0.593
@@ -416,20 +411,17 @@ system.time(crHS<-rf_classPredict(rf_tspAll, expQueryTrans, numRand=nqRand))
    user  system elapsed 
   5.941   0.222   6.162 
 
-
-
+# heatmap classification result
 sgrp<-as.vector(stQuery$prefix)
 names(sgrp)<-rownames(stQuery)
 grpRand<-rep("rand", nqRand)
 names(grpRand)<-paste("rand_", 1:nqRand, sep='')
 sgrp<-append(sgrp, grpRand)
-
-
-# heatmap classification result
 sc_hmClass(crHS, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 ```
 <img src="md_img/hmClass_CS_090618.png">
 
+Note that the macrophage category seems to be promiscuous in the mouse held out data, too.
 
 
 
