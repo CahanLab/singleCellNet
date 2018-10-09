@@ -25,7 +25,7 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 ```R
 library(fgsea)
 library(devtools)
-install_github("pcahan1/singleCellNet", ref="tsp_rf_pc", auth="your_token")
+install_github("pcahan1/singleCellNet", ref="master", auth="your_token")
 library(singleCellNet)
 
 library(RColorBrewer)
@@ -34,7 +34,10 @@ library(randomForest)
 library(viridis)
 library(ggplot2)
 library(dplyr)
-
+library(pROC)
+library(viridis)
+library(patchwork)
+library(DescTools)
 
 mydate<-utils_myDate()
 ```
@@ -134,7 +137,6 @@ dim(pdTrain)
 
  ```
 
-
 #### Train the classifier
 ```R
 system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=100, ntrees=1000))       user  system elapsed 
@@ -167,6 +169,15 @@ sla<-append(sla, slaRand)
 sc_hmClass(classRes_val_all, sla, max=300, isBig=TRUE)
 ```
 <img src="md_img/hmClass_validation.png">
+
+#### Assess classifier
+```R
+newSampTab<-makeSampleTable(classRes_val_all, stTest, nrand, "cell")
+tm_heldoutassessment <- assessmentReport_comm(classRes_val_all, newSampTab, classLevels='newAnn',dLevelSID='cell')
+plot_multiAssess(tm_heldoutassessment, method = "tsp_rf", ylimForMultiLogLoss = 1000)
+```
+<img src="md_img/assessReport_100918.png">
+
 
 #### Apply to Park et al query data
 ```R
@@ -398,8 +409,6 @@ sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
 ```
 <img src="md_img/hmClass_CS_heldOut_090618.png">
 
-@YT: Add the PR -> AUPR assessment here
-
 Apply to human query data
 ```R
 system.time(expQueryTrans<-query_transform(expQuery[cgenesA,], xpairs))
@@ -422,13 +431,6 @@ sc_hmClass(crHS, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 <img src="md_img/hmClass_CS_090618.png">
 
 Note that the macrophage category seems to be promiscuous in the mouse held out data, too.
-
-
-
-
-
-
-
 
 
 
