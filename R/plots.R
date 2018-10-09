@@ -1,6 +1,82 @@
 # Patrick Cahan (C) 2017
 # patrick.cahan@gmail.com
 
+
+
+
+
+#' @export
+makeColList<-function(sampTab,dLevel,cellName="cell_name",palName="Blues"){
+    grps<-as.vector(sampTab[,dLevel])
+    names(grps)<-as.vector(sampTab[,cellName])
+    cells<-names(grps)  
+    groupNames<-unique(grps)
+
+    xcol <- colorRampPalette(rev(brewer.pal(n = 9,name = palName)))(length(groupNames)+1)[1:length(groupNames)]
+    names(xcol) <- groupNames
+    anno_colors <- list(group = xcol)
+
+    xx<-data.frame(group=as.factor(grps))
+    rownames(xx)<-cells
+    list(ann_col = xx, ann_colors = anno_colors)
+}
+
+#' @export
+hm_sel_col<-function(
+  expDat,
+  genes,
+  clusCols,# from makeColLis
+  maxPerGrp=100,
+  cRow=FALSE,
+  cCol=FALSE,
+  limits=c(0,10),
+  toScale=FALSE,
+  fontsize_row=4){
+
+  allgenes<-rownames(expDat)
+  missingGenes<-setdiff(genes, allgenes)
+  if(length(missingGenes)>0){
+    cat("Missing genes: ", paste0(missingGenes, collapse=","), "\n")
+    genes<-intersect(genes, allgenes)
+  }
+
+  value<-expDat[genes,]
+  if(toScale){
+      value <- t(scale(t(value)))
+    }
+
+  value[value < limits[1]] <- limits[1]
+  value[value > limits[2]] <- limits[2]
+
+  anno_colors <- clusCols[["ann_colors"]]
+  xx <- clusCols[["ann_col"]]
+  groupNames<-names(anno_colors$group)
+  cells<-colnames(expDat)
+
+  cells2<-vector()
+  for(groupName in groupNames){
+    xi<-which(grps==groupName)
+    if(length(xi)>maxPerGrp){
+      tmpCells<-sample(cells[xi], maxPerGrp)
+    }
+    else{
+      tmpCells<-cells[xi]
+    }
+    cells2<-append(cells2, tmpCells)
+  }
+  value<-value[,cells2]
+
+   val_col <- colorRampPalette(rev(brewer.pal(n = 12,name = "Spectral")))(25)
+  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol, color=val_col,
+        show_colnames = FALSE, annotation_names_row = FALSE,
+        annotation_col = xx,
+        annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
+}
+
+
+
+
+
 #' Skyline waterfall
 #'
 #' Skyline waterfall of classification result
