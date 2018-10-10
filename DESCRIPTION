@@ -16,7 +16,10 @@ Requires:
     mclust,
     randomForest,
     tidyr,
-    dbscan
+    dbscan,
+    DescTools,
+    patchwork,
+    viridis
 License: PRIVATE
 Encoding: UTF-8
 LazyData: true
