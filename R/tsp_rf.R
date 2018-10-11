@@ -107,6 +107,28 @@ findClassyGenes<-function
 }
 
 
+
+makePairTab<-function(genes){
+	ngenes<-length(genes)
+	genes1<-vector()
+	genes2<-vector()
+	for(i in 1:ngenes){ # replace with combn?
+		for(j in 1:ngenes){
+			if(j>i){
+				genes1<-append(genes1, genes[i])
+				genes2<-append(genes2, genes[j])				
+			}
+		}
+	}
+	pairTab = data.frame(genes1=genes1, genes2=genes2)
+	pairNames<-paste(pairTab[,1], "_",pairTab[,2], sep='')
+	pairTab <- cbind(pairTab, pairName=pairNames)
+	pairTab
+}
+
+
+
+
 #' makes vector of gene pairs, iterates over this and computes pairDat, sc_testPattern, then, at the end, findBestPairs 
 #'
 #' @param expDat expDat
@@ -168,7 +190,6 @@ ptGetTop<-function
 		tmpPdat<-ptSmall(expDat, tmpTab)
 
 		for(gi in seq(length(myPatternG))){
-	    	
 	    	grp<-grps[[gi]]
     		statList[[grp]]<-rbind( statList[[grp]], sc_testPattern(myPatternG[[gi]], expDat=tmpPdat) )
     	}
@@ -183,6 +204,7 @@ ptGetTop<-function
     	ans<-append(ans, tmpAns)
     }
     unique(ans)
+
 }
 
 ptSmall<-function

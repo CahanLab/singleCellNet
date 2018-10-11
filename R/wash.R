@@ -98,6 +98,52 @@ downSampleW<-function
 }
 
 
+
+# not used
+newWD<-function(expDat, 
+  total=1e5, 
+  dThresh=0){
+  cSums  <- colSums(expDat)
+  resids <- cSums - total
+  props  <- sweep(expDat, MARGIN=2, FUN="/", STATS=colSums(expDat))
+  
+  rrids  <- cSums - total
+
+  # tmpAns <- expDat - t(t(props) * rrids)
+  tmpAns <- expDat - sweep(props, 2, rrids, "*")
+  tmpAns[which(tmpAns<dThresh)] <- 0
+  tmpAns
+
+}
+
+#' weighted subtraction from mapped reades, applied to all
+#'
+#' Simulate expression profile of  _total_ mapped reads
+#' @param expRaw matrix of total mapped reads per gene/transcript
+#' @param total numeric post transformation sum of read counts
+#'
+#' @return vector of downsampled read mapped to genes/transcripts
+#'
+#' @export
+weigted_down<-function
+(expRaw,
+ total,
+ dThresh=0
+ ){
+  cSums  <- colSums(expDat)
+  rrids  <- cSums - total
+  props <- t(expDat) / cSums
+
+  tmpAns <- expDat - t(props * rrids)
+  tmpAns[which(tmpAns<dThresh)] <- 0
+  tmpAns
+}
+
+
+
+
+if(FALSE){
+
 #' weighted subtraction from mapped reades, applied to all
 #'
 #' Simulate expression profile of  _total_ mapped reads
@@ -116,13 +162,16 @@ weighted_down<-function
     #log(1+expCountDnW)
     expCountDnW
   }
+}
+
+if(FALSE){
 
 #' @export
 trans_prop<-function 
 (expDat,
  xFact=1e5
 ){
-  ans<-matrix(0, nrow=nrow(expDat), ncol=ncol(expDat));
+  ans<-matrix(0, nrow=nrow(expDat), ncol=ncol(expDat))
   for(i in seq(ncol(expDat))){
     ans[,i]<-expDat[,i]/sum(expDat[,i]);    
   }
@@ -130,6 +179,16 @@ trans_prop<-function
   colnames(ans)<-colnames(expDat);
   rownames(ans)<-rownames(expDat);
   log(1+ans)
+}
+}
+
+#' @export
+trans_prop<-function
+(expDat,
+  xFact=1e5){
+
+  cSums  <- colSums(expDat)
+  t(log(1 + xFact * t(expDat) / cSums))
 }
 
 #' @export

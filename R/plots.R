@@ -379,7 +379,12 @@ hm_gpa_sel<-function(
 
   value<-expDat[genes,]
   if(toScale){
-      value <- t(scale(t(value)))
+      if(class(value)[1]!='matrix'){
+        value <- t(scale(Matrix::t(value)))
+      }
+      else{
+        value <- t(scale(t(value)))
+      }
     }
 
   value[value < limits[1]] <- limits[1]

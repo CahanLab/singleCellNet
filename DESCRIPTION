@@ -19,7 +19,8 @@ Requires:
     dbscan,
     DescTools,
     patchwork,
-    viridis
+    viridis,
+    Matrix
 License: PRIVATE
 Encoding: UTF-8
 LazyData: true

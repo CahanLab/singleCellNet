@@ -413,7 +413,7 @@ cn_clPerf<-function # assumes rownames(sampTab) == sampTab identifier used as co
   c(TP, FN, FP, TN);  
 }
 
-
+#' @export
 makeSampleTable <- function(ct_scores, stQuery, nRand, dLevelSID){
   
   sampIDs<-colnames(ct_scores)
@@ -479,7 +479,7 @@ SubsetQueryBasedOnTraining <- function(stQuery,
   return(result)  
 }
 
-
+#' @export
 assessmentReport_comm <- function(ct_score_com, #matrix of classification scores, rows = classifiers, columns = samples, colnames=sampleids || where query cells is in the training
                                   stVal_com, #sample table where cells in query are in the training 
                                   resolution = 0.005,# increment at which to evalutate classification
@@ -693,6 +693,7 @@ plot_class_ROCs<-function
   theme(axis.text = element_text(size=5)) + ggtitle("Classification performance")
 }
 
+#' @export
 plot_multiAssess <- function(assessed, method = "tsp_rf", ylimForMultiLogLoss = x){
 
  metric <- matrix(0, ncol = 5, nrow = 1)

@@ -354,6 +354,24 @@ sc_sampR_to_pattern<-function#
 }
 
 
+
+#' @export
+sc_testPatternTrans<-function(pattern, expDat){
+  pval<-vector();
+  cval<-vector();
+  geneids<-colnames(expDat);
+  llfit<-ls.print(lsfit(pattern, expDat), digits=25, print=FALSE);
+  xxx<-matrix( unlist(llfit$coef), ncol=8,byrow=TRUE);
+  ccorr<-xxx[,6];
+  cval<- sqrt(as.numeric(llfit$summary[,2])) * sign(ccorr);
+  pval<-as.numeric(xxx[,8]);
+
+  #qval<-qvalue(pval)$qval;
+  holm<-p.adjust(pval, method='holm');
+  #data.frame(row.names=geneids, pval=pval, cval=cval, qval=qval, holm=holm);
+  data.frame(row.names=geneids, pval=pval, cval=cval,holm=holm);
+}
+
 #' @export
 sc_testPattern<-function(pattern, expDat){
   pval<-vector();
@@ -370,6 +388,8 @@ sc_testPattern<-function(pattern, expDat){
   #data.frame(row.names=geneids, pval=pval, cval=cval, qval=qval, holm=holm);
   data.frame(row.names=geneids, pval=pval, cval=cval,holm=holm);
 }
+
+
 
 #' @export
 getTopGenes<-function
