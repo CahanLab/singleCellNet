@@ -135,6 +135,7 @@ weighted_down<-function
     props <- Matrix::t(expDat) / cSums
     rrids  <- cSums - total
     tmpAns <- expDat - Matrix::t(props * rrids)
+    tmpAns[Matrix::which(tmpAns<dThresh)] <- 0
   }
   else{
     cSums  <- colSums(expDat)
@@ -142,7 +143,7 @@ weighted_down<-function
     rrids  <- cSums - total
     tmpAns <- expDat - t(props * rrids)
   }
-  tmpAns[which(tmpAns<dThresh)] <- 0
+  
   tmpAns
 }
 
