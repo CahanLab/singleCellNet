@@ -130,7 +130,13 @@ weighted_down<-function
  total,
  dThresh=0
  ){
-  cSums  <- colSums(expDat)
+  if(class(expDat)[1]!='matrix'){
+    cSums  <- Matrix::colSums(expDat)
+  }
+  else{
+    cSums  <- colSums(expDat)
+  }
+
   rrids  <- cSums - total
   props <- t(expDat) / cSums
 
@@ -187,7 +193,13 @@ trans_prop<-function
 (expDat,
   xFact=1e5){
 
-  cSums  <- colSums(expDat)
+  if(class(expDat)[1]!='matrix'){
+    cSums  <- Matrix::colSums(expDat)
+  }
+  else{
+    cSums  <- colSums(expDat)
+  }
+  
   t(log(1 + xFact * t(expDat) / cSums))
 }
 
