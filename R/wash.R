@@ -132,15 +132,16 @@ weighted_down<-function
  ){
   if(class(expDat)[1]!='matrix'){
     cSums  <- Matrix::colSums(expDat)
+    props <- Matrix::t(expDat) / cSums
+    rrids  <- cSums - total
+    tmpAns <- expDat - Matrix::t(props * rrids)
   }
   else{
     cSums  <- colSums(expDat)
+    props <- t(expDat) / cSums
+    rrids  <- cSums - total
+    tmpAns <- expDat - t(props * rrids)
   }
-
-  rrids  <- cSums - total
-  props <- t(expDat) / cSums
-
-  tmpAns <- expDat - t(props * rrids)
   tmpAns[which(tmpAns<dThresh)] <- 0
   tmpAns
 }
@@ -195,12 +196,14 @@ trans_prop<-function
 
   if(class(expDat)[1]!='matrix'){
     cSums  <- Matrix::colSums(expDat)
+    ans <- Matrix::t(log(1 + xFact * t(expDat) / cSums))
   }
   else{
     cSums  <- colSums(expDat)
+    ans<-  t(log(1 + xFact * t(expDat) / cSums))
   }
-  
-  t(log(1 + xFact * t(expDat) / cSums))
+  ans
+ 
 }
 
 #' @export
