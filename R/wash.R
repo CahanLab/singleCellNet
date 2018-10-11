@@ -126,7 +126,7 @@ newWD<-function(expDat,
 #'
 #' @export
 weighted_down<-function
-(expRaw,
+(expDat,
  total,
  dThresh=0
  ){
