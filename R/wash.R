@@ -197,7 +197,7 @@ trans_prop<-function
 
   if(class(expDat)[1]!='matrix'){
     cSums  <- Matrix::colSums(expDat)
-    ans <- Matrix::t(log(1 + xFact * t(expDat) / cSums))
+    ans <- Matrix::t(log(1 + xFact * Matrix::t(expDat) / cSums))
   }
   else{
     cSums  <- colSums(expDat)
