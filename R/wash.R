@@ -125,7 +125,7 @@ newWD<-function(expDat,
 #' @return vector of downsampled read mapped to genes/transcripts
 #'
 #' @export
-weigted_down<-function
+weighted_down<-function
 (expRaw,
  total,
  dThresh=0
