@@ -108,24 +108,13 @@ findClassyGenes<-function
 
 
 
-makePairTab<-function(genes){
-	ngenes<-length(genes)
-	genes1<-vector()
-	genes2<-vector()
-	for(i in 1:ngenes){ # replace with combn?
-		for(j in 1:ngenes){
-			if(j>i){
-				genes1<-append(genes1, genes[i])
-				genes2<-append(genes2, genes[j])				
-			}
-		}
-	}
-	pairTab = data.frame(genes1=genes1, genes2=genes2)
-	pairNames<-paste(pairTab[,1], "_",pairTab[,2], sep='')
-	pairTab <- cbind(pairTab, pairName=pairNames)
-	pairTab
-}
 
+makePairTab<-function(genes){
+	pTab<-t(combn(genes, 2))
+	colnames(pTab)<-c("genes1", "genes2")
+	pTab<-cbind(pTab, pairName=paste(pTab[,1], "_",pTab[,2], sep=''))
+	pTab
+}
 
 
 
@@ -145,25 +134,37 @@ ptGetTop<-function
  sliceSize = 5e3){
 
 	ans<-vector()
+	genes<-rownames(expDat)
+
+	ncores <- detectCores()
+	mcCores <- 1
+	if(ncores>1){
+		mcCores <- ncores - 1
+	}
+	cat(ncores, "  --> ", mcCores,"\n")
 
 	# make a data frame of pairs of genes that will be sliced later
-	cat("Making pairTable\n")
-	ngenes<-nrow(expDat)
-	genes<-rownames(expDat)
-	genes1<-vector()
-	genes2<-vector()
-	for(i in 1:ngenes){ # replace with combn?
-		for(j in 1:ngenes){
-			if(j>i){
-				genes1<-append(genes1, genes[i])
-				genes2<-append(genes2, genes[j])				
+	if(FALSE){
+		cat("Making pairTable\n")
+		ngenes<-nrow(expDat)
+		genes<-rownames(expDat)
+		genes1<-vector()
+		genes2<-vector()
+		for(i in 1:ngenes){ # replace with combn?
+			for(j in 1:ngenes){
+				if(j>i){
+					genes1<-append(genes1, genes[i])
+					genes2<-append(genes2, genes[j])				
+				}
 			}
 		}
+
+		pairTab = data.frame(genes1=genes1, genes2=genes2)
+		pairNames<-paste(pairTab[,1], "_",pairTab[,2], sep='')
+		pairTab <- cbind(pairTab, pairName=pairNames)
 	}
 
-	pairTab = data.frame(genes1=genes1, genes2=genes2)
-	pairNames<-paste(pairTab[,1], "_",pairTab[,2], sep='')
-	pairTab <- cbind(pairTab, pairName=pairNames)
+	pairTab<-makePairTab(genes)
 
 	###
 	# setup tmp ans list of sc_testPattern
@@ -189,22 +190,33 @@ ptGetTop<-function
 		tmpTab<-pairTab[str:stp,]
 		tmpPdat<-ptSmall(expDat, tmpTab)
 
+		### new
+		
+		tmpAns<-mclapply(myPatternG, sc_testPattern, expDat=tmpPdat, mc.cores=mcCores)
+		### names(tmpAns) <- grps
+
+		###for(gi in seq(length(myPatternG))){
+	    ###	grp<-grps[[gi]]
+    	###	statList[[grp]]<-rbind( statList[[grp]], sc_testPattern(myPatternG[[gi]], expDat=tmpPdat) )
+    	### }
+
 		for(gi in seq(length(myPatternG))){
 	    	grp<-grps[[gi]]
-    		statList[[grp]]<-rbind( statList[[grp]], sc_testPattern(myPatternG[[gi]], expDat=tmpPdat) )
+	    	#cat(i, " grp: ",grp,"\n")
+    		statList[[grp]]<-rbind( statList[[grp]],  tmpAns[[grp]])
     	}
 
 
     	str = stp+1
    	 	stp = str + sliceSize - 1		
 	}
+
 	cat("compile results\n")
 	for(grp in grps){
     	tmpAns<-findBestPairs(statList[[grp]], topX)
     	ans<-append(ans, tmpAns)
     }
     unique(ans)
-
 }
 
 ptSmall<-function
@@ -212,15 +224,15 @@ ptSmall<-function
  pTab){
 	npairs = nrow(pTab)
 	ans<-matrix(0, nrow=npairs, ncol=ncol(expDat))
-	genes1<-as.vector(pTab$genes1)
-	genes2<-as.vector(pTab$genes2)
+	genes1<-as.vector(pTab[,"genes1"])
+	genes2<-as.vector(pTab[,"genes2"])
 
     for(i in seq(nrow(pTab))){
     	#cat(genes1[i], ": ", genes2[i],"\n")
     	ans[i,]<-as.numeric(expDat[genes1[i],]>expDat[genes2[i],]) 
     }
 	colnames(ans)<-colnames(expDat)
-	rownames(ans)<-as.vector(pTab$pairName)
+	rownames(ans)<-as.vector(pTab[,"pairName"])
 	ans
 }
 

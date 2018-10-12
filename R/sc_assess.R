@@ -693,6 +693,42 @@ plot_class_ROCs<-function
   theme(axis.text = element_text(size=5)) + ggtitle("Classification performance")
 }
 
+
+#' @export
+plot_metrics <- function(assessed, method = "tsp_rf", ylimForMultiLogLoss = x){
+
+ metric <- matrix(0, ncol = 5, nrow = 1)
+  colnames(metric) <- c("cohen's kappa", "accuracy", "multiLogLoss", "mean_AUPRC","weighted-AUPRC")
+  rownames(metric) <- "value"
+  metric[,1:5] <- c(assessed$kappa, assessed$accuracy, assessed$multiLogLoss, assessed$AUPRC_w, assessed$AUPRC_wc) 
+  metric <- as.data.frame(metric)
+
+  p1<-ggplot(metric, aes(x="cohen's kappa", y = metric[1,1])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) +  ylim(0,1) + theme(legend.position="none")
+
+  p2<-ggplot(metric, aes(x="accuracy", y = metric[1,2])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) + ylim(0,1) + theme(legend.position="none")
+
+  p3<-ggplot(metric, aes(x="multiLogLoss", y = metric[1,3])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) + ylim(0,ylimForMultiLogLoss)+ theme(legend.position="none")
+
+  p4<-ggplot(metric, aes(x="mean_AUPRC", y = metric[1,4])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) + ylim(0,1) + theme(legend.position="none")
+
+  p5<-ggplot(metric, aes(x="weight_AUPRC", y = metric[1,5])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) + ylim(0,1) + theme(legend.position="none")
+
+  (p1 | p2 | p4 | p5 | p3)
+  
+}
+
+plot_PRs <- function(assessed){
+
+  p6 <- ggplot(data=assessed$nonNA_PR, aes(x=as.numeric(as.vector(recall)), y=as.numeric(as.vector(precision)))) + geom_point(size = .5, alpha=.5) +  geom_path(size=.5, alpha=.75) +
+    theme_bw() + xlab("Recall") + ylab("Precision") + facet_wrap( ~ ctype, ncol=4) +
+    theme(axis.text = element_text(size=5)) + ggtitle("Classification performance_PR Curve")
+  p6
+  
+}
+
+
+
+
 #' @export
 plot_multiAssess <- function(assessed, method = "tsp_rf", ylimForMultiLogLoss = x){
 

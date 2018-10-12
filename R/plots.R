@@ -2,7 +2,40 @@
 # patrick.cahan@gmail.com
 
 
+addToST<-function(sampTab, nrand, sid="sample_name", dLevels=c("description1")){
 
+  grpRand<-rep("rand", nrand)
+  names(grpRand)<-paste("rand_", 1:nrand, sep='')
+
+  rTab<-data.frame(sid=names(grpRand))
+  for(dlev in dLevels){
+    rTab<-cbind(rTab, grpRand)
+  }
+  colnames(rTab)<-c("sid", dLevels)
+  qTab<-sampTab[,c(sid, dLevels)]
+  colnames(qTab)[1]<-"sid"
+  rbind(qTab, rTab)
+}
+
+
+
+
+assign_cate<-function(classRes, sampTab, cThresh=0){
+  topCats<-rownames(classRes)[apply(classRes, 2, which.max)]
+  sampTab<-cbind(sampTab, category=topCats)
+  sampTab
+}
+
+#' @export
+plot_attr<-function(classRes, sampTab, nrand, dLevel, sid="sample_name"){
+  stTmp<-addToST(sampTab, nrand=nrand, sid=sid, dLevels=dLevel)
+  stTmp<-assign_cate(classRes, stTmp)
+  colnames(stTmp)[2] <- "group"
+
+  getPalette = colorRampPalette(brewer.pal(12, "Paired"))
+  myPal = getPalette(length(unique(stTmp$category)))
+  ggplot(stTmp, aes(x=group, fill=category)) +  geom_bar(position = "fill", width=.6) + scale_y_continuous(labels = scales::percent) + scale_fill_manual(values=myPal) +  theme_bw() + coord_flip()
+}
 
 
 #' @export
