@@ -2,6 +2,46 @@
 # patrick.cahan@gmail.com
 
 
+
+
+
+#' @export
+prep_umap_class<-function
+(classRes,
+ sampTab,
+ nrand,
+ dLevel,
+ sid='sample_name',
+ topPC=10){
+
+
+  stTmp<-addToST(sampTab, nrand=nrand, sid=sid, dLevels=dLevel)
+  stTmp<-assign_cate(classRes, stTmp)
+  colnames(stTmp)[2] <- "group"
+  uCates<-unique(stTmp[,"category"])
+  cat("PCA\n")
+  pcRes<-prcomp(t(classRes[uCates,]))
+  if(topPC>length(uCates)){
+    topPC <- length(uCates)
+  }
+  cat("UMAP\n")
+  uRes<-umap(pcRes$x[,1:topPC], min_dist=.5)
+  cat("done")
+  stTmp<-cbind(stTmp, uRes$layout)
+  colnames(stTmp)[4]<-"umap.1"
+  colnames(stTmp)[5]<-"umap.2"
+  stTmp
+}
+
+plot_umap<-function
+(preRes){
+
+  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(preRes$category)))
+  ggplot(preRes, aes(x=umap.1, y=umap.2, colour=category) ) + geom_point(pch=19, alpha=3/4, size=1) + theme_bw() + scale_colour_manual(values=ColorRamp) 
+
+}
+
+#' @export
 addToST<-function(sampTab, nrand, sid="sample_name", dLevels=c("description1")){
 
   grpRand<-rep("rand", nrand)
@@ -19,7 +59,7 @@ addToST<-function(sampTab, nrand, sid="sample_name", dLevels=c("description1")){
 
 
 
-
+#' @export
 assign_cate<-function(classRes, sampTab, cThresh=0){
   topCats<-rownames(classRes)[apply(classRes, 2, which.max)]
   sampTab<-cbind(sampTab, category=topCats)

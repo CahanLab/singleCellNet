@@ -38,6 +38,8 @@ library(pROC)
 library(viridis)
 library(patchwork)
 library(DescTools)
+library(Matrix)
+library(parallel)
 
 mydate<-utils_myDate()
 ```
@@ -46,9 +48,9 @@ mydate<-utils_myDate()
 ```R
 download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_Park_MouseKidney_062118.rda", "sampTab_Park_MouseKidney_062118.rda")
 
-download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expDat_Park_MouseKidney_062218.rda", "expDat_Park_MouseKidney_062218.rda")
+download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expMatrix_Park_MouseKidney_Oct_12_2018.rda", "expMatrix_Park_MouseKidney_Oct_12_2018.rda")
 
-download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expTM_Raw_053018.rda", "expTM_Raw_053018.rda")
+download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expMatrix_TM_Raw_Oct_12_2018.rda", "expMatrix_TM_Raw_Oct_12_2018.rda")
 
 download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_TM_053018.rda", "sampTab_TM_053018.rda")
 
@@ -64,7 +66,7 @@ download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/stDat_b
 #### Load query data
 ```R
 stPark<-utils_loadObject("sampTab_Park_MouseKidney_062118.rda")
-expPark<-utils_loadObject("expDat_Park_MouseKidney_062218.rda")
+expPark<-utils_loadObject("expMatrix_Park_MouseKidney_Oct_12_2018.rda")
 dim(expPark)
 [1] 16272 43745
 
@@ -73,7 +75,7 @@ genesPark<-rownames(expPark)
 
 #### Load the training data
 ```R
-expTMraw<-utils_loadObject("expTM_Raw_053018.rda")
+expTMraw<-utils_loadObject("expMatrix_TM_Raw_Oct_12_2018.rda")
 dim(expTMraw)
 [1] 23433 24936
 
@@ -84,63 +86,78 @@ dim(stTM)
 stTM<-droplevels(stTM)
 ```
 
-#### Find genes in common to the data sets
+#### Find genes in common to the data sets and limit analysis to these
 ```R
 commonGenes<-intersect(rownames(expTMraw), genesPark)
 length(commonGenes)
 [1] 13831
+
+
+expPark<-expPark[commonGenes,]
+expTMraw<-expTMraw[commonGenes,]
 ```
 
-#### Normalize the training data
+#### Split for training and assessment, and transform training data
 ```R
-expTMnorm<-trans_prop(weighted_down(expTMraw[commonGenes,], 1.5e3, dThresh=0.25), 1e4)
+stList<-splitCommon(stTM, ncells=100, dLevel="newAnn")
+stTrain<-stList[[1]]
+expTrain<-expTMraw[,rownames(stTrain)]
+
+
+system.time(tmpX<-weighted_down(expTrain, 1.5e3, dThresh=0.25))
+   user  system elapsed 
+  4.837   0.845   5.711
+
+system.time(expTrain<-trans_prop(tmpX, 1e4))
+   user  system elapsed 
+  1.486   0.645   2.136
 ```
 
 #### Find the best set of classifier genes
 ```R
-stList<-splitCommon(stTM, ncells=100, dLevel="newAnn")
-stTrain<-stList[[1]]
-expTrain<-expTMnorm[,rownames(stTrain)]
 
 system.time(cgenes2<-findClassyGenes(expTrain, stTrain, "newAnn", topX=10))
-   user  system elapsed 
- 92.374  19.027 111.651 
+  user  system elapsed 
+ 38.721  10.045  48.767
 
 cgenesA<-cgenes2[['cgenes']]
 grps<-cgenes2[['grps']]
 length(cgenesA)
-[1] 481
+[1] 476
 
 # heatmap these genes
 hm_gpa_sel(expTrain, cgenesA, grps, maxPerGrp=5, toScale=T, cRow=F, cCol=F,font=4)
 ```
 <img src="md_img/hm_tabulaMuris.png">
 
-####  Find the best pairs
- ```R
- system.time(xpairs<-ptGetTop(expTrain[cgenesA,], grps, topX=50, sliceSize=100))
-   user   system  elapsed 
-1020.057  375.750 1396.290
+#### Find the best pairs
+```R
+expT<-as.matrix(expTrain[cgenesA,])
+dim(expT)
+[1]  476 3036
+
+system.time(xpairs<-ptGetTop(expT, grps, topX=25, sliceSize=5000))
+    user   system  elapsed 
+1671.187 1406.671  154.199
 
 length(xpairs)
-[1] 1547
+[1] 799
 ```
 
 #### TSP transform the training data
 ```R
-system.time(pdTrain<-query_transform(expTrain[cgenesA, ], xpairs))
-  user  system elapsed 
-  0.352   0.061   0.414 
+system.time(pdTrain<-query_transform(expT[cgenesA, ], xpairs))
 
 dim(pdTrain)
-[1] 1547 3036
+[1]  799 3036
 
  ```
 
 #### Train the classifier
 ```R
-system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=100, ntrees=1000))       user  system elapsed 
-560.335   0.884 561.432
+system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=100, ntrees=1000))
+  user  system elapsed 
+166.643   0.248 166.866
 ```
 
 #### Apply to held out data -- this is the place to add the multi-class assessment
@@ -148,7 +165,7 @@ system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=
 stTest<-stList[[2]]
 
 system.time(expQtransAll<-query_transform(expTMraw[cgenesA,rownames(stTest)], xpairs))
- 
+
     user  system elapsed 
   4.221   2.751  11.369 
 
@@ -170,13 +187,36 @@ sc_hmClass(classRes_val_all, sla, max=300, isBig=TRUE)
 ```
 <img src="md_img/hmClass_validation.png">
 
+
+#### Attribution plot
+```R
+plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
+```
+<img src="md_img/attribution_val_101218.png">
+
+#### UMAP by category
+```R
+system.time(umPrep<-prep_umap_class(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell", topPC=5))
+user  system elapsed 
+109.500   3.588 113.067 
+
+plot_umap(umPrep)
+```
+<img src="md_img/umap_val_101218.png">
+
+
 #### Assess classifier
 ```R
 newSampTab<-makeSampleTable(classRes_val_all, stTest, nrand, "cell")
 tm_heldoutassessment <- assessmentReport_comm(classRes_val_all, newSampTab, classLevels='newAnn',dLevelSID='cell')
-plot_multiAssess(tm_heldoutassessment, method = "tsp_rf", ylimForMultiLogLoss = 1000)
+plot_PRs(tm_heldoutassessment)
 ```
-<img src="md_img/assessReport_100918.png">
+<img src="md_img/pr_101218.png">
+
+```R
+plot_metrics(tm_heldoutassessment, method = "tsp_rf", ylimForMultiLogLoss = 1000)
+```
+<img src="md_img/metrics_101218.png">
 
 
 #### Apply to Park et al query data
@@ -317,9 +357,12 @@ hm_enr(esMatPat, 0.05, cRows=T, cCols=T, fsr=6)
 Load the human query data
 ```R
 stQuery<-utils_loadObject("stDat_beads_mar22.rda")
-expQuery<-utils_loadObject("6k_beadpurfied_raw.rda")
+expQuery<-utils_loadObject("6k_beadpurfied_raw.rda") # use Matrix if RAM low
 dim(expQuery)
 [1] 32643  6000
+
+expTMraw<-utils_loadObject("expMatrix_TM_Raw_Oct_12_2018.rda") # reload training
+
 ```
 
 Load the ortholog table and convert human gene names to mouse ortholog names, and limit analysis to genes in common between the training and query data.
@@ -346,55 +389,59 @@ dim(expTrain)
 [1] 14550 15161
 ```
 
-Normalize training data. Split into trainin and validation, and find classy genes
+Split into training and validation, normalize training data, and find classy genes
 ```R
-expTMnorm<-trans_prop(weighted_down(expTrain, 1.5e3, dThresh=0.25), 1e4)
-
 stList<-splitCommon(stTM2, ncells=100, dLevel="newAnn")
 stTrain<-stList[[1]]
 dim(stTrain)
-[1]  1457  17
+
+[1] 1457   17
+
+expTMnorm<-trans_prop(weighted_down(expTrain[,rownames(stTrain)], 1.5e3, dThresh=0.25), 1e4)
 
 
-expTrainSS<-expTMnorm[,rownames(stTrain)]
-
-system.time(cgenes2<-findClassyGenes(expTrainSS, stTrain, "newAnn", topX=30))
+system.time(cgenes2<-findClassyGenes(expTMnorm, stTrain, "newAnn", topX=10))
    user  system elapsed 
- 10.610   1.332  11.941
+ 12.735   3.114  15.847 
+
 
 cgenesA<-cgenes2[['cgenes']]
 grps<-cgenes2[['grps']]
 length(cgenesA)
-[1] 650
+[1] 244
+
 ```
+
 
 find best pairs and transform query data, and train classifier
 ```R
-system.time(xpairs<-ptGetTop(expTrainSS[cgenesA,], grps, topX=75, sliceSize=5000))
-nPairs =  210925
-  user  system elapsed 
-597.289 169.932 767.181
+system.time(xpairs<-ptGetTop(expTMnorm[cgenesA,], grps, topX=25, sliceSize=5000))
+   user  system elapsed 
+117.248 120.292 115.127 
 
+pdTrain<-query_transform(expTrain[cgenesA, rownames(stTrain)], xpairs)
 
-pdTrain<-query_transform(expTrainSS[cgenesA, ], xpairs)
+dim(pdTrain)
+[1]  375 1457
 
+nrand = 50
 system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=50, ntrees=1000))
    user  system elapsed 
- 59.171   0.122  59.285
+ 18.321   0.057  18.373
  ```
 
 Apply to held out data
 ```R
 stTest<-stList[[2]]
 
-system.time(expQtransAll<-query_transform(expRawTM[cgenesA,rownames(stTest)], xpairs))
+system.time(expQtransAll<-query_transform(expTrain[cgenesA,rownames(stTest)], xpairs))
    user  system elapsed 
-  1.294   0.240   1.534 
+  2.744   0.061   2.806 
 
 nrand<-50
 system.time(classRes_val_all<-rf_classPredict(rf_tspAll, expQtransAll, numRand=nrand))
-  user  system elapsed 
- 13.356   0.723  14.078 
+   user  system elapsed 
+  8.015   0.178   8.191 
 
 
 sla<-as.vector(stTest$newAnn)
@@ -407,18 +454,18 @@ sla<-append(sla, slaRand)
 # heatmap classification result
 sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
 ```
-<img src="md_img/hmClass_CS_heldOut_090618.png">
+<img src="md_img/hmClass_CS_heldOut_101218.png">
 
 Apply to human query data
 ```R
 system.time(expQueryTrans<-query_transform(expQuery[cgenesA,], xpairs))
   user  system elapsed 
-  0.519   0.074   0.593
+  0.149   0.027   0.176 
   
 nqRand<-50
 system.time(crHS<-rf_classPredict(rf_tspAll, expQueryTrans, numRand=nqRand))
    user  system elapsed 
-  5.941   0.222   6.162 
+  2.390   0.068   2.456 
 
 # heatmap classification result
 sgrp<-as.vector(stQuery$prefix)
