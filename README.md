@@ -475,7 +475,7 @@ names(grpRand)<-paste("rand_", 1:nqRand, sep='')
 sgrp<-append(sgrp, grpRand)
 sc_hmClass(crHS, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 ```
-<img src="md_img/hmClass_CS_090618.png">
+<img src="md_img/hmClass_CS_101218.png">
 
 Note that the macrophage category seems to be promiscuous in the mouse held out data, too.
 
