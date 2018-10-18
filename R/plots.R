@@ -11,6 +11,7 @@ prep_umap_class<-function
  sampTab,
  nrand,
  dLevel,
+ uCates='all',
  sid='sample_name',
  topPC=10){
 
@@ -18,7 +19,13 @@ prep_umap_class<-function
   stTmp<-addToST(sampTab, nrand=nrand, sid=sid, dLevels=dLevel)
   stTmp<-assign_cate(classRes, stTmp)
   colnames(stTmp)[2] <- "group"
-  uCates<-unique(stTmp[,"category"])
+  if(uCates!='all'){
+    uCates<-unique(stTmp[,"category"])
+   }
+   else{
+    ###uCates <- unique(as.vector(sampTab[,dLevel]))
+    uCates<-rownames(classRes)
+   }
   cat("PCA\n")
   pcRes<-prcomp(t(classRes[uCates,]))
   if(topPC>length(uCates)){
@@ -33,6 +40,7 @@ prep_umap_class<-function
   stTmp
 }
 
+#' @export
 plot_umap<-function
 (preRes){
 
