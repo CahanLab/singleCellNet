@@ -20,7 +20,8 @@ Requires:
     DescTools,
     patchwork,
     viridis,
-    Matrix
+    Matrix,
+    umap
 License: PRIVATE
 Encoding: UTF-8
 LazyData: true
