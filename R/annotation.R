@@ -137,7 +137,7 @@ fgsea.wrapper.set<-function(
         qdiffRes<-diffExprList[[qname]]
         teststat<-qdiffRes$cval
         names(teststat)<-rownames(qdiffRes)
-        fRes<-as.data.frame(fgsea(pathways=geneSets, stats=teststat, minSize=minSize, maxSize=maxSize,nperm=nPerm))
+        fRes<-as.data.frame(fgsea(pathways=geneSets, stats=teststat, minSize=minSize, maxSize=maxSize,nperm=nPerm, BPPARAM=SnowParam()))
         ansList[[qname]]<-fRes
     }
     ansList

@@ -21,9 +21,21 @@ Requires:
     patchwork,
     viridis,
     Matrix,
-    umap
+    umap,
+    parallel
 License: PRIVATE
 Encoding: UTF-8
 LazyData: true
 URL: http://pcahan1.github.io/singleCellNet
 RoxygenNote: 6.0.1.9000
+Imports: 
+    DescTools,
+    patchwork,
+    umap,
+    fgsea,
+    ggplot2,
+    pheatmap,
+    viridis,
+    parallel,
+    randomForest,
+    dplyr

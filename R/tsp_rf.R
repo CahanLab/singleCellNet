@@ -102,8 +102,8 @@ findClassyGenes<-function
 	names(grps)<-rownames(sampTab)
 	xdiff<-gnrAll(expDat[ggenes,], grps)
 	cgenes<-lapply(xdiff, getClassGenes, topX=topX)
-	cgenes<-unique(unlist(cgenes))
-	list(cgenes=cgenes, grps=grps)
+	cgenes2<-unique(unlist(cgenes))
+	list(cgenes=cgenes2, grps=grps, by_ct = cgenes)
 }
 
 

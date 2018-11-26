@@ -142,6 +142,7 @@ weighted_down<-function
     props <- t(expDat) / cSums
     rrids  <- cSums - total
     tmpAns <- expDat - t(props * rrids)
+    tmpAns[which(tmpAns<dThresh)] <- 0
   }
   
   tmpAns
