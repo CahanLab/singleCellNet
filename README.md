@@ -413,6 +413,9 @@ plot_umap(umPrep_HS)
 
 #### Assess classifier
 ```R
+stQuery$description <- as.character(stQuery$description)
+stQuery[which(stQuery$description == "NK cell"), "description"] = "natural killer cell"
+
 newSampTab_pbmc<-makeSampleTable(crHS, stQuery, nqRand, "sample_name")
 tm_pbmc_assessment <- assessmentReport_comm(crHS, newSampTab_pbmc, classLevels='description',dLevelSID='sample_name')
 plot_PRs(tm_pbmc_assessment)
