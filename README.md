@@ -238,7 +238,7 @@ skylineClass(crParkall, "T cell", stKid2, "description1",.25, "sample_name")
 
 ### Cross-species classification
 
-####Load the human query data
+#### Load the human query data
 ```R
 stQuery<-utils_loadObject("stDat_beads_mar22.rda")
 expQuery<-utils_loadObject("6k_beadpurfied_raw.rda") # use Matrix if RAM low
@@ -249,7 +249,7 @@ expTMraw<-utils_loadObject("expMatrix_TM_Raw_Oct_12_2018.rda") # reload training
 
 ```
 
-####Load the ortholog table and convert human gene names to mouse ortholog names, and limit analysis to genes in common between the training and query data.
+#### Load the ortholog table and convert human gene names to mouse ortholog names, and limit analysis to genes in common between the training and query data.
 ```R
 oTab<-utils_loadObject("human_mouse_genes_Jul_24_2018.rda")
 dim(oTab)
@@ -260,7 +260,7 @@ expQuery <- aa[['expQuery']]
 expTrain <- aa[['expTrain']]
 ```
 
-####Limit anlaysis to a subset of the TM cell types
+#### Limit anlaysis to a subset of the TM cell types
 ```R
 cts<-c("B cell",  "cardiac muscle cell", "endothelial cell", "erythroblast", "granulocyte", "hematopoietic precursor cell", "late pro-B cell", "limb_mesenchymal", "macrophage", "mammary_basal_cell", "monocyte", "natural killer cell", "T cell", "trachea_epithelial", "trachea_mesenchymal")
 
@@ -273,7 +273,7 @@ dim(expTrain)
 [1] 14550 15161
 ```
 
-####Split into training and validation, normalize training data, and find classy genes
+#### Split into training and validation, normalize training data, and find classy genes
 ```R
 stList<-splitCommon(stTM2, ncells=100, dLevel="newAnn")
 stTrain<-stList[[1]]
@@ -295,7 +295,7 @@ length(cgenesA)
 ```
 
 
-####find best pairs and transform query data, and train classifier
+#### find best pairs and transform query data, and train classifier
 ```R
 system.time(xpairs<-ptGetTop(expTMnorm[cgenesA,], grps, topX=25, sliceSize=5000))
    user  system elapsed 
@@ -315,7 +315,7 @@ system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=
  18.321   0.057  18.373
  ```
 
-####Apply to held out data
+#### Apply to held out data
 ```R
 stTest<-stList[[2]]
 
@@ -338,9 +338,28 @@ sla<-append(sla, slaRand)
 # heatmap classification result
 sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
 ```
-<img src="md_img/hmClass_CS_heldOut_101218.png">
+<img src="md_img/hmClass_CS_heldOut_112918.png">
 
-####Apply to human query data
+#### Attribute plot
+```R
+plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
+```
+<img src="md_img/attribution_CS_heldout_112918.png">
+
+#### assess classifier
+```R
+newSampTab<-makeSampleTable(classRes_val_all, stTest, nrand, "cell")
+tm_heldoutassessment <- assessmentReport_comm(classRes_val_all, newSampTab, classLevels='newAnn',dLevelSID='cell')
+plot_PRs(tm_heldoutassessment)
+```
+<img src="md_img/pr_CS_heldout_112918.png">
+
+```R
+plot_metrics(tm_heldoutassessment)
+```
+<img src="md_img/metrics_CS_heldout_112918.png">
+
+#### Apply to human query data
 ```R
 system.time(expQueryTrans<-query_transform(expQuery[cgenesA,], xpairs))
   user  system elapsed 
@@ -364,5 +383,30 @@ sc_hmClass(crHS, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 
 Note that the macrophage category seems to be promiscuous in the mouse held out data, too.
 
+#### Attribution plot
+```R
+plot_attr(crHS, stQuery, nrand=nqRand, dLevel="description", sid="sample_name")
+```
+<img src="md_img/attribution_CS_112918.png">
 
+#### UMAP by category
+```R
+system.time(umPrep_HS<-prep_umap_class(crHS, stQuery, nrand=nqRand, dLevel="description", sid="sample_name", topPC=5))
+  user  system elapsed
+  26.666   0.957  27.741
+plot_umap(umPrep_HS)
+```
+<img src="md_img/umap_CS_112918.png">
 
+#### Assess classifier
+```R
+newSampTab_pbmc<-makeSampleTable(crHS, stQuery, nqRand, "sample_name")
+tm_pbmc_assessment <- assessmentReport_comm(crHS, newSampTab_pbmc, classLevels='description',dLevelSID='sample_name')
+plot_PRs(tm_pbmc_assessment)
+```
+<img src="md_img/pr_CS_112918.png">
+
+```R
+plot_metrics(tm_pbmc_assessment)
+```
+<img src="md_img/metrics_CS_112918.png">
