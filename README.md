@@ -23,23 +23,9 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 
 #### Setup
 ```R
-library(fgsea)
-library(devtools)
 install_github("pcahan1/singleCellNet", ref="master", auth="your_token")
 library(singleCellNet)
-
-library(RColorBrewer)
-library(pheatmap)
-library(randomForest)
-library(viridis)
-library(ggplot2)
 library(dplyr)
-library(pROC)
-library(viridis)
-library(patchwork)
-library(DescTools)
-library(Matrix)
-library(parallel)
 
 mydate<-utils_myDate()
 ```
@@ -71,6 +57,9 @@ dim(expPark)
 [1] 16272 43745
 
 genesPark<-rownames(expPark)
+
+rm(expPark)
+gc()
 ```
 
 #### Load the training data
@@ -92,8 +81,6 @@ commonGenes<-intersect(rownames(expTMraw), genesPark)
 length(commonGenes)
 [1] 13831
 
-
-expPark<-expPark[commonGenes,]
 expTMraw<-expTMraw[commonGenes,]
 ```
 
@@ -165,7 +152,6 @@ system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=
 stTest<-stList[[2]]
 
 system.time(expQtransAll<-query_transform(expTMraw[cgenesA,rownames(stTest)], xpairs))
-
     user  system elapsed 
   4.221   2.751  11.369 
 
@@ -179,7 +165,6 @@ sla<-as.vector(stTest$newAnn)
 names(sla)<-rownames(stTest)
 slaRand<-rep("rand", nrand)
 names(slaRand)<-paste("rand_", 1:nrand, sep='')
-
 sla<-append(sla, slaRand)
 
 # heatmap classification result
@@ -214,19 +199,19 @@ plot_PRs(tm_heldoutassessment)
 <img src="md_img/pr_101218.png">
 
 ```R
-plot_metrics(tm_heldoutassessment, method = "tsp_rf", ylimForMultiLogLoss = 1000)
+plot_metrics(tm_heldoutassessment)
 ```
-<img src="md_img/metrics_101218.png">
+<img src="md_img/metrics_112918.png">
 
 
 #### Apply to Park et al query data
 ```R
+expPark<-utils_loadObject("expMatrix_Park_MouseKidney_Oct_12_2018.rda")
 system.time(kidTransAll<-query_transform(expPark[cgenesA,], xpairs))
    user  system elapsed 
   8.594   3.314  15.704 
   
 nqRand<-100
-
 system.time(crParkall<-rf_classPredict(rf_tspAll, kidTransAll, numRand=nqRand))
   user  system elapsed 
  78.520   3.873  82.49
@@ -251,110 +236,9 @@ skylineClass(crParkall, "T cell", stKid2, "description1",.25, "sample_name")
 <img src="md_img/skyline_Tcell_Park.png">
 
 
-
-#### Determine cell groups yourself using Cluster by Competition (CBC)
-```R
-library(cluster)
-library(pcaMethods)
-library(rpca)
-library(data.tree)
-library(dbscan)
-library(Rtsne)
-
-gstats<-sc_statTab(expTrain, dThresh=1)
-ggenes<-sc_filterGenes(gstats, alpha1=0.025, alpha2=.001, mu=2)
-length(ggenes)
-[1] 7777
-
-system.time(xTree_auto<-gpa_recurse(expTrain[ggenes,], zThresh=2, maxLevel=3, nPCs=2, SilhDrop=0.5, methods=c("cutree","sNN_clust","kmeans"), dThresh=1, pcaMethod="prcomp",k=2:8, minClusterSize=20, silMin=FALSE, pcAuto=TRUE))
-
-   user  system elapsed 
- 77.129   4.513  81.654 
-
-system.time(ts3<-pca_to_tsne(expTrain[ggenes,], xTree_auto, perplexity=30, theta=0.25, weighted=FALSE))
- user  system elapsed 
- 44.945   0.410  45.370
-
-
-stT1<-stTrain
-stT1<-cbind(stT1, cluster=xTree_auto$groups)
-sampTab<-cbind(sampTab, cluster2=xTree_auto$grp_list[[2]])
-sampTab<-cbind(sampTab, cluster3=xTree_auto$grp_list[[3]])
-
-plot_tsne(stT1, ts3, cname="cluster")
-```
-<img src="md_img/tsne_TM_cluster.png">
-
-#### Black background; good for presentations
-```R
-plot_tsne(stT1, ts3, cname="cluster", themeWhite=FALSE)
-```
-<img src="md_img/tsne_TM_cluster_black.png">
-
-
-Color by category provided by Tabula Muris
-```R
-plot_tsne(stT1, ts3, cname="newAnn")
-```
-<img src="md_img/tsne_TM_label.png">
-
- 
-#### Differential expression
-```R
-system.time(xdiff<-gnrAll(expTrain[ggenes,], xTree_auto$groups))
-   user  system elapsed 
- 71.072  16.591  87.684 
-
-x1<-lapply( xdiff, getTopGenes, 5)
-newOrder<-reorderCellsByGrp( xTree_auto$groups , names(x1))
-
-hm_gpa_sel(expTrain, c(unique(unlist(x1))), newOrder, maxPerGrp=20, toScale=T, cRow=F, cCol=F,font=5)
-```
-<img src="md_img/hm_diffExp_TM.png">
-
-#### tsne plot specific genes 
-```R 
-tsneMultsimp(ts3, expTrain, c("Ear2","Tnnt2","Cd3e","Apoc3"))
-```
-<img src="md_img/tsne_4_genes.png">
-
-#### tsne plot specific genes; black background
-```R 
-tsneMultsimp(ts3, expTrain, c("Ear2","Tnnt2","Cd3e","Apoc3"), revCol=FALSE,themeWhite=FALSE)
-```
-<img src="md_img/tsne_4_genes_black.png">
-
-#### Gene set enrichment analysis
-
-Download and install fgsea (https://github.com/ctlab/fgsea) if you don't already have it
-```R
-install_github("ctlab/fgsea")
-```
-
-Enrichment analysis
-```R
-# download mouse symbol hallmarks gene sets
-download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/resources/mouse_symbols_H_v5p2_Dec_11_2017.rda")
-
-gsHallmarks<-utils_loadObject("mouse_symbols_H_v5p2_Dec_11_2017.rda")
-
-# limit to genes included in both the expression data and in the hallmarks lists
-gsHall<-lapply(gsHallmarks, intersect, rownames(xdiff[[1]]))
-
-system.time(enrPatt<-fgsea.wrapper.set(xdiff, gsHall, minSize=20, nPerm=1e3))
-  user  system elapsed 
- 34.546   0.814   6.781 
-
-esMatPat<-ks.extract.more(enrPatt, sigThresh=1.1, sigType='padj', gsColName='pathway', esColName='NES')
-
-# heatmap the enrichment scores, color only those that are significant
-hm_enr(esMatPat, 0.05, cRows=T, cCols=T, fsr=6)
-```
-<img src="md_img/hm_fgsea_tm.png">
-
 ### Cross-species classification
 
-Load the human query data
+####Load the human query data
 ```R
 stQuery<-utils_loadObject("stDat_beads_mar22.rda")
 expQuery<-utils_loadObject("6k_beadpurfied_raw.rda") # use Matrix if RAM low
@@ -365,18 +249,18 @@ expTMraw<-utils_loadObject("expMatrix_TM_Raw_Oct_12_2018.rda") # reload training
 
 ```
 
-Load the ortholog table and convert human gene names to mouse ortholog names, and limit analysis to genes in common between the training and query data.
+####Load the ortholog table and convert human gene names to mouse ortholog names, and limit analysis to genes in common between the training and query data.
 ```R
 oTab<-utils_loadObject("human_mouse_genes_Jul_24_2018.rda")
 dim(oTab)
 [1] 16688     3
 
-aa = csRenameOrth(expQuery, expRawTM, oTab)
+aa = csRenameOrth(expQuery, expTMraw, oTab)
 expQuery <- aa[['expQuery']]
 expTrain <- aa[['expTrain']]
 ```
 
-Limit anlaysis to a subset of the TM cell types
+####Limit anlaysis to a subset of the TM cell types
 ```R
 cts<-c("B cell",  "cardiac muscle cell", "endothelial cell", "erythroblast", "granulocyte", "hematopoietic precursor cell", "late pro-B cell", "limb_mesenchymal", "macrophage", "mammary_basal_cell", "monocyte", "natural killer cell", "T cell", "trachea_epithelial", "trachea_mesenchymal")
 
@@ -389,16 +273,14 @@ dim(expTrain)
 [1] 14550 15161
 ```
 
-Split into training and validation, normalize training data, and find classy genes
+####Split into training and validation, normalize training data, and find classy genes
 ```R
 stList<-splitCommon(stTM2, ncells=100, dLevel="newAnn")
 stTrain<-stList[[1]]
 dim(stTrain)
-
 [1] 1457   17
 
 expTMnorm<-trans_prop(weighted_down(expTrain[,rownames(stTrain)], 1.5e3, dThresh=0.25), 1e4)
-
 
 system.time(cgenes2<-findClassyGenes(expTMnorm, stTrain, "newAnn", topX=10))
    user  system elapsed 
@@ -413,11 +295,14 @@ length(cgenesA)
 ```
 
 
-find best pairs and transform query data, and train classifier
+####find best pairs and transform query data, and train classifier
 ```R
 system.time(xpairs<-ptGetTop(expTMnorm[cgenesA,], grps, topX=25, sliceSize=5000))
    user  system elapsed 
 117.248 120.292 115.127 
+
+length(xpairs)
+[1] 375
 
 pdTrain<-query_transform(expTrain[cgenesA, rownames(stTrain)], xpairs)
 
@@ -430,7 +315,7 @@ system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=
  18.321   0.057  18.373
  ```
 
-Apply to held out data
+####Apply to held out data
 ```R
 stTest<-stList[[2]]
 
@@ -448,7 +333,6 @@ sla<-as.vector(stTest$newAnn)
 names(sla)<-rownames(stTest)
 slaRand<-rep("rand", nrand)
 names(slaRand)<-paste("rand_", 1:nrand, sep='')
-
 sla<-append(sla, slaRand)
 
 # heatmap classification result
@@ -456,7 +340,7 @@ sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
 ```
 <img src="md_img/hmClass_CS_heldOut_101218.png">
 
-Apply to human query data
+####Apply to human query data
 ```R
 system.time(expQueryTrans<-query_transform(expQuery[cgenesA,], xpairs))
   user  system elapsed 
@@ -473,6 +357,7 @@ names(sgrp)<-rownames(stQuery)
 grpRand<-rep("rand", nqRand)
 names(grpRand)<-paste("rand_", 1:nqRand, sep='')
 sgrp<-append(sgrp, grpRand)
+
 sc_hmClass(crHS, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 ```
 <img src="md_img/hmClass_CS_101218.png">
