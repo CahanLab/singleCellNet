@@ -144,7 +144,7 @@ dim(pdTrain)
 ```R
 system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=100, ntrees=1000))
   user  system elapsed 
-166.643   0.248 166.866
+  166.643   0.248 166.866
 ```
 
 #### Apply to held out data -- this is the place to add the multi-class assessment
@@ -182,8 +182,8 @@ plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 #### UMAP by category
 ```R
 system.time(umPrep<-prep_umap_class(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell", topPC=5))
-user  system elapsed 
-109.500   3.588 113.067 
+  user  system elapsed 
+  109.500   3.588 113.067 
 
 plot_umap(umPrep)
 ```
@@ -345,6 +345,16 @@ sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
 plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```
 <img src="md_img/attribution_CS_heldout_112918.png">
+
+#### UMAP by category
+```R
+system.time(umPrep<-prep_umap_class(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell", topPC=5))
+  user  system elapsed 
+ 79.352   1.578  81.177 
+
+plot_umap(umPrep)
+```
+<img src="md_img/umap_CS_val_112918.png">
 
 #### assess classifier
 ```R
