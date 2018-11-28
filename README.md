@@ -292,7 +292,10 @@ grps<-cgenes2[['grps']]
 length(cgenesA)
 [1] 244
 
+# heatmap these genes
+hm_gpa_sel(expTrain, cgenesA, grps, maxPerGrp=20, toScale=T, cRow=F, cCol=F,font=4)
 ```
+<img src="md_img/heatmap_classGenes_CS_heldOut_112918.png">
 
 
 #### find best pairs and transform query data, and train classifier
