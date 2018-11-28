@@ -124,8 +124,8 @@ dim(expT)
 [1]  476 3036
 
 system.time(xpairs<-ptGetTop(expT, grps, topX=25, sliceSize=5000))
-    user   system  elapsed 
-1671.187 1406.671  154.199
+  user   system  elapsed 
+ 1671.187 1406.671  154.199
 
 length(xpairs)
 [1] 799
@@ -144,7 +144,7 @@ dim(pdTrain)
 ```R
 system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=100, ntrees=1000))
   user  system elapsed 
-  166.643   0.248 166.866
+ 166.643   0.248 166.866
 ```
 
 #### Apply to held out data -- this is the place to add the multi-class assessment
@@ -152,8 +152,8 @@ system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=
 stTest<-stList[[2]]
 
 system.time(expQtransAll<-query_transform(expTMraw[cgenesA,rownames(stTest)], xpairs))
-    user  system elapsed 
-  4.221   2.751  11.369 
+  user  system elapsed 
+ 4.221   2.751  11.369 
 
 
 nrand<-100
@@ -183,7 +183,7 @@ plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```R
 system.time(umPrep<-prep_umap_class(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell", topPC=5))
   user  system elapsed 
-  109.500   3.588 113.067 
+ 109.500   3.588 113.067 
 
 plot_umap(umPrep)
 ```
@@ -208,8 +208,8 @@ plot_metrics(tm_heldoutassessment)
 ```R
 expPark<-utils_loadObject("expMatrix_Park_MouseKidney_Oct_12_2018.rda")
 system.time(kidTransAll<-query_transform(expPark[cgenesA,], xpairs))
-   user  system elapsed 
-  8.594   3.314  15.704 
+  user  system elapsed 
+ 8.594   3.314  15.704 
   
 nqRand<-100
 system.time(crParkall<-rf_classPredict(rf_tspAll, kidTransAll, numRand=nqRand))
@@ -283,7 +283,7 @@ dim(stTrain)
 expTMnorm<-trans_prop(weighted_down(expTrain[,rownames(stTrain)], 1.5e3, dThresh=0.25), 1e4)
 
 system.time(cgenes2<-findClassyGenes(expTMnorm, stTrain, "newAnn", topX=10))
-   user  system elapsed 
+  user  system elapsed 
  12.735   3.114  15.847 
 
 
@@ -301,8 +301,8 @@ hm_gpa_sel(expTrain, cgenesA, grps, maxPerGrp=20, toScale=T, cRow=F, cCol=F,font
 #### find best pairs and transform query data, and train classifier
 ```R
 system.time(xpairs<-ptGetTop(expTMnorm[cgenesA,], grps, topX=25, sliceSize=5000))
-   user  system elapsed 
-117.248 120.292 115.127 
+  user  system elapsed 
+ 117.248 120.292 115.127 
 
 length(xpairs)
 [1] 375
@@ -314,7 +314,7 @@ dim(pdTrain)
 
 nrand = 50
 system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=50, ntrees=1000))
-   user  system elapsed 
+  user  system elapsed 
  18.321   0.057  18.373
  ```
 
@@ -323,13 +323,13 @@ system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=
 stTest<-stList[[2]]
 
 system.time(expQtransAll<-query_transform(expTrain[cgenesA,rownames(stTest)], xpairs))
-   user  system elapsed 
-  2.744   0.061   2.806 
+  user  system elapsed 
+ 2.744   0.061   2.806 
 
 nrand<-50
 system.time(classRes_val_all<-rf_classPredict(rf_tspAll, expQtransAll, numRand=nrand))
-   user  system elapsed 
-  8.015   0.178   8.191 
+  user  system elapsed 
+ 8.015   0.178   8.191 
 
 
 sla<-as.vector(stTest$newAnn)
@@ -376,12 +376,12 @@ plot_metrics(tm_heldoutassessment)
 ```R
 system.time(expQueryTrans<-query_transform(expQuery[cgenesA,], xpairs))
   user  system elapsed 
-  0.149   0.027   0.176 
+ 0.149   0.027   0.176 
   
 nqRand<-50
 system.time(crHS<-rf_classPredict(rf_tspAll, expQueryTrans, numRand=nqRand))
-   user  system elapsed 
-  2.390   0.068   2.456 
+  user  system elapsed 
+ 2.390   0.068   2.456 
 
 # heatmap classification result
 sgrp<-as.vector(stQuery$prefix)
@@ -406,7 +406,7 @@ plot_attr(crHS, stQuery, nrand=nqRand, dLevel="description", sid="sample_name")
 ```R
 system.time(umPrep_HS<-prep_umap_class(crHS, stQuery, nrand=nqRand, dLevel="description", sid="sample_name", topPC=5))
   user  system elapsed
-  26.666   0.957  27.741
+ 26.666   0.957  27.741
 plot_umap(umPrep_HS)
 ```
 <img src="md_img/umap_CS_112918.png">
