@@ -465,11 +465,11 @@ assess_comm <- function(ct_scores, #matrix of classification scores, rows = clas
   stVal_com <- stQuery[which(stQuery[,classQuery] %in% unique(stTrain[,classTrain])),]
   
   if(nRand > 0){
-    tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stQuery))))
-    colnames(tmp) <- colnames(stQuery)
+    tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stVal_com))))
+    colnames(tmp) <- colnames(stVal_com)
     tmp[,dLevelSID] <- colnames(ct_scores)[(ncol(ct_scores) - nRand + 1):ncol(ct_scores)]
     rownames(tmp) <- tmp[,dLevelSID]
-    stVal_com <- rbind(stQuery, tmp)
+    stVal_com <- rbind(stVal_com, tmp)
   }
   
   cells_sub <- as.character(stVal_com[,dLevelSID])
