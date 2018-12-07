@@ -480,7 +480,18 @@ assess_comm <- function(ct_scores, #matrix of classification scores, rows = clas
   report <- list()
   ct_scores_t <- t(ct_score_com)
   true_label <- as.character(stVal_com[, classQuery])
-  
+  #multiLogLoss
+  names(true_label) <- rownames(ct_scores_t)
+
+  if (is.matrix(true_label) == FALSE) {
+    y_true <- model.matrix(~ 0 + ., data.frame(as.character(true_label)))
+  }
+  eps <- 1e-15
+  y_pred <- pmax(pmin(ct_scores_t, 1 - eps), eps)
+
+  multiLogLoss <- (-1 / nrow(ct_scores_t)) * sum(t(y_true)%*% log(y_pred)) #want columns to be the cell types for y_pred
+
+
   #cohen's kappa, accuracy
   pred_label <- c()
   pred_label <- colnames(ct_scores_t)[max.col(ct_scores_t,ties.method="random")]
@@ -537,6 +548,7 @@ assess_comm <- function(ct_scores, #matrix of classification scores, rows = clas
   report[['accuracy']] <- accuracy
   report[['kappa']] <- (accuracy - expAccuracy) / (1 - expAccuracy)
   report[['AUPRC_w']] <- mean(areas)
+  report[['multiLogLoss']] <- multiLogLoss
   report[['cm']] <- cm
   report[['confusionMatrix']] <- confusionMatrix
   report[['nonNA_PR']] <- nonNA_PR
