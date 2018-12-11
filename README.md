@@ -361,8 +361,7 @@ plot_umap(umPrep)
 
 #### assess classifier
 ```R
-newSampTab<-makeSampleTable(classRes_val_all, stTest, nrand, "cell")
-tm_heldoutassessment <- assessmentReport_comm(classRes_val_all, newSampTab, classLevels='newAnn',dLevelSID='cell')
+tm_heldoutassessment <- assess_comm(ct_scores = classRes_val_all, stTrain = stTrain, stQuery = stTest, dLevelSID = "cell", classTrain = "newAnn", classQuery = "newAnn")
 plot_PRs(tm_heldoutassessment)
 ```
 <img src="md_img/pr_CS_heldout_112918.png">
@@ -416,8 +415,7 @@ plot_umap(umPrep_HS)
 stQuery$description <- as.character(stQuery$description)
 stQuery[which(stQuery$description == "NK cell"), "description"] = "natural killer cell"
 
-newSampTab_pbmc<-makeSampleTable(crHS, stQuery, nqRand, "sample_name")
-tm_pbmc_assessment <- assessmentReport_comm(crHS, newSampTab_pbmc, classLevels='description',dLevelSID='sample_name')
+m_pbmc_assessment <- assess_comm(ct_scores = crHS, stTrain = stTrain, stQuery = stQuery, classTrain = "newAnn",classQuery="description",dLevelSID="sample_name")
 plot_PRs(tm_pbmc_assessment)
 ```
 <img src="md_img/pr_CS_112918.png">
