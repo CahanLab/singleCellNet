@@ -415,7 +415,7 @@ plot_umap(umPrep_HS)
 stQuery$description <- as.character(stQuery$description)
 stQuery[which(stQuery$description == "NK cell"), "description"] = "natural killer cell"
 
-m_pbmc_assessment <- assess_comm(ct_scores = crHS, stTrain = stTrain, stQuery = stQuery, classTrain = "newAnn",classQuery="description",dLevelSID="sample_name")
+tm_pbmc_assessment <- assess_comm(ct_scores = crHS, stTrain = stTrain, stQuery = stQuery, classTrain = "newAnn",classQuery="description",dLevelSID="sample_name")
 plot_PRs(tm_pbmc_assessment)
 ```
 <img src="md_img/pr_CS_112918.png">
