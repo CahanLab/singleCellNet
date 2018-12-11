@@ -458,11 +458,21 @@ assess_comm <- function(ct_scores, #matrix of classification scores, rows = clas
                             resolution = 0.005,# increment at which to evalutate classification
                             nRand = 50,
                             dLevelSID = "sample_name",
-                            classTrain = "cell_ontology_class",
-                            classQuery = "description2", #query data
+                            classTrain = "newAnn4",
+                            classQuery = "newAnn2", #query data
                             AUCmethod = "trapezoid"){
-
-  stVal_com <- stQuery[which(stQuery[,classQuery] %in% unique(stTrain[,classTrain])),]
+  
+  #capitalize the first letter of the sample table
+  simpleCap <- function(x) {
+    paste(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)), sep="")
+  }
+  
+  stQuery[,classQuery] = sapply(stQuery[,classQuery], simpleCap)
+  stTrain[,classTrain] = sapply(stTrain[,classTrain], simpleCap)
+  
+  #identify shared cell types
+  shared_cell_type <- intersect(unique(stTrain[,classTrain]), unique(stQuery[,classQuery]))
+  stVal_com <- stQuery[which(stQuery[,classQuery] %in% shared_cell_type),]
   
   if(nRand > 0){
     tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stVal_com))))
@@ -480,21 +490,21 @@ assess_comm <- function(ct_scores, #matrix of classification scores, rows = clas
   report <- list()
   ct_scores_t <- t(ct_score_com)
   true_label <- as.character(stVal_com[, classQuery])
-  #multiLogLoss
-  names(true_label) <- rownames(ct_scores_t)
-
+  true_label <- sapply(true_label, simpleCap)
+  
+  #cohen's kappa, accuracy
+  pred_label <- c()
+  pred_label <- colnames(ct_scores_t)[max.col(ct_scores_t,ties.method="random")]
+  pred_label <- sapply(pred_label, simpleCap)
+  
   if (is.matrix(true_label) == FALSE) {
     y_true <- model.matrix(~ 0 + ., data.frame(as.character(true_label)))
   }
   eps <- 1e-15
   y_pred <- pmax(pmin(ct_scores_t, 1 - eps), eps)
-
-  multiLogLoss <- (-1 / nrow(ct_scores_t)) * sum(t(y_true)%*% log(y_pred)) #want columns to be the cell types for y_pred
-
-
-  #cohen's kappa, accuracy
-  pred_label <- c()
-  pred_label <- colnames(ct_scores_t)[max.col(ct_scores_t,ties.method="random")]
+  
+  multilogloss <- (-1 / nrow(ct_scores_t)) * sum(t(y_true)%*% log(y_pred)) #want columns to be the cell types for y_pred
+  
   
   cm = as.matrix(table(Actual = true_label, Predicted = pred_label))
   
@@ -516,7 +526,6 @@ assess_comm <- function(ct_scores, #matrix of classification scores, rows = clas
   }
   
   cm <- cm[,colnames(cm)[match(rownames(cm),colnames(cm))]]  
-  
   
   #sort table names accordigly
   
@@ -548,7 +557,8 @@ assess_comm <- function(ct_scores, #matrix of classification scores, rows = clas
   report[['accuracy']] <- accuracy
   report[['kappa']] <- (accuracy - expAccuracy) / (1 - expAccuracy)
   report[['AUPRC_w']] <- mean(areas)
-  report[['multiLogLoss']] <- multiLogLoss
+  report[['AUPRC_wc']] <- weighted.mean(areas, w)
+  report[['multiLogLoss']] <- multilogloss
   report[['cm']] <- cm
   report[['confusionMatrix']] <- confusionMatrix
   report[['nonNA_PR']] <- nonNA_PR
@@ -558,6 +568,7 @@ assess_comm <- function(ct_scores, #matrix of classification scores, rows = clas
   return(report)
   
 }
+
 
 #' @export
 assessmentReport_comm <- function(ct_score_com, #matrix of classification scores, rows = classifiers, columns = samples, colnames=sampleids || where query cells is in the training
