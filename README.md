@@ -192,8 +192,7 @@ plot_umap(umPrep)
 
 #### Assess classifier
 ```R
-newSampTab<-makeSampleTable(classRes_val_all, stTest, nrand, "cell")
-tm_heldoutassessment <- assessmentReport_comm(classRes_val_all, newSampTab, classLevels='newAnn',dLevelSID='cell')
+tm_heldoutassessment <- assess_comm(ct_scores = classRes_val_all, stTrain = stTrain, stQuery = stTest, dLevelSID = "cell", classTrain = "newAnn", classQuery = "newAnn")
 plot_PRs(tm_heldoutassessment)
 ```
 <img src="md_img/pr_101218.png">
