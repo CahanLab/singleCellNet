@@ -451,33 +451,110 @@ cal_ARI <- function(expDat, sampTab, topPC, maxLevel, dThresh, true_lable, nIter
   
 }
 
-SubsetQueryBasedOnTraining <- function(stQuery, 
-                                       stTrain, 
-                                       ct_scores,
-                                       nRand = 50,
-                                       dLevelSID = "sample_name",
-                                       classTrain = "cell_ontology_class",
-                                       classQuery = "description2"){
+#' @export
+assess_comm <- function(ct_scores, #matrix of classification scores, rows = classifiers, columns = samples, colnames=sampleids || where query cells is in the training
+         stTrain, #sample table where cells in query are in the training 
+         stQuery,
+         resolution = 0.005,# increment at which to evalutate classification
+         nRand = 50,
+         dLevelSID = "sample_name",
+         classTrain = "cell_ontology_class",
+         classQuery = "description2", #query data
+         AUCmethod = "trapezoid"){
   
-  stVal_com <- stQuery[which(stQuery[,classQuery] %in% unique(stTrain[,classTrain])),]
+  shared_cell_type <- intersect(unique(stTrain[,classTrain]), unique(stQuery[,classQuery]))
+  stVal_com <- stQuery[which(stQuery[,classQuery] %in% shared_cell_type),]
   
   if(nRand > 0){
-    tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stQuery))))
-    colnames(tmp) <- colnames(stQuery)
+    tmp <- as.data.frame(matrix("rand", nrow = nRand, ncol=(ncol(stVal_com))))
+    colnames(tmp) <- colnames(stVal_com)
     tmp[,dLevelSID] <- colnames(ct_scores)[(ncol(ct_scores) - nRand + 1):ncol(ct_scores)]
     rownames(tmp) <- tmp[,dLevelSID]
-    stVal_com <- rbind(stQuery, tmp)
+    stVal_com <- rbind(stVal_com, tmp)
   }
   
   cells_sub <- as.character(stVal_com[,dLevelSID])
   
   #subsetting the ct_scores where the cells' true identity is within the range of the classifiers
   ct_score_com <- ct_scores[, cells_sub]
+  report <- list()
+  ct_scores_t <- t(ct_score_com)
+  true_label <- as.character(stVal_com[, classQuery])
+  #multiLogLoss
+  names(true_label) <- rownames(ct_scores_t)
+  if (is.matrix(true_label) == FALSE) {
+    y_true <- model.matrix(~ 0 + ., data.frame(as.character(true_label)))
+  }
+  eps <- 1e-15
+  y_pred <- pmax(pmin(ct_scores_t, 1 - eps), eps)
+  multiLogLoss <- (-1 / nrow(ct_scores_t)) * sum(t(y_true)%*% log(y_pred)) #want columns to be the cell types for y_pred
+  #cohen's kappa, accuracy
+  pred_label <- c()
+  pred_label <- colnames(ct_scores_t)[max.col(ct_scores_t,ties.method="random")]
   
-  result <- list(stVal_com = stVal_com, ct_score_com = ct_score_com)
-
-  return(result)  
+  cm = as.matrix(table(Actual = true_label, Predicted = pred_label))
+  
+  #in case of misclassfication where there are classifiers that are not used
+  if(length(setdiff(unique(true_label), unique(pred_label))) != 0){
+    misCol <- setdiff(unique(true_label), unique(pred_label))
+    for(i in 1:length(misCol)){
+      cm <- cbind(cm, rep(0, nrow(cm)))
+    }
+    colnames(cm)[(ncol(cm) - length(misCol) +1) : ncol(cm)] <- misCol
+  }
+  
+  if(length(setdiff(unique(pred_label), unique(true_label))) != 0){
+    misRow <- setdiff(unique(pred_label), unique(true_label))
+    for(i in 1:length(misRow)){
+      cm <- rbind(cm, rep(0, ncol(cm)))
+    }
+    rownames(cm)[(nrow(cm) - length(misRow) +1) : nrow(cm)] <- misRow
+  }
+  
+  cm <- cm[,colnames(cm)[match(rownames(cm),colnames(cm))]]  
+  
+  
+  #sort table names accordigly
+  
+  n = sum(cm) # number of instances
+  nc = nrow(cm) # number of classes
+  diag = diag(cm) # number of correctly classified instances per class 
+  rowsums = apply(cm, 1, sum) # number of instances per class
+  colsums = apply(cm, 2, sum) # number of predictions per class 
+  p = rowsums / n # distribution of instances over the actual classes
+  q = colsums / n # distribution of instances over the predicted classes
+  expAccuracy = sum(p*q)
+  accuracy = sum(diag) / n 
+  
+  #PR
+  confusionMatrix <- cn_classAssess(ct_score_com, stVal_com, classLevels= classQuery, dLevelSID=dLevelSID, resolution=resolution)
+  PR_ROC <- cal_class_PRs(confusionMatrix)
+  nonNA_PR <-PR_ROC[which(!is.nan(PR_ROC$recall)),]
+  nonNA_PR[which((nonNA_PR$TP == 0 & nonNA_PR$FP ==0)), "precision"] <- 1
+  
+  w <- c()
+  areas <- c()
+  for(i in 1: length(unique(nonNA_PR$ctype))){
+    tmp <- nonNA_PR[which(nonNA_PR$ctype %in% unique(nonNA_PR$ctype)[i]),]
+    area <- AUC(tmp$recall, tmp$precision, method = AUCmethod)
+    areas <- c(areas,area[1])
+    w <- c(w, sum(stVal_com[,classQuery] %in% unique(nonNA_PR$ctype)[i])/nrow(stVal_com))
+  }
+  
+  report[['accuracy']] <- accuracy
+  report[['kappa']] <- (accuracy - expAccuracy) / (1 - expAccuracy)
+  report[['AUPRC_w']] <- mean(areas)
+  report[['AUPRC_wc']] <- weighted.mean(areas, w)
+  report[['multiLogLoss']] <- multiLogLoss
+  report[['cm']] <- cm
+  report[['confusionMatrix']] <- confusionMatrix
+  report[['nonNA_PR']] <- nonNA_PR
+  report[['PR_ROC']] <- PR_ROC
+  
+  return(report)
+  
 }
+
 
 #' @export
 assessmentReport_comm <- function(ct_score_com, #matrix of classification scores, rows = classifiers, columns = samples, colnames=sampleids || where query cells is in the training

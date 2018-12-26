@@ -1949,7 +1949,35 @@ if (numPlots==1) {
   }
 }
 
+#' @export
+sc_violinClass <- function(sampTab, classRes_val_all, dLevel = "cell_type"){
+  
+  sampTab <- as.data.frame(sampTab)
+  colnames(sampTab)[which(colnames(sampTab) == dLevel)] <- "cell_type"
+  sampTab_res <- cbind(sampTab, t(classRes_val_all))
+  meaVar <- rownames(classRes_val_all) 
+  
+  tmp <- melt(sampTab_res, id.vars = "cell_type", measure.vars =  meaVar)
+  colnames(tmp)[which(colnames(tmp) == "value")] <- "classification_score"
 
+  ggplot(tmp, aes(x = cell_type, y = classification_score)) + 
+    geom_violin(fill = "#b2182b", scale = "width", position='dodge') +
+    #scale_fill_manual(values = "#b2182b") + 
+    ylim(0,1) + 
+    facet_grid(rows = vars(variable)) +
+    coord_cartesian(clip = "off") +
+    theme_bw() +
+    theme(
+      axis.line.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      axis.title.y = element_text(size = 12),
+      axis.title.x = element_text(size = 12),
+      axis.text.x = element_text(size = 12, angle = 45, hjust=1),
+      axis.text.y = element_text(size = 6),
+      strip.text = element_text(size = 6),
+      legend.position = "none"
+    )
+} 
 
 
 pcaPlot_recRes<-function(recRes, nodeName="L1_G1",legend=TRUE)

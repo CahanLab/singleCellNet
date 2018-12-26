@@ -4,30 +4,15 @@ Version: 0.1.0
 Authors@R: c(person("Patrick", "Cahan", email = "patrick.cahan@gmail.com", role = c("aut", "cre")), person("Yuqi", "Tan", email="ytan19@jhmi.edu", role=c("aut")))
 Description: Determining cell identity from single cell RNA-Seq data
 Depends: R (>= 3.3.1)
-Requires:
-    cluster,
-    pcaMethods,
-    rpca,
-    data.tree,
-    Rtsne,    
-    ggplot2,
-    pheatmap,
-    RColorBrewer,
-    mclust,
-    randomForest,
-    tidyr,
-    dbscan,
-    DescTools,
-    patchwork,
-    viridis,
-    Matrix,
-    umap,
-    parallel
+Requires: data.tree, ggplot2, pheatmap, RColorBrewer, randomForest, tidyr,
+        DescTools, patchwork, viridis, Matrix, umap, parallel
 License: PRIVATE
 Encoding: UTF-8
 LazyData: true
 URL: http://pcahan1.github.io/singleCellNet
-RoxygenNote: 6.0.1.9000
+Author: Patrick Cahan [aut, cre],
+  Yuqi Tan [aut]
+Maintainer: Yuqi Tan <ytan19@jhmi.edu>
 Imports: 
     DescTools,
     patchwork,
