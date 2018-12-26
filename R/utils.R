@@ -59,6 +59,26 @@ loadLoomExp<-function# load a loom object containing expression data
   expMat
 }
 
+#' @export
+loadLoomExpCluster<-function# load a loom object containing expression  + cluster info
+(path,
+  cellNameCol='obs_names',
+  xname='cluster'
+  ){
+  lfile <- connect(filename = path)
+  geneNames<-lfile[["row_attrs"]][["var_names"]][]
+  cellNames<-lfile[["col_attrs"]][["obs_names"]][]
+  expMat<- t(lfile[["matrix"]][1:length(cellNames),])
+  rownames(expMat)<-geneNames
+  colnames(expMat)<-cellNames
+  
+  cluster_old <- lfile[['col_attrs']][[xname]][]
+
+  sampTab <- data.frame(cell_name=cellNames, cluster=cluster_old)
+  lfile$close_all()
+  list(expDat = expMat, sampTab = sampTab)
+}
+
 
 
 
