@@ -92,58 +92,60 @@ expTrain<-expTMraw[,rownames(stTrain)]
 
 system.time(tmpX<-weighted_down(expTrain, 1.5e3, dThresh=0.25))
    user  system elapsed 
-  4.837   0.845   5.711
+  5.662   0.958   6.649 
 
 system.time(expTrain<-trans_prop(tmpX, 1e4))
    user  system elapsed 
-  1.486   0.645   2.136
+  2.033   0.888   2.925 
 ```
 
 #### Find the best set of classifier genes
 ```R
 
 system.time(cgenes2<-findClassyGenes(expTrain, stTrain, "newAnn", topX=10))
-  user  system elapsed 
- 38.721  10.045  48.767
+   user  system elapsed 
+ 51.145   7.603  59.067 
 
 cgenesA<-cgenes2[['cgenes']]
 grps<-cgenes2[['grps']]
 length(cgenesA)
-[1] 476
+[1] 473
 
 # heatmap these genes
 hm_gpa_sel(expTrain, cgenesA, grps, maxPerGrp=5, toScale=T, cRow=F, cCol=F,font=4)
 ```
-<img src="md_img/hm_tabulaMuris.png">
+<img src="md_img/hm_tabulaMuris_122718.png">
 
 #### Find the best pairs
 ```R
 expT<-as.matrix(expTrain[cgenesA,])
 dim(expT)
-[1]  476 3036
+[1]  473 3036
 
 system.time(xpairs<-ptGetTop(expT, grps, topX=25, sliceSize=5000))
-  user   system  elapsed 
- 1671.187 1406.671  154.199
+    user   system  elapsed 
+1902.520 1189.397  803.201 
 
 length(xpairs)
-[1] 799
+[1] 797
 ```
 
 #### TSP transform the training data
 ```R
 system.time(pdTrain<-query_transform(expT[cgenesA, ], xpairs))
-
+   user  system elapsed 
+  0.179   0.031   0.212 
+  
 dim(pdTrain)
-[1]  799 3036
+[1]  797 3036
 
  ```
 
 #### Train the classifier
 ```R
 system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=100, ntrees=1000))
-  user  system elapsed 
- 166.643   0.248 166.866
+   user  system elapsed 
+393.570   1.112 395.620 
 ```
 
 #### Apply to held out data -- this is the place to add the multi-class assessment
@@ -151,68 +153,67 @@ system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=
 stTest<-stList[[2]]
 
 system.time(expQtransAll<-query_transform(expTMraw[cgenesA,rownames(stTest)], xpairs))
-  user  system elapsed 
- 4.221   2.751  11.369 
-
+   user  system elapsed 
+ 16.479   1.578  18.359 
 
 nrand<-100
 system.time(classRes_val_all<-rf_classPredict(rf_tspAll, expQtransAll, numRand=nrand))
-  user  system elapsed 
- 37.136   1.522  38.691 
-
-sla<-as.vector(stTest$newAnn)
-names(sla)<-rownames(stTest)
-slaRand<-rep("rand", nrand)
-names(slaRand)<-paste("rand_", 1:nrand, sep='')
-sla<-append(sla, slaRand)
-
-# heatmap classification result
-sc_hmClass(classRes_val_all, sla, max=300, isBig=TRUE)
+   user  system elapsed 
+ 30.808   1.379  32.210 
 ```
-<img src="md_img/hmClass_validation.png">
-
-
-#### Attribution plot
-```R
-plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
-```
-<img src="md_img/attribution_val_101218.png">
-
-#### UMAP by category
-```R
-system.time(umPrep<-prep_umap_class(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell", topPC=5))
-  user  system elapsed 
- 109.500   3.588 113.067 
-
-plot_umap(umPrep)
-```
-<img src="md_img/umap_val_101218.png">
-
 
 #### Assess classifier
 ```R
 tm_heldoutassessment <- assess_comm(ct_scores = classRes_val_all, stTrain = stTrain, stQuery = stTest, dLevelSID = "cell", classTrain = "newAnn", classQuery = "newAnn")
 plot_PRs(tm_heldoutassessment)
 ```
-<img src="md_img/pr_101218.png">
+<img src="md_img/pr_122718.png">
 
 ```R
 plot_metrics(tm_heldoutassessment)
 ```
-<img src="md_img/metrics_112918.png">
+<img src="md_img/metrics_122718.png">
+
+#### Classification result heatmap
+```R
+sla<-as.vector(stTest$newAnn)
+names(sla)<-rownames(stTest)
+slaRand<-rep("rand", nrand)
+names(slaRand)<-paste("rand_", 1:nrand, sep='')
+sla<-append(sla, slaRand)
+
+sc_hmClass(classRes_val_all, sla, max=300, isBig=TRUE)
+```
+<img src="md_img/hmClass_validation_122718.png">
+
+#### Attribution plot
+```R
+plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
+```
+<img src="md_img/attribution_val_122718.png">
+
+#### UMAP by category
+```R
+system.time(umPrep<-prep_umap_class(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell", topPC=5))
+  user  system elapsed 
+ 130.096   2.735 133.189 
+
+plot_umap(umPrep)
+```
+<img src="md_img/umap_val_122718.png">
 
 
 #### Apply to Park et al query data
 ```R
 expPark<-utils_loadObject("expMatrix_Park_MouseKidney_Oct_12_2018.rda")
 system.time(kidTransAll<-query_transform(expPark[cgenesA,], xpairs))
-  user  system elapsed 
- 8.594   3.314  15.704 
+   user  system elapsed 
+ 23.536   1.721  25.338 
   
 nqRand<-100
 system.time(crParkall<-rf_classPredict(rf_tspAll, kidTransAll, numRand=nqRand))
-  user  system elapsed 
- 78.520   3.873  82.49
+   user  system elapsed 
+ 60.601   2.898  63.654 
 
 sgrp<-as.vector(stPark$description1)
 names(sgrp)<-rownames(stPark)
@@ -223,10 +224,15 @@ sgrp<-append(sgrp, grpRand)
 # heatmap classification result
 sc_hmClass(crParkall, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 ```
-<img src="md_img/hmClass_Park.png">
+<img src="md_img/hmClass_Park_122718.png">
 
+#### classification result violin plot
+```R
+sc_violinClass(sampTab = stPark, classRes = crParkall, cellIDCol = "sample_name", dLevel = "description1", addRand = nrand)
+```
+<img src="md_img/scviolinClass_Park.png">
 
-### Skyline plot of classification results
+#### Skyline plot of classification results
 ```R
 stKid2<-addRandToSampTab(crParkall, stPark, "description1", "sample_name")
 skylineClass(crParkall, "T cell", stKid2, "description1",.25, "sample_name")
@@ -282,36 +288,36 @@ expTMnorm<-trans_prop(weighted_down(expTrain[,rownames(stTrain)], 1.5e3, dThresh
 
 system.time(cgenes2<-findClassyGenes(expTMnorm, stTrain, "newAnn", topX=10))
   user  system elapsed 
- 12.735   3.114  15.847 
+ 16.888   3.499  20.506 
 
 
 cgenesA<-cgenes2[['cgenes']]
 grps<-cgenes2[['grps']]
 length(cgenesA)
-[1] 244
+[1] 245
 
 # heatmap these genes
 hm_gpa_sel(expTrain, cgenesA, grps, maxPerGrp=20, toScale=T, cRow=F, cCol=F,font=4)
 ```
-<img src="md_img/heatmap_classGenes_CS_heldOut_112918.png">
+<img src="md_img/heatmap_classGenes_CS_heldOut_122718.png">
 
 
 #### find best pairs and transform query data, and train classifier
 ```R
 system.time(xpairs<-ptGetTop(expTMnorm[cgenesA,], grps, topX=25, sliceSize=5000))
-  user  system elapsed 
- 117.248 120.292 115.127 
+   user  system elapsed 
+185.198 142.132 163.631 
 
 length(xpairs)
-[1] 375
+[1] 374
 
 pdTrain<-query_transform(expTrain[cgenesA, rownames(stTrain)], xpairs)
 
 dim(pdTrain)
-[1]  375 1457
+[1]  374 1457
 
 nrand = 50
-system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=50, ntrees=1000))
+system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=nrand, ntrees=1000))
   user  system elapsed 
  18.321   0.057  18.373
  ```
@@ -321,15 +327,29 @@ system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=
 stTest<-stList[[2]]
 
 system.time(expQtransAll<-query_transform(expTrain[cgenesA,rownames(stTest)], xpairs))
-  user  system elapsed 
- 2.744   0.061   2.806 
+   user  system elapsed 
+  3.055   0.375   3.489
 
 nrand<-50
 system.time(classRes_val_all<-rf_classPredict(rf_tspAll, expQtransAll, numRand=nrand))
-  user  system elapsed 
- 8.015   0.178   8.191 
+   user  system elapsed 
+  7.055   0.254   7.311  
+```
 
+#### assess classifier
+```R
+tm_heldoutassessment <- assess_comm(ct_scores = classRes_val_all, stTrain = stTrain, stQuery = stTest, dLevelSID = "cell", classTrain = "newAnn", classQuery = "newAnn")
+plot_PRs(tm_heldoutassessment)
+```
+<img src="md_img/pr_CS_heldout_122718.png">
 
+```R
+plot_metrics(tm_heldoutassessment)
+```
+<img src="md_img/metrics_CS_heldout_122718.png">
+
+#### Classification result heatmap
+```R
 sla<-as.vector(stTest$newAnn)
 names(sla)<-rownames(stTest)
 slaRand<-rep("rand", nrand)
@@ -339,48 +359,52 @@ sla<-append(sla, slaRand)
 # heatmap classification result
 sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
 ```
-<img src="md_img/hmClass_CS_heldOut_112918.png">
+<img src="md_img/hmClass_CS_heldOut_122718.png">
 
 #### Attribute plot
 ```R
 plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```
-<img src="md_img/attribution_CS_heldout_112918.png">
+<img src="md_img/attribution_CS_heldout_122718.png">
 
 #### UMAP by category
 ```R
 system.time(umPrep<-prep_umap_class(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell", topPC=5))
   user  system elapsed 
- 79.352   1.578  81.177 
+ 79.475   2.110  82.004 
 
 plot_umap(umPrep)
 ```
-<img src="md_img/umap_CS_val_112918.png">
-
-#### assess classifier
-```R
-tm_heldoutassessment <- assess_comm(ct_scores = classRes_val_all, stTrain = stTrain, stQuery = stTest, dLevelSID = "cell", classTrain = "newAnn", classQuery = "newAnn")
-plot_PRs(tm_heldoutassessment)
-```
-<img src="md_img/pr_CS_heldout_112918.png">
-
-```R
-plot_metrics(tm_heldoutassessment)
-```
-<img src="md_img/metrics_CS_heldout_112918.png">
+<img src="md_img/umap_CS_val_122718.png">
 
 #### Apply to human query data
 ```R
 system.time(expQueryTrans<-query_transform(expQuery[cgenesA,], xpairs))
-  user  system elapsed 
- 0.149   0.027   0.176 
+   user  system elapsed 
+  0.308   0.371   0.743
   
 nqRand<-50
 system.time(crHS<-rf_classPredict(rf_tspAll, expQueryTrans, numRand=nqRand))
-  user  system elapsed 
- 2.390   0.068   2.456 
+   user  system elapsed 
+  3.592   0.126   3.747 
+```
+#### Assess classifier with external dataset
+```R
+stQuery$description <- as.character(stQuery$description)
+stQuery[which(stQuery$description == "NK cell"), "description"] = "natural killer cell"
 
-# heatmap classification result
+tm_pbmc_assessment <- assess_comm(ct_scores = crHS, stTrain = stTrain, stQuery = stQuery, classTrain = "newAnn",classQuery="description",dLevelSID="sample_name")
+plot_PRs(tm_pbmc_assessment)
+```
+<img src="md_img/pr_CS_122718.png">
+
+```R
+plot_metrics(tm_pbmc_assessment)
+```
+<img src="md_img/metrics_CS_122718.png">
+
+#### Classification result heatmap
+```r
 sgrp<-as.vector(stQuery$prefix)
 names(sgrp)<-rownames(stQuery)
 grpRand<-rep("rand", nqRand)
@@ -389,36 +413,29 @@ sgrp<-append(sgrp, grpRand)
 
 sc_hmClass(crHS, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 ```
-<img src="md_img/hmClass_CS_101218.png">
+<img src="md_img/hmClass_CS_122718.png">
 
 Note that the macrophage category seems to be promiscuous in the mouse held out data, too.
 
+#### Classification result violin plot
+```R
+sc_violinClass(sampTab = stQuery, classRes = crHS, cellIDCol = "sample_name", dLevel = "description")
+```
+<img src="md_img/scViolinClass_CS_122718.png">
+
 #### Attribution plot
 ```R
-plot_attr(crHS, stQuery, nrand=nqRand, dLevel="description", sid="sample_name")
+plot_attr(crHS, stQuery, nrand=nqRand, sid="sample_name", dLevel="description")
 ```
-<img src="md_img/attribution_CS_112918.png">
+<img src="md_img/attribution_CS_122718.png">
 
 #### UMAP by category
 ```R
 system.time(umPrep_HS<-prep_umap_class(crHS, stQuery, nrand=nqRand, dLevel="description", sid="sample_name", topPC=5))
   user  system elapsed
- 26.666   0.957  27.741
+ 26.905   1.014  27.993 
 plot_umap(umPrep_HS)
 ```
-<img src="md_img/umap_CS_112918.png">
+<img src="md_img/umap_CS_122718.png">
 
-#### Assess classifier
-```R
-stQuery$description <- as.character(stQuery$description)
-stQuery[which(stQuery$description == "NK cell"), "description"] = "natural killer cell"
 
-tm_pbmc_assessment <- assess_comm(ct_scores = crHS, stTrain = stTrain, stQuery = stQuery, classTrain = "newAnn",classQuery="description",dLevelSID="sample_name")
-plot_PRs(tm_pbmc_assessment)
-```
-<img src="md_img/pr_CS_112918.png">
-
-```R
-plot_metrics(tm_pbmc_assessment)
-```
-<img src="md_img/metrics_CS_112918.png">
