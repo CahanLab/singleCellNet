@@ -26,7 +26,8 @@ sc_violinClass<-function
   cnames[which(cnames=='value')] <- "classification_score"
   cnames[which(cnames=='variable')] <- "cell_type"
   colnames(test) <- cnames
-  test
+  xcol = length(unique(sampTab[,dLevel]))
+  getPalette <- colorRampPalette(brewer.pal(xcol, "Set2"))
 
 
 ggplot(test, aes(x = cluster, y = classification_score, fill = cluster)) + ylim(0,1) + geom_violin(scale='width', position='dodge', trim=FALSE) + 
@@ -49,7 +50,7 @@ ggplot(test, aes(x = cluster, y = classification_score, fill = cluster)) + ylim(
     legend.title=element_text(size=10), 
     legend.text=element_text(size=10),
     strip.text.x = element_text(size = 8)
-   ) + geom_boxplot(width=0.1, outlier.size=.25) + scale_fill_brewer(palette="Set2") 
+   ) + geom_boxplot(width=0.1, outlier.size=.25) + scale_fill_manual(values = getPalette(xcol))
 
 }
 
