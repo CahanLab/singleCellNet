@@ -5,7 +5,7 @@ Authors@R: c(person("Patrick", "Cahan", email = "patrick.cahan@gmail.com", role 
 Description: Determining cell identity from single cell RNA-Seq data
 Depends: R (>= 3.3.1)
 Requires: data.tree, ggplot2, pheatmap, RColorBrewer, randomForest, tidyr,
-        DescTools, patchwork, viridis, Matrix, umap, parallel
+        DescTools, patchwork, viridis, Matrix, umap, parallel, cowplot, reshape2
 License: PRIVATE
 Encoding: UTF-8
 LazyData: true
@@ -23,4 +23,6 @@ Imports:
     viridis,
     parallel,
     randomForest,
-    dplyr
+    dplyr,
+    cowplot,
+    reshape2

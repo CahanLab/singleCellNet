@@ -1,7 +1,7 @@
 # singleCellNet
 
 ### Introduction
-See [CellNet](https://github.com/pcahan1/CellNet) for an introduction to CellNet, how to use it on bulk RNA-Seq, and how to analyze single cell RNA-Seq (scRNA-Seq) data with classifiers trained on bulk RNA-Seq. Here, we illustrate
+See [CellNet](https://github.com/pcahan1/CellNet) for an introduction to CellNet, how to use it on bulk RNA-Seq, and how to analyze single cell RNA-Seq (scRNA-Seq) data with classifiers trained on bulk RNA-Seq. Here, we illustrate ... 
 
 - how to build and assess single cell classifiers 
 
@@ -9,7 +9,6 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction to CellNet
 
 - how to use these classifiers to quantify 'cell identity' from query scRNA-Seq data
 
-- how to cluster scRNA-Seq data using our 'cluster by competition' method
 
 ### DATA
 

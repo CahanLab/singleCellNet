@@ -2,6 +2,56 @@
 # patrick.cahan@gmail.com
 
 
+sc_violinClass(stQuery, crHS)
+
+#' @export
+sc_violinClass<-function
+(sampTab,
+ classRes,
+ cellIDCol = "cell_name",
+ dLevel="cluster",
+ addRand=0,
+ threshold=0.20){
+
+  sids <-rownames(sampTab)
+  classRes<-classRes[,sids]
+  stQ2<-cbind(sampTab[sids,], t(classRes[,sids]))
+
+  maxX <-apply(classRes, 1, max)
+  meaVar <-names(which(maxX>threshold))
+
+  test <- melt(stQ2, id.vars = c(cellIDCol, dLevel), measure.vars =  meaVar)
+
+  cnames <- colnames(test)
+  cnames[which(cnames=='value')] <- "classification_score"
+  cnames[which(cnames=='variable')] <- "cell_type"
+  colnames(test) <- cnames
+  test
+
+
+ggplot(test, aes(x = cluster, y = classification_score, fill = cluster)) + ylim(0,1) + geom_violin(scale='width', position='dodge', trim=FALSE) + 
+  facet_wrap(~ cell_type, ncol=1) + scale_y_continuous(
+   # expand = c(0, 0),
+     name = "Class score",
+     breaks = c(0,  0.50,  1.0),
+     labels = c("0", "0.50", "1.0")
+   ) +
+   coord_cartesian(clip = "off") +
+   theme_dviz_hgrid() +
+   theme(
+     axis.line.x = element_blank(),
+     axis.ticks.x = element_blank(), 
+     axis.title.y = element_text(size = 8),
+    axis.title.x = element_text(size = 8),
+    axis.text.x = element_text(size = 8),
+    axis.text.y = element_text(size = 8),
+    legend.title=element_text(size=10), 
+    legend.text=element_text(size=10),
+    strip.text.x = element_text(size = 8)
+   ) + geom_boxplot(width=0.1, outlier.size=.25) + scale_fill_brewer(palette="Set2") 
+
+}
+
 
 #' @export
 prep_umap_class<-function
@@ -1949,37 +1999,6 @@ if (numPlots==1) {
   }
 }
 
-#' @export
-sc_violinClass <- function(sampTab, classRes_val_all, dLevel = "cell_type"){
-  
-  sampTab <- as.data.frame(sampTab)
-  colnames(sampTab)[which(colnames(sampTab) == dLevel)] <- "cell_type"
-  sampTab_res <- cbind(sampTab, t(classRes_val_all))
-  meaVar <- rownames(classRes_val_all) 
-  
-  tmp <- melt(sampTab_res, id.vars = "cell_type", measure.vars =  meaVar)
-  colnames(tmp)[which(colnames(tmp) == "value")] <- "classification_score"
-
-  ggplot(tmp, aes(x = cell_type, y = classification_score)) + 
-    geom_violin(fill = "#b2182b", scale = "width", position='dodge') +
-    #scale_fill_manual(values = "#b2182b") + 
-    ylim(0,1) + 
-    facet_grid(rows = vars(variable)) +
-    coord_cartesian(clip = "off") +
-    theme_bw() +
-    theme(
-      axis.line.x = element_blank(),
-      axis.ticks.x = element_blank(),
-      axis.title.y = element_text(size = 12),
-      axis.title.x = element_text(size = 12),
-      axis.text.x = element_text(size = 12, angle = 45, hjust=1),
-      axis.text.y = element_text(size = 6),
-      strip.text = element_text(size = 6),
-      legend.position = "none"
-    )
-} 
-
-
 pcaPlot_recRes<-function(recRes, nodeName="L1_G1",legend=TRUE)
 {
 
@@ -2033,6 +2052,33 @@ theme_dviz_hgrid <- function(font_size = 14, font_family = "") {
     # no y axis line
     axis.line.y = element_blank() ) 
 } 
+
+
+
+### theme_dviz_hgrid  FROM https://github.com/clauswilke/dataviz/blob/master/R/themes.R
+theme_dviz_hgrid <- function(font_size = 14, font_family = "") { 
+  color = "grey90"
+  line_size = 0.5
+
+# Starts with theme_cowplot and then modify some parts
+  theme_cowplot(font_size = font_size, font_family = font_family) %+replace% 
+  theme( 
+
+    # make horizontal grid lines
+    panel.grid.major = element_line(colour = color, 
+    size = line_size), 
+    panel.grid.major.x = element_blank(), 
+
+    # adjust axis tickmarks
+    axis.ticks = element_line(colour = color, size = line_size), 
+
+    # adjust x axis
+    axis.line.x = element_line(colour = color, size = line_size), 
+    # no y axis line
+    axis.line.y = element_blank() 
+  ) 
+}
+
 
 
 # theme_black from https://gist.github.com/jslefche/eff85ef06b4705e6efbc
