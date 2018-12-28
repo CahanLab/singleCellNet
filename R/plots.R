@@ -2,8 +2,6 @@
 # patrick.cahan@gmail.com
 
 
-sc_violinClass(stQuery, crHS)
-
 #' @export
 sc_violinClass<-function
 (sampTab,
@@ -14,6 +12,8 @@ sc_violinClass<-function
  threshold=0.20){
 
   sids <-rownames(sampTab)
+  colnames(sampTab)[which(colnames(sampTab) == dLevel)] = "cluster"
+  dLevel = "cluster"
   classRes<-classRes[,sids]
   stQ2<-cbind(sampTab[sids,], t(classRes[,sids]))
 
@@ -34,7 +34,8 @@ ggplot(test, aes(x = cluster, y = classification_score, fill = cluster)) + ylim(
    # expand = c(0, 0),
      name = "Class score",
      breaks = c(0,  0.50,  1.0),
-     labels = c("0", "0.50", "1.0")
+     labels = c("0", "0.50", "1.0"),
+     limits = c(0,1)
    ) +
    coord_cartesian(clip = "off") +
    theme_dviz_hgrid() +
