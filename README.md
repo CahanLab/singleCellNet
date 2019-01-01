@@ -154,7 +154,7 @@ system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=
 393.570   1.112 395.620 
 ```
 
-#### Apply to held out data -- this is the place to add the multi-class assessment
+#### Apply to held out data
 ```R
 stTest<-stList[[2]]
 
