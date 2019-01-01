@@ -1,7 +1,7 @@
 # singleCellNet
 
 ### Introduction
-SingleCellNet enables the classifcation of single cell RNA-Seq data across species and platofrms. See [BioRxiv](https://www.biorxiv.org/content/early/2018/12/31/508085) for details. 
+SingleCellNet enables the classifcation of single cell RNA-Seq data across species and platforms. See [BioRxiv](https://www.biorxiv.org/content/early/2018/12/31/508085) for details. 
 
 Here, we illustrate ... 
 
