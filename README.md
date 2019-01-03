@@ -29,12 +29,17 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 install.packages("devtools")
 library(devtools)
 install_github("thomasp85/patchwork")
-install_github(repo = "mojaveazure/loomR", ref = "develop")
 install_github("pcahan1/singleCellNet", ref="v0.2.0")
 library(singleCellNet)
 library(dplyr)
 
 mydate<-utils_myDate()
+```
+#### Optional set up if you are working with loom files
+```
+devtools::install_github(repo = "hhoeflin/hdf5r")
+devtools::install_github(repo = "mojaveazure/loomR", ref = "develop")
+library(loomR)
 ```
 
 #### Fetch the data if you have not already done so
