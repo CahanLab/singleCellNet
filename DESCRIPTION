@@ -25,5 +25,4 @@ Imports:
     randomForest,
     dplyr,
     cowplot,
-    reshape2,
-    loomR
+    reshape2
