@@ -1,7 +1,9 @@
 # singleCellNet
 
 ### Introduction
-See [CellNet](https://github.com/pcahan1/CellNet) for an introduction to CellNet, how to use it on bulk RNA-Seq, and how to analyze single cell RNA-Seq (scRNA-Seq) data with classifiers trained on bulk RNA-Seq. Here, we illustrate ... 
+SingleCellNet enables the classifcation of single cell RNA-Seq data across species and platforms. See [BioRxiv](https://www.biorxiv.org/content/early/2018/12/31/508085) for details. 
+
+Here, we illustrate ... 
 
 - how to build and assess single cell classifiers 
 
@@ -9,10 +11,12 @@ See [CellNet](https://github.com/pcahan1/CellNet) for an introduction to CellNet
 
 - how to use these classifiers to quantify 'cell identity' from query scRNA-Seq data
 
+If you want to use the bulk RNA-Seq version of CellNet, go to [bulk CellNet](https://github.com/pcahan1/CellNet). 
+
 
 ### DATA
 
-In this example, we use a subset of the Tabula Muris data to train singleCellNet. To learn more about the Tabula Muris project, see the [manuscript])(https://www.biorxiv.org/content/early/2018/03/29/237446). As query data, we use scRNA-Seq of kidney cells as reported in [Park et al 2018](https://www.ncbi.nlm.nih.gov/pubmed/29622724). We also provide an example of classifying human, bead enriched PBMCs (from https://www.ncbi.nlm.nih.gov/pubmed/28091601). You can download this data here:
+In this example, we use a subset of the Tabula Muris data to train singleCellNet. To learn more about the Tabula Muris project, see the [manuscript](https://www.biorxiv.org/content/early/2018/03/29/237446). As query data, we use scRNA-Seq of kidney cells as reported in [Park et al 2018](https://www.ncbi.nlm.nih.gov/pubmed/29622724). We also provide an example of classifying human, bead enriched PBMCs (from https://www.ncbi.nlm.nih.gov/pubmed/28091601). You can download this data here:
 
 | APPLICATION | METADATA | EXPRESSION |
 |-------------|----------|------------|
@@ -22,7 +26,9 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 
 #### Setup
 ```R
-install_github("pcahan1/singleCellNet", ref="master", auth="your_token")
+install.packages("devtools")
+library(devtools)
+install_github("pcahan1/singleCellNet", ref="v0.2.0")
 library(singleCellNet)
 library(dplyr)
 
@@ -148,7 +154,7 @@ system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=
 393.570   1.112 395.620 
 ```
 
-#### Apply to held out data -- this is the place to add the multi-class assessment
+#### Apply to held out data
 ```R
 stTest<-stList[[2]]
 
