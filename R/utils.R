@@ -65,7 +65,7 @@ loadLoomExpCluster<-function# load a loom object containing expression  + cluste
   cellNameCol='obs_names',
   xname='cluster'
   ){
-  lfile <- connect(filename = path)
+  lfile <- connect(filename = path, skip.validate = TRUE)
   geneNames<-lfile[["row_attrs"]][["var_names"]][]
   cellNames<-lfile[["col_attrs"]][["obs_names"]][]
   expMat<- t(lfile[["matrix"]][1:length(cellNames),])
