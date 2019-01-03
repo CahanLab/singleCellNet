@@ -28,6 +28,7 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 ```R
 install.packages("devtools")
 library(devtools)
+install_github("thomasp85/patchwork")
 install_github("pcahan1/singleCellNet", ref="v0.2.0")
 library(singleCellNet)
 library(dplyr)

@@ -26,3 +26,7 @@ Imports:
     dplyr,
     cowplot,
     reshape2
+Remotes:
+    thomasp85/patchwork,
+    hhoeflin/hdf5r,
+    mojaveazure/loomR
