@@ -75,6 +75,7 @@ loadLoomExpCluster<-function# load a loom object containing expression  + cluste
   cluster_old <- lfile[['col_attrs']][[xname]][]
 
   sampTab <- data.frame(cell_name=cellNames, cluster=cluster_old)
+  row.names(sampTab) <- cellNames
   lfile$close_all()
   list(expDat = expMat, sampTab = sampTab)
 }
