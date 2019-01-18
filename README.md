@@ -59,6 +59,8 @@ download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/6k_bead
 
 download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/stDat_beads_mar22.rda", "stDat_beads_mar22.rda")
 
+## To demonstrate how to integrate loom files to SCN
+download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/pbmc_6k.loom", "pbmc_6k.loom")
 ```
 
 #### Load query data
@@ -451,4 +453,16 @@ plot_umap(umPrep_HS)
 ```
 <img src="md_img/umap_CS_122718.png">
 
+#### Demonstrate how to integrate loom file to SCN
+```
+lfile <- loadLoomExpCluster("pbmc_6k.loom", cellNameCol = "obs_names", xname = "description")
+stQuery = lfile$sampTab
+dim(stQuery)
+#[1] 6000    2
 
+expQuery = lfile$expDat
+dim(expQuery)
+#[1] 32643  6000
+
+# with this you can rerun the cross-species analysis and follow the exact same steps
+```
