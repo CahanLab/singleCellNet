@@ -458,11 +458,11 @@ plot_umap(umPrep_HS)
 lfile <- loadLoomExpCluster("pbmc_6k.loom", cellNameCol = "obs_names", xname = "description")
 stQuery = lfile$sampTab
 dim(stQuery)
-#[1] 6000    2
+[1] 6000    2
 
 expQuery = lfile$expDat
 dim(expQuery)
-#[1] 32643  6000
+[1] 32643  6000
 
-# with this you can rerun the cross-species analysis and follow the exact same steps
+With this you can rerun the cross-species analysis and follow the exact same steps
 ```
