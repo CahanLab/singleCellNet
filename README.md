@@ -29,7 +29,7 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 install.packages("devtools")
 library(devtools)
 install_github("thomasp85/patchwork")
-install_github("pcahan1/singleCellNet", ref="v0.2.0")
+install_github("pcahan1/singleCellNet")
 library(singleCellNet)
 library(dplyr)
 
