@@ -131,12 +131,12 @@ ptGetTop<-function
 (expDat,
  cell_labels,
  topX=50,
- sliceSize = 5e3){
-
+ sliceSize = 5e3,
+ ncores = detectCores()){
+#Change by SK to allow ncores as a user-selected parameter (default to original value, which was number of detected cores)
 	ans<-vector()
 	genes<-rownames(expDat)
-
-	ncores <- detectCores()
+	
 	mcCores <- 1
 	if(ncores>1){
 		mcCores <- ncores - 1
