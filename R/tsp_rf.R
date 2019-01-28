@@ -1,6 +1,5 @@
 # for TSP-RF
 # (C) 2018 Patrick Cahan
-# EDITED BY SK - changed memory usage in ptGetTop
 
 
 
@@ -134,7 +133,7 @@ ptGetTop<-function
  topX=50,
  sliceSize = 5e3,
  ncores = detectCores()){
-
+#Change by SK to allow ncores as a user-selected parameter (default to original value, which was number of detected cores)
 	ans<-vector()
 	genes<-rownames(expDat)
 	
