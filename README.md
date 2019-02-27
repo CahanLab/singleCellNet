@@ -299,9 +299,9 @@ stTrain<-stList[[1]]
 dim(stTrain)
 [1] 1457   17
 
-expTMnorm<-trans_prop(weighted_down(expTrain[,rownames(stTrain)], 1.5e3, dThresh=0.25), 1e4)
+expTrain<-trans_prop(weighted_down(expTrain[,rownames(stTrain)], 1.5e3, dThresh=0.25), 1e4)
 
-system.time(cgenes2<-findClassyGenes(expTMnorm, stTrain, "newAnn", topX=10))
+system.time(cgenes2<-findClassyGenes(expTrain, stTrain, "newAnn", topX=10))
   user  system elapsed 
  16.888   3.499  20.506 
 
@@ -319,7 +319,7 @@ hm_gpa_sel(expTrain, cgenesA, grps, maxPerGrp=20, toScale=T, cRow=F, cCol=F,font
 
 #### find best pairs and transform query data, and train classifier
 ```R
-system.time(xpairs<-ptGetTop(expTMnorm[cgenesA,], grps, topX=25, sliceSize=5000))
+system.time(xpairs<-ptGetTop(expTrain[cgenesA,], grps, topX=25, sliceSize=5000))
    user  system elapsed 
 185.198 142.132 163.631 
 
