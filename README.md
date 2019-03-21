@@ -264,6 +264,7 @@ expQuery<-utils_loadObject("6k_beadpurfied_raw.rda") # use Matrix if RAM low
 dim(expQuery)
 [1] 32643  6000
 
+stTM<-utils_loadObject("sampTab_TM_053018.rda")
 expTMraw<-utils_loadObject("expMatrix_TM_Raw_Oct_12_2018.rda") # reload training
 
 ```
@@ -341,7 +342,7 @@ system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=
 ```R
 stTest<-stList[[2]]
 
-system.time(expQtransAll<-query_transform(expTrain[cgenesA,rownames(stTest)], xpairs))
+system.time(expQtransAll<-query_transform(expTMraw[cgenesA,rownames(stTest)], xpairs))
    user  system elapsed 
   3.055   0.375   3.489
 
