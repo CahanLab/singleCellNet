@@ -11,7 +11,7 @@ sc_violinClass<-function
  addRand=0,
  threshold=0.20){
 
-  sids <-rownames(sampTab)
+  sids <-as.character(sampTab[,cellIDCol])
   colnames(sampTab)[which(colnames(sampTab) == dLevel)] = "cluster"
   dLevel = "cluster"
   classRes<-classRes[,sids]
