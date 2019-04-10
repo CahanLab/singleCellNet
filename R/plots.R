@@ -9,7 +9,7 @@ sc_violinClass<-function
  cellIDCol = "cell_name",
  dLevel="cluster",
  addRand=0,
- threshold=0.20){
+ threshold=0.20, ncol =1){
 
   rownames(sampTab) = sampTab[,cellIDCol]
   sids <- rownames(sampTab)
@@ -32,7 +32,7 @@ sc_violinClass<-function
 
 
 ggplot(test, aes(x = cluster, y = classification_score, fill = cluster)) + ylim(0,1) + geom_violin(scale='width', position='dodge', trim=FALSE) + 
-  facet_wrap(~ cell_type, ncol=1) + scale_y_continuous(
+  facet_wrap(~ cell_type, ncol=ncol) + scale_y_continuous(
    # expand = c(0, 0),
      name = "Class score",
      breaks = c(0,  0.50,  1.0),
