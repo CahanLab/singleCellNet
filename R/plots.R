@@ -142,7 +142,7 @@ plot_attr<-function(classRes, sampTab, nrand, dLevel, sid="sample_name", sub_clu
     p1
   }else{
   p2 = ggplot(stTmp[which(stTmp$group %in% sub_cluster),], aes(x = group, fill = category)) + geom_bar(position = "fill", width = 0.6) + scale_y_continuous(labels = scales::percent) + 
-      scale_fill_manual(values = myPal) + theme_bw() + coord_flip() + theme(legend.position = "bottom")
+      scale_fill_manual(values = myPal) + theme_bw() + coord_flip() + theme(legend.position = "bottom",,axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
     p1 + p2
   }
 
