@@ -9,7 +9,9 @@ sc_violinClass<-function
  cellIDCol = "cell_name",
  dLevel="cluster",
  addRand=0,
- threshold=0.20, ncol =1){
+ threshold=0.20, 
+ ncol =1,
+ sub_cluster = NA){
 
   rownames(sampTab) = sampTab[,cellIDCol]
   sids <- rownames(sampTab)
@@ -29,7 +31,9 @@ sc_violinClass<-function
   colnames(test) <- cnames
   xcol = length(unique(sampTab[,dLevel]))
   getPalette <- colorRampPalette(brewer.pal(xcol, "Set2"))
-
+  if(!is.na(sub_cluster)){
+    test = test[test$cluster %in% sub_cluster,]
+  }
 
 ggplot(test, aes(x = cluster, y = classification_score, fill = cluster)) + ylim(0,1) + geom_violin(scale='width', position='dodge', trim=FALSE) + 
   facet_wrap(~ cell_type, ncol=ncol) + scale_y_continuous(
