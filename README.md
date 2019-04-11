@@ -419,6 +419,13 @@ sc_violinClass(sampTab = stQuery, classRes = crHS, cellIDCol = "sample_name", dL
 ```
 <img src="md_img/scViolinClass_CS_122718.png">
 
+#### Violin plot with adjusted width
+
+```R
+sc_violinClass(sampTab = stQuery,classRes = crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 11)
+```
+<img src="md_img/scViolinPlotncol11.png">
+
 #### Attribution plot
 ```R
 plot_attr(crHS, stQuery, nrand=nqRand, sid="sample_name", dLevel="description")
