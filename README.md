@@ -207,16 +207,6 @@ plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```
 <img src="md_img/attribution_val_122718.png">
 
-#### UMAP by category
-```R
-system.time(umPrep<-prep_umap_class(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell", topPC=5))
-  user  system elapsed 
- 130.096   2.735 133.189 
-
-plot_umap(umPrep)
-```
-<img src="md_img/umap_val_122718.png">
-
 
 #### Apply to Park et al query data
 ```R
@@ -382,16 +372,6 @@ sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
 plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```
 <img src="md_img/attribution_CS_heldout_122718.png">
-
-#### UMAP by category
-```R
-system.time(umPrep<-prep_umap_class(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell", topPC=5))
-  user  system elapsed 
- 79.475   2.110  82.004 
-
-plot_umap(umPrep)
-```
-<img src="md_img/umap_CS_val_122718.png">
 
 #### Apply to human query data
 ```R
