@@ -413,18 +413,25 @@ sc_hmClass(crHS, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 
 Note that the macrophage category seems to be promiscuous in the mouse held out data, too.
 
-#### Classification result violin plot
+#### Classification violin plot
 ```R
 sc_violinClass(sampTab = stQuery, classRes = crHS, cellIDCol = "sample_name", dLevel = "description")
 ```
 <img src="md_img/scViolinClass_CS_122718.png">
 
-#### Violin plot with adjusted width
+#### Classification violin plot with adjusted width
 
 ```R
 sc_violinClass(sampTab = stQuery,classRes = crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 11)
 ```
 <img src="md_img/scViolinPlotncol11.png">
+
+#### Classification violin plot with selected cluster
+
+```R
+sc_violinClass2(stQuery, crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 11, sub_cluster = "B cell")
+```
+<img src="scViolin_subcluster.png">
 
 #### Attribution plot
 ```R
