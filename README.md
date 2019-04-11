@@ -431,7 +431,7 @@ sc_violinClass(sampTab = stQuery,classRes = crHS, cellIDCol = "sample_name", dLe
 ```R
 sc_violinClass2(stQuery, crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 11, sub_cluster = "B cell")
 ```
-<img src="scViolin_subcluster.png">
+<img src="md_img/scViolin_subcluster.png">
 
 #### Attribution plot
 ```R
