@@ -443,7 +443,7 @@ plot_attr(crHS, stQuery, nrand=nqRand, sid="sample_name", dLevel="description")
 ```R
 plot_attr(sampTab = stQuery, classRes = crHS, sid = "sample_name", dLevel = "description", nrand = 50, sub_cluster = c("B cell", "T cell"))
 ```
-<img scr = "md_img/attr_subcluster.png">
+<img src="md_img/attr_subcluster.png">
 
 #### UMAP by category
 ```R

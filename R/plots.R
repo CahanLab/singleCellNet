@@ -140,11 +140,11 @@ plot_attr<-function(classRes, sampTab, nrand, dLevel, sid="sample_name", sub_clu
   getPalette = colorRampPalette(brewer.pal(12, "Paired"))
   myPal = getPalette(length(unique(stTmp$category)))
   p1 = ggplot(stTmp, aes(x=group, fill=category)) +  geom_bar(position = "fill", width=.6) + scale_y_continuous(labels = scales::percent) + scale_fill_manual(values=myPal) +  theme_bw() + coord_flip()
-if(is.na(sub_cluster)){
+if(all(is.na(sub_cluster))){
   p1
 }else{
   ggplot(stTmp[which(stTmp$group %in% sub_cluster),], aes(x = group, fill = category)) + geom_bar(position = "fill", width = 0.6) + scale_y_continuous(labels = scales::percent) + 
-    scale_fill_manual(values = myPal) + theme_bw()+ theme(legend.position = "bottom",,axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+    scale_fill_manual(values = myPal) + theme_bw()+ theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 }}
 
 
