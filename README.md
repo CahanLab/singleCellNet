@@ -439,6 +439,12 @@ plot_attr(crHS, stQuery, nrand=nqRand, sid="sample_name", dLevel="description")
 ```
 <img src="md_img/attribution_CS_122718.png">
 
+#### Attribution plot with subcluster focus
+```R
+plot_attr(sampTab = stQuery, classRes = crHS, sid = "sample_name", dLevel = "description", nrand = 50, sub_cluster = c("B cell", "T cell"))
+```
+<img scr = "md_img/attr_subcluster.png">
+
 #### UMAP by category
 ```R
 system.time(umPrep_HS<-prep_umap_class(crHS, stQuery, nrand=nqRand, dLevel="description", sid="sample_name", topPC=5))
