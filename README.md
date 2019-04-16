@@ -428,7 +428,7 @@ sc_violinClass(sampTab = stQuery,classRes = crHS, cellIDCol = "sample_name", dLe
 #### Classification violin plot with selected cluster
 
 ```R
-sc_violinClass2(stQuery, crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 11, sub_cluster = "B cell")
+sc_violinClass(stQuery, crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 11, sub_cluster = "B cell")
 ```
 <img src="md_img/scViolin_subcluster.png">
 
