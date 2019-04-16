@@ -336,7 +336,6 @@ system.time(expQtransAll<-query_transform(expTMraw[cgenesA,rownames(stTest)], xp
    user  system elapsed 
   3.055   0.375   3.489
 
-nrand<-50
 system.time(classRes_val_all<-rf_classPredict(rf_tspAll, expQtransAll, numRand=nrand))
    user  system elapsed 
   7.055   0.254   7.311  
