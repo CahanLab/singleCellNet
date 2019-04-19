@@ -486,6 +486,6 @@ With this you can rerun the cross-species analysis and follow the exact same ste
 |    Zeisel   |    mouse   | barin altas |     10x    | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Zeisel.rda)|
 |    Loo      |    mouse   |cortex(e14.5)|   Dropseq  | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Loo.rda)|
 |    Darmanis |    human   |    cortex   |     C1     | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Darminis.rda)|
-|    Goeck*   |    human   |   striatum  |C1 and Smart-Seq2| [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Gocke.rda)|
+|    Gokce*   |    human   |   striatum  |C1 and Smart-Seq2| [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Gocke.rda)|
 
 * the expresion data is log-transformed.
