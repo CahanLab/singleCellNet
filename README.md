@@ -466,3 +466,9 @@ dim(expQuery)
 
 With this you can rerun the cross-species analysis and follow the exact same steps
 ```
+
+### More training data
+
+|    study    |organ/tissue|    data    |
+|-------------|------------|------------|
+| Baron_huma  |  pancreas  | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Baron_human.rda))|
