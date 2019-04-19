@@ -23,7 +23,9 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 | Query       | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_Park_MouseKidney_062118.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expDat_Park_MouseKidney_062218.rda") |
 | Training    | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/sampTab_TM_053018.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/expTM_Raw_053018.rda) |
 | cross-species | [human-mouse orthologs](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/human_mouse_genes_Jul_24_2018.rda)|           |
-| cross-species |  Query (human bead-purified PBMC from 10x) [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/stDat_beads_mar22.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/6k_beadpurfied_raw.rda) |
+| cross-species | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/stDat_beads_mar22.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/6k_beadpurfied_raw.rda) |
+
+More training datasets (metadata and expression data) are provided at the bottom of the page.
 
 #### Setup
 ```R
@@ -454,7 +456,7 @@ plot_umap(umPrep_HS)
 ```
 <img src="md_img/umap_CS_122718.png">
 
-#### Demonstrate how to integrate loom file to SCN
+### Demonstrate how to integrate loom file to SCN
 ```
 lfile <- loadLoomExpCluster("pbmc_6k.loom", cellNameCol = "obs_names", xname = "description")
 stQuery = lfile$sampTab
@@ -470,6 +472,10 @@ With this you can rerun the cross-species analysis and follow the exact same ste
 
 ### More training data
 
-|    study    |organ/tissue|    data    |
-|-------------|------------|------------|
-| Baron_human  |  pancreas  | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Baron_human.rda)|
+|    study    |   species  | organ/tissue| seq method |    data    |
+|-------------|------------|-------------|------------|------------|
+|    Baron    |    human   |   pancreas  |   inDrop   |[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Baron_human.rda)|
+|    Baron    |    mouse   |   pancreas  |   inDrop   |[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Baron_mouse.rda)|
+|   Darmanis  |    human   | cortical neuron |   C1   | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Darminis.rda)|
+|   TM10x     |    mouse   |    atlas    |     10x    | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_tm10x.rda)|
+|   TMfacs    |    mouse   |    atlas    |  Smart-Seq |[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_tmfacs.rda)|
