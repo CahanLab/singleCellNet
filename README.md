@@ -470,7 +470,7 @@ dim(expQuery)
 With this you can rerun the cross-species analysis and follow the exact same steps
 ```
 
-### More training data
+### More training data for your own analysis
 
 |    study    |   species  | organ/tissue| seq method |    data    |
 |-------------|------------|-------------|------------|------------|
