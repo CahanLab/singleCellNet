@@ -25,7 +25,7 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 | cross-species | [human-mouse orthologs](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/human_mouse_genes_Jul_24_2018.rda)|           |
 | cross-species | [metadata](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/stDat_beads_mar22.rda) | [expression data](https://s3.amazonaws.com/cnobjects/singleCellNet/examples/6k_beadpurfied_raw.rda) |
 
-More training datasets (metadata and expression data) are provided at the bottom of the page.
+*more training datasets (metadata and expression data) are provided at the bottom of the page.
 
 #### Setup
 ```R
@@ -456,7 +456,7 @@ plot_umap(umPrep_HS)
 ```
 <img src="md_img/umap_CS_122718.png">
 
-### Demonstrate how to integrate loom file to SCN
+### How to integrate loom file to SCN
 ```
 lfile <- loadLoomExpCluster("pbmc_6k.loom", cellNameCol = "obs_names", xname = "description")
 stQuery = lfile$sampTab
@@ -474,8 +474,18 @@ With this you can rerun the cross-species analysis and follow the exact same ste
 
 |    study    |   species  | organ/tissue| seq method |    data    |
 |-------------|------------|-------------|------------|------------|
-|    Baron    |    human   |   pancreas  |   inDrop   |[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Baron_human.rda)|
 |    Baron    |    mouse   |   pancreas  |   inDrop   |[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Baron_mouse.rda)|
-|   Darmanis  |    human   | cortical neuron |   C1   | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Darminis.rda)|
-|   TM10x     |    mouse   |    atlas    |     10x    | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_tm10x.rda)|
-|   TMfacs    |    mouse   |    atlas    |  Smart-Seq |[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_tmfacs.rda)|
+|    Baron    |    human   |   pancreas  |   inDrop   |[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Baron_human.rda)|
+|   Murano*   |    human   |   pancreas  |  Cel-Seq2  | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_murano.rda)|
+|  Segerstolp |    human   |   pancreas  | Smart-Seq  | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Segerstolpe.rda)|
+|    Park     |    human   |    kidney   |     10x    | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Park.rda)|
+|    Haber    |    mouse   |   intestine | Smart-Seq2 | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Haber.rda)|
+|    TM10x    |    mouse   |    atlas    |     10x    | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_tm10x.rda)|
+|    TMfacs   |    mouse   |    atlas    |  Smart-Seq |[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_tmfacs.rda)|
+|    MWS      |    mouse   |    atlas    |microwell-seq|[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_MWS.rda)|
+|    Zeisel   |    mouse   | barin altas |     10x    | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Zeisel.rda)|
+|    Loo      |    mouse   |cortex(e14.5)|   Dropseq  | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Loo.rda)|
+|    Darmanis |    human   |    cortex   |     C1     | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Darminis.rda)|
+|    Goeck*   |    human   |   striatum  |C1 and Smart-Seq2| [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Gocke.rda)|
+
+* the expresion data is log-transformed.
