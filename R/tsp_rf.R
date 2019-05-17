@@ -1,7 +1,42 @@
 # for TSP-RF
 # (C) 2018 Patrick Cahan
 
+# assumes genes are a subset
+filterClass<-function( fcRes, genes ){
+	for(i in seq(length(fcRes))){
+		fcRes[[i]] <- fcRes[[i]][genes,]
+	}
+	fcRes
+}
 
+
+rpicker<-function(ttgenes, npairs=50){
+  genes1 = vector()
+  genes2 = vector()
+  if(npairs>length(ttgenes[[1]][[1]] ) ){
+    npairs = length(ttgenes[[1]][[1]])
+  } 
+  for (i in seq(length(ttgenes))){ 
+    xgenes = ttgenes[[i]]
+  
+    genes1 = append(genes1, sample(xgenes[[1]], npairs))
+    genes2 = append(genes2, sample(xgenes[[2]], npairs))
+
+    othersI = setdiff(1:length(ttgenes), i)
+    xtop = sample(xgenes[[1]], npairs*length(othersI), replace=TRUE)
+    ytop = unlist(lapply(ttgenes[othersI], pickOtherTop, n=npairs))
+    genes1 = append(genes1, xtop)
+    genes2 = append(genes2, ytop)
+  }
+ 
+ pTab<-data.frame(genes1=genes1, genes2=genes2)
+ pTab<-cbind(pTab, pairName=paste(pTab[,1], "_",pTab[,2], sep=''))
+ pTab
+}
+
+pickOtherTop <-function( TBgenes, n=10){
+  sample(TBgenes[['top']], n)
+}
 
 #' enable cross-species comparison
 #'
@@ -101,9 +136,10 @@ findClassyGenes<-function
 	grps<-as.vector(sampTab[,dLevel])
 	names(grps)<-rownames(sampTab)
 	xdiff<-gnrAll(expDat[ggenes,], grps)
-	cgenes<-lapply(xdiff, getClassGenes, topX=topX)
-	cgenes2<-unique(unlist(cgenes))
-	list(cgenes=cgenes2, grps=grps, by_ct = cgenes)
+	##cgenes<-lapply(xdiff, getClassGenes, topX=topX)
+	##cgenes2<-unique(unlist(cgenes))
+	##list(cgenes=cgenes2, grps=grps, by_ct = cgenes)
+	xdiff
 }
 
 
@@ -335,6 +371,33 @@ findBestPairs<-function # find best and diverse set of pairs
  	}
  	ans
  }
+
+
+findBestPairs2<-function # find best and diverse set of pairs
+(pTab,
+ maxPer=3){
+ 
+  	genes<-unique(unlist(strsplit(as.vector(pTab$pairName, "_"))))
+ 	countList <- rep(0, length(genes))
+ 	names(countList) <- genes	
+ 	i<-0
+ 	ans<-vector()
+ 	xdiff_index<-1
+ 	pair_names<-as.vector(pTab$pairName)
+ 	while(i < n ){
+ 		tmpAns<-pair_names[xdiff_index]
+ 		tgp <- unlist(strsplit(tmpAns, "_"))
+ 		if( (countList[ tgp[1] ] < maxPer) & (countList[ tgp[2] ] < maxPer )){
+ 			ans<-append(ans, tmpAns)
+ 			countList[ tgp[1] ] <- countList[ tgp[1] ]+ 1
+ 			countList[ tgp[2] ] <- countList[ tgp[2] ]+ 1
+ 			i<-i+1
+ 		}
+ 		xdiff_index <- xdiff_index + 1
+ 	}
+ 	ans
+ }
+
 
 
 #' @export

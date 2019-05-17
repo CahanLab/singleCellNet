@@ -2,6 +2,31 @@
 # (C) Patrick Cahan 2012-2017
 
 
+#' getClassGenes
+#'
+#' extract genes for training classifier
+#' @param diffRes a df with cval, holm, rownames=genes
+#' @param topX number of genes to select
+#' @param bottom boolean if ture use the top x genes with - cvals
+#'
+#' @return vector of genes
+#'
+#' @export
+getClassGenes2<-function(
+  diffRes,
+  topX=25)
+  {
+
+
+    #exclude NAs
+    xi<-which(!is.na(diffRes$cval))
+    diffRes<-diffRes[xi,]   
+    diffRes<-diffRes[order(diffRes$cval, decreasing=TRUE),]
+    ttop<-rownames(diffRes[1:topX,])
+    bbottom<-rownames( diffRes[nrow(diffRes) - ((topX-1):0),])
+    list(top = ttop, bottom = bbottom)
+  }
+
 
 
 #' getClassGenes
