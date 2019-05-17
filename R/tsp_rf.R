@@ -190,17 +190,17 @@ ptGetTop<-function
 		tmpTab<-pairTab[str:stp,]
 		tmpPdat<-ptSmall(expDat, tmpTab)
 
-		### new
-		
-		tmpAns<-mclapply(myPatternG, sc_testPattern, expDat=tmpPdat, mc.cores=mcCores)
-		### names(tmpAns) <- grps
+	### new
+	
+	if (Sys.info()[['sysname']] == "Windows") {
+   		 tmpAns<-lapply(myPatternG, sc_testPattern, expDat=tmpPdat)
+  	}
+  	else {
+    		tmpAns<-parallel::mclapply(myPatternG, sc_testPattern, expDat=tmpPdat, mc.cores=mcCores) # this code cannot run on windows
+  	}
+	
 
-		###for(gi in seq(length(myPatternG))){
-	    ###	grp<-grps[[gi]]
-    	###	statList[[grp]]<-rbind( statList[[grp]], sc_testPattern(myPatternG[[gi]], expDat=tmpPdat) )
-    	### }
-
-		for(gi in seq(length(myPatternG))){
+	for(gi in seq(length(myPatternG))){
 	    	grp<-grps[[gi]]
 	    	#cat(i, " grp: ",grp,"\n")
     		statList[[grp]]<-rbind( statList[[grp]],  tmpAns[[grp]])
