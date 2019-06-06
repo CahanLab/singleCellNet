@@ -269,8 +269,8 @@ dim(oTab)
 [1] 16688     3
 
 aa = csRenameOrth(expQuery, expTMraw, oTab)
-expQuery <- aa[['expQuery']]
-expTrain <- aa[['expTrain']]
+expQueryOrth <- aa[['expQuery']]
+expTrainOrth <- aa[['expTrain']]
 ```
 
 #### Limit anlaysis to a subset of the TM cell types
@@ -281,8 +281,8 @@ stTM2<-filter(stTM, newAnn %in% cts)
 stTM2<-droplevels(stTM2)
 rownames(stTM2)<-as.vector(stTM2$cell) # filter strips rownames
 
-expTrain<-expTrain[,rownames(stTM2)]
-dim(expTrain)
+expTMraw2<-expTrainOrth[,rownames(stTM2)]
+dim(expTMraw2)
 [1] 14550 15161
 ```
 
@@ -293,7 +293,7 @@ stTrain<-stList[[1]]
 dim(stTrain)
 [1] 1457   17
 
-expTrain<-trans_prop(weighted_down(expTrain[,rownames(stTrain)], 1.5e3, dThresh=0.25), 1e4)
+expTrain<-trans_prop(weighted_down(expTMraw2[,rownames(stTrain)], 1.5e3, dThresh=0.25), 1e4)
 
 system.time(cgenes2<-findClassyGenes(expTrain, stTrain, "newAnn", topX=10))
   user  system elapsed 
@@ -334,8 +334,9 @@ system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=
 #### Apply to held out data
 ```R
 stTest<-stList[[2]]
+expTest <- expTMraw2[cgenesA, rownames(stTest)]
 
-system.time(expQtransAll<-query_transform(expTMraw[cgenesA,rownames(stTest)], xpairs))
+system.time(expQtransAll<-query_transform(expTest, xpairs))
    user  system elapsed 
   3.055   0.375   3.489
 
@@ -377,7 +378,7 @@ plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 
 #### Apply to human query data
 ```R
-system.time(expQueryTrans<-query_transform(expQuery[cgenesA,], xpairs))
+system.time(expQueryTrans<-query_transform(expQueryOrth[cgenesA,], xpairs))
    user  system elapsed 
   0.308   0.371   0.743
   
@@ -424,14 +425,14 @@ sc_violinClass(sampTab = stQuery, classRes = crHS, cellIDCol = "sample_name", dL
 #### Classification violin plot with adjusted width
 
 ```R
-sc_violinClass(sampTab = stQuery,classRes = crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 11)
+sc_violinClass(sampTab = stQuery,classRes = crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 12)
 ```
 <img src="md_img/scViolinPlotncol11.png">
 
 #### Classification violin plot with selected cluster
 
 ```R
-sc_violinClass(stQuery, crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 11, sub_cluster = "B cell")
+sc_violinClass(stQuery, crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 12, sub_cluster = "B cell")
 ```
 <img src="md_img/scViolin_subcluster.png">
 
