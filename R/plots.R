@@ -36,13 +36,14 @@ sc_violinClass<-function
   }
 
 ggplot(test, aes(x = cluster, y = classification_score, fill = cluster)) + ylim(0,1) + geom_violin(scale='width', position='dodge', trim=FALSE) + 
-  facet_wrap(~ cell_type, ncol=ncol) + scale_y_continuous(
+  facet_wrap(~ cell_type, ncol=ncol) + 
+   # scale_y_continuous(
    # expand = c(0, 0),
-     name = "Class score",
-     breaks = c(0,  0.50,  1.0),
-     labels = c("0", "0.50", "1.0"),
-     limits = c(0,1)
-   ) +
+   # name = "Class score",
+   # breaks = c(0,  0.50,  1.0),
+   # labels = c("0", "0.50", "1.0"),
+   # limits = c(0,1)
+   # ) +
    coord_cartesian(clip = "off") +
    theme_dviz_hgrid() +
    theme(
