@@ -319,3 +319,49 @@ cn_correctZmat<-function
   zmat[is.na(zmat)]<-0
   zmat
 }
+
+#' extract sampTab and expDat seurat object into regular S3 objects
+#' @param seurat_object
+#' @param exp_slot_name
+#' @return list
+#' @export
+
+seuratExtract <- function(seurat_object, exp_slot_name = "counts"){
+  
+  #extract metadata
+  sampTab = seurat_object@meta.data
+  
+  #extract expression matrix
+  expDat = as.matrix(GetAssayData(seurat_object, slot = exp_slot_name))   
+  
+  return(list(sampTab = sampTab, expDat = expDat))
+  
+}
+
+#' extract sampTab and expDat sce object into regular S3 objects
+#' @param sce_object
+#' @param exp_type
+#' @param list
+#' @export
+
+sceExtract <- function(sce_object, exp_type = "normcounts"){
+  #extract metadata
+  sampTab = as.data.frame(colData(sce_object, internal = TRUE))
+  sampTab$sample_name = rownames(sampTab)
+  
+  #extract expression matrix
+  if(exp_type == "counts"){
+    expDat = counts(sce_object)
+  }
+  
+  if(exp_type == "normcounts"){
+    expDat = normcounts(sce_object)
+  }
+  
+  if(exp_type == "logcounts"){
+    expDat = logcounts(sce_object)
+  }
+  
+  return(list(sampTab = sampTab, expDat = expDat))
+  
+}
