@@ -12,7 +12,7 @@ output: #rmarkdown::html_vignette
     toc_float: true
 vignette: >
   %\VignetteIndexEntry{my-vignette}
-  %\VignetteEngine{knitr::knitr}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
