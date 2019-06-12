@@ -4,8 +4,7 @@
 \alias{fgsea.wrapper.set}
 \title{run fgsea on list of diffExprs}
 \usage{
-fgsea.wrapper.set(diffExprList, geneSets, minSize = 10, maxSize = 500,
-  nPerm = 10000)
+fgsea.wrapper.set(diffExprList, geneSets, minSize = 10, nPerm = 10000)
 }
 \arguments{
 \item{diffExprList}{named list of diffExpr results, for example from running gnrAll()}

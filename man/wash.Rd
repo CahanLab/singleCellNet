@@ -4,8 +4,7 @@
 \alias{wash}
 \title{subsets on ok genes, applies selected data transform, and recalculates gene stats}
 \usage{
-wash(preWashed, transMethod = "prop", threshold = 1,
-  removeBad = TRUE)
+wash(preWashed, transMethod = "prop", threshold = 1, removeBad = TRUE)
 }
 \arguments{
 \item{preWashed}{list of expDat=expDat, geneStats=geneStats, okGenes=okGenes from prewash()}

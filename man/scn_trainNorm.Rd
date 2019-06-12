@@ -6,8 +6,7 @@
 \usage{
 scn_trainNorm(expTrain, stTrain, subNets, classList = NULL,
   dLevel = "description1", tVals = NULL, classWeight = FALSE,
-  exprWeight = FALSE, sidCol = "sample_id", xmax = 1000,
-  predSD = FALSE)
+  exprWeight = FALSE, sidCol = "sample_id", xmax = 1000, predSD = FALSE)
 }
 \arguments{
 \item{expTrain}{expression matrix}

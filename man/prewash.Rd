@@ -4,8 +4,8 @@
 \alias{prewash}
 \title{down samples, computes per gene stats, finds ok genes}
 \usage{
-prewash(expDat, stDat, countDepth = 1000, minGenes = 10,
-  alpha1 = 0.01, mu = 1, thresh = 0)
+prewash(expDat, stDat, countDepth = 1000, minGenes = 10, alpha1 = 0.01,
+  mu = 1, thresh = 0)
 }
 \arguments{
 \item{expDat}{expDat}

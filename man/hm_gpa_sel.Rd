@@ -5,8 +5,8 @@
 \title{heatmap genes and groups}
 \usage{
 hm_gpa_sel(expDat, genes, grps, maxPerGrp = 100, cRow = FALSE,
-  cCol = FALSE, limits = c(0, 10), toScale = FALSE,
-  fontsize_row = 4, reOrderCells = FALSE)
+  cCol = FALSE, limits = c(0, 10), toScale = FALSE, fontsize_row = 4,
+  reOrderCells = FALSE)
 }
 \arguments{
 \item{expDat}{expDat}
