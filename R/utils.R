@@ -325,7 +325,6 @@ cn_correctZmat<-function
 #' @param exp_slot_name
 #' @return list
 #' @export
-
 extractSeurat <- function(seurat_object, exp_slot_name = "counts"){
   
   #extract metadata
@@ -343,7 +342,6 @@ extractSeurat <- function(seurat_object, exp_slot_name = "counts"){
 #' @param exp_type
 #' @param list
 #' @export
-
 extractSCE <- function(sce_object, exp_type = "normcounts"){
   #extract metadata
   sampTab = as.data.frame(colData(sce_object, internal = TRUE))

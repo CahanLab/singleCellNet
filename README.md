@@ -458,7 +458,7 @@ plot_umap(umPrep_HS)
 <img src="md_img/umap_CS_122718.png">
 
 ### How to integrate loom file to SCN
-```
+```R
 lfile <- loadLoomExpCluster("pbmc_6k.loom", cellNameCol = "obs_names", xname = "description")
 stQuery = lfile$sampTab
 dim(stQuery)
@@ -468,7 +468,25 @@ expQuery = lfile$expDat
 dim(expQuery)
 [1] 32643  6000
 
-With this you can rerun the cross-species analysis and follow the exact same steps
+#With this you can rerun the cross-species analysis and follow the exact same steps
+```
+
+### Integrate Seurat object to SCN analysis
+```R
+#exp_type options can be: counts, data, and scale.data if they are available in your sce object
+scefile <- extractSCE(sce_object, exp_slot_name = "counts") 
+sampTab = scefile$sampTab
+expDat = scefile$expDat
+
+```
+
+### Integrate SCE object to SCN analysis
+```R
+#exp_type options can be: counts, normcounts, and logcounts, if they are available in your sce object
+seuratfile <- extractSeurat(seurat_object, exp_type = "counts")
+sampTab = seuratfile$sampTab
+expDat = seuratfile$expDat
+
 ```
 
 ### More training data for your own analysis
