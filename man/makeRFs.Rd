@@ -4,7 +4,8 @@
 \alias{makeRFs}
 \title{make classifiers}
 \usage{
-makeRFs(expTrain, stTrain, geneLists, dLevel = "description1", nTrees = 200)
+makeRFs(expTrain, stTrain, geneLists, dLevel = "description1",
+  nTrees = 200)
 }
 \arguments{
 \item{expTrain}{expression matrix}

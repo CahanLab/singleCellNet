@@ -4,12 +4,12 @@
 \alias{weighted_down}
 \title{weighted subtraction from mapped reades, applied to all}
 \usage{
-weighted_down(expRaw, total, dThresh = 0)
+weighted_down(expDat, total, dThresh = 0)
 }
 \arguments{
-\item{expRaw}{matrix of total mapped reads per gene/transcript}
-
 \item{total}{numeric post transformation sum of read counts}
+
+\item{expRaw}{matrix of total mapped reads per gene/transcript}
 }
 \value{
 vector of downsampled read mapped to genes/transcripts

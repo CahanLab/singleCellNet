@@ -4,8 +4,9 @@
 \alias{tsneMultsimp}
 \title{plot tsne and genes}
 \usage{
-tsneMultsimp(tsneDat, expDat, genesToPlot, colorPal = "BuPu", revCol = TRUE,
-  toScale = TRUE, limits = c(-3, 3), themeWhite = TRUE)
+tsneMultsimp(tsneDat, expDat, genesToPlot, colorPal = "BuPu",
+  revCol = TRUE, toScale = TRUE, limits = c(-3, 3),
+  themeWhite = TRUE)
 }
 \arguments{
 \item{tsneDat}{tsne matrix}

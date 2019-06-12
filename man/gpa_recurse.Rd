@@ -4,11 +4,12 @@
 \alias{gpa_recurse}
 \title{find clusters, agnostically (kind of)}
 \usage{
-gpa_recurse(expAll, kvals = 2:5, nPCs = 2, dThresh = 0, zThresh = 2,
-  meanType = "overall_mean", maxLevel = 4, max.iter = 30,
-  SilhDrop = 0.25, minClusterSize = 42, methods = c("mclust", "cutree",
-  "kmeans", "sNN_clust"), pcaMethod = "prcomp", numGenes = 5,
-  silMin = TRUE, pcAuto = TRUE, adjust = TRUE)
+gpa_recurse(expAll, kvals = 2:5, nPCs = 2, dThresh = 0,
+  zThresh = 2, meanType = "overall_mean", maxLevel = 4,
+  max.iter = 30, SilhDrop = 0.25, minClusterSize = 42,
+  methods = c("mclust", "cutree", "kmeans", "sNN_clust"),
+  pcaMethod = "prcomp", numGenes = 5, silMin = TRUE, pcAuto = TRUE,
+  adjust = TRUE)
 }
 \arguments{
 \item{expAll}{expDat}

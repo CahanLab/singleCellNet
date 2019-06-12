@@ -4,8 +4,9 @@
 \alias{load10x}
 \title{Loads 10x data mtx}
 \usage{
-load10x(path, prefix, mtx_fname = "matrix.mtx", gene_fname = "genes.tsv",
-  bc_fname = "barcodes.tsv", bcFiltered = TRUE, removeRedundant = TRUE)
+load10x(path, prefix, mtx_fname = "matrix.mtx",
+  gene_fname = "genes.tsv", bc_fname = "barcodes.tsv",
+  bcFiltered = TRUE, removeRedundant = TRUE)
 }
 \arguments{
 \item{path}{path}

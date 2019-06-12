@@ -321,11 +321,10 @@ cn_correctZmat<-function
 }
 
 #' extract sampTab and expDat seurat object into regular S3 objects
-#' @param seurat_object
-#' @param exp_slot_name
+#' @param seurat_object seurat objet
+#' @param exp_slot_name expression data type
 #' @return list
 #' @export
-
 extractSeurat <- function(seurat_object, exp_slot_name = "counts"){
   
   #extract metadata
@@ -339,11 +338,10 @@ extractSeurat <- function(seurat_object, exp_slot_name = "counts"){
 }
 
 #' extract sampTab and expDat sce object into regular S3 objects
-#' @param sce_object
-#' @param exp_type
-#' @param list
+#' @param sce_object sce object
+#' @param exp_type expression data type
+#' @return list
 #' @export
-
 extractSCE <- function(sce_object, exp_type = "normcounts"){
   #extract metadata
   sampTab = as.data.frame(colData(sce_object, internal = TRUE))
