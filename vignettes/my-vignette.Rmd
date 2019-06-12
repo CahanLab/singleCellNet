@@ -57,12 +57,12 @@ Though the direct input for `SCN` is basic S3 class object, `SCN` incorporates u
 
 ```{r, eval = FALSE}
 #exp_type options can be: counts, data, and scale.data if they are available in your sce object
-scefile <- sceExtract(seurat_object, exp_slot_name = "counts") 
+scefile <- extractSCE(sce_object, exp_slot_name = "counts") 
 sampTab = scefile$sampTab
 expDat = scefile$expDat
 
 #exp_type options can be: counts, normcounts, and logcounts, if they are available in your sce object
-seuratfile <- seuratExtract(sce_object, exp_type = "counts")
+seuratfile <- extractSeurat(seurat_object, exp_slot_name = "counts")
 sampTab = seuratfile$sampTab
 expDat = seuratfile$expDat
 ```
