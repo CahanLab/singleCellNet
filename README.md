@@ -483,7 +483,7 @@ expDat = scefile$expDat
 ### Integrate SCE object to SCN analysis
 ```R
 #exp_type options can be: counts, normcounts, and logcounts, if they are available in your sce object
-seuratfile <- extractSeurat(seurat_object, exp_type = "counts")
+seuratfile <- extractSeurat(seurat_object, exp_slot_name = "counts")
 sampTab = seuratfile$sampTab
 expDat = seuratfile$expDat
 

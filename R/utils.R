@@ -342,7 +342,7 @@ extractSeurat <- function(seurat_object, exp_slot_name = "counts"){
 #' @param exp_type
 #' @param list
 #' @export
-extractSCE <- function(sce_object, exp_type = "normcounts"){
+extractSCE <- function(sce_object, exp_slot_name = "counts"){
   #extract metadata
   sampTab = as.data.frame(colData(sce_object, internal = TRUE))
   sampTab$sample_name = rownames(sampTab)
