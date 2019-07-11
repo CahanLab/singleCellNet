@@ -17,7 +17,6 @@ Imports:
     DescTools,
     patchwork,
     umap,
-    fgsea,
     ggplot2,
     pheatmap,
     viridis,
