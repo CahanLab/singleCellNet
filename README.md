@@ -108,89 +108,24 @@ stTrain<-stList[[1]]
 expTrain<-expTMraw[,rownames(stTrain)]
 
 
-system.time(tmpX<-weighted_down(expTrain, 1.5e3, dThresh=0.25))
-   user  system elapsed 
-  5.662   0.958   6.649 
-
-system.time(expTrain<-trans_prop(tmpX, 1e4))
-   user  system elapsed 
-  2.033   0.888   2.925 
+#### Train the classifier (Shortcut)
 ```
 
-#### Find the best set of classifier genes
-```R
-
-system.time(cgenes2<-findClassyGenes(expTrain, stTrain, "newAnn", topX=10))
-   user  system elapsed 
- 51.145   7.603  59.067 
-
-cgenesA<-cgenes2[['cgenes']]
-grps<-cgenes2[['grps']]
-length(cgenesA)
-[1] 473
-
-# heatmap these genes
-hm_gpa_sel(expTrain, cgenesA, grps, maxPerGrp=5, toScale=T, cRow=F, cCol=F,font=4)
-```
-<img src="md_img/hm_tabulaMuris_122718.png">
-
-#### Find the best pairs
-```R
-expT<-as.matrix(expTrain[cgenesA,])
-dim(expT)
-[1]  473 3036
-
-system.time(xpairs<-ptGetTop(expT, grps, topX=25, sliceSize=5000))
-    user   system  elapsed 
-1902.520 1189.397  803.201 
-
-length(xpairs)
-[1] 797
-```
-
-#### TSP transform the training data
-```R
-system.time(pdTrain<-query_transform(expT[cgenesA, ], xpairs))
-   user  system elapsed 
-  0.179   0.031   0.212 
-  
-dim(pdTrain)
-[1]  797 3036
-
- ```
-
-#### Train the classifier
-```R
-system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=100, ntrees=1000))
-   user  system elapsed 
-393.570   1.112 395.620 
 ```
 
 #### Apply to held out data
 ```R
-stTest<-stList[[2]]
 
-system.time(expQtransAll<-query_transform(expTMraw[cgenesA,rownames(stTest)], xpairs))
-   user  system elapsed 
- 16.479   1.578  18.359 
 
-nrand<-100
-system.time(classRes_val_all<-rf_classPredict(rf_tspAll, expQtransAll, numRand=nrand))
-   user  system elapsed 
- 30.808   1.379  32.210 
 ```
 
 #### Assess classifier
 ```R
-tm_heldoutassessment <- assess_comm(ct_scores = classRes_val_all, stTrain = stTrain, stQuery = stTest, dLevelSID = "cell", classTrain = "newAnn", classQuery = "newAnn")
-plot_PRs(tm_heldoutassessment)
-```
-<img src="md_img/pr_122718.png">
 
-```R
-plot_metrics(tm_heldoutassessment)
+
+
 ```
-<img src="md_img/metrics_122718.png">
+
 
 #### Classification result heatmap
 ```R
@@ -202,13 +137,11 @@ sla<-append(sla, slaRand)
 
 sc_hmClass(classRes_val_all, sla, max=300, isBig=TRUE)
 ```
-<img src="md_img/hmClass_validation_122718.png">
 
 #### Attribution plot
 ```R
 plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```
-<img src="md_img/attribution_val_122718.png">
 
 
 #### Apply to Park et al query data
@@ -232,20 +165,18 @@ sgrp<-append(sgrp, grpRand)
 # heatmap classification result
 sc_hmClass(crParkall, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 ```
-<img src="md_img/hmClass_Park_122718.png">
+
 
 #### classification result violin plot
 ```R
 sc_violinClass(sampTab = stPark, classRes = crParkall, cellIDCol = "sample_name", dLevel = "description1", addRand = nrand)
 ```
-<img src="md_img/scviolinClass_Park.png">
 
 #### Skyline plot of classification results
 ```R
 stKid2<-addRandToSampTab(crParkall, stPark, "description1", "sample_name")
 skylineClass(crParkall, "T cell", stKid2, "description1",.25, "sample_name")
 ```
-<img src="md_img/skyline_Tcell_Park.png">
 
 
 ### Cross-species classification
@@ -286,76 +217,21 @@ dim(expTMraw2)
 [1] 14550 15161
 ```
 
-#### Split into training and validation, normalize training data, and find classy genes
-```R
-stList<-splitCommon(stTM2, ncells=100, dLevel="newAnn")
-stTrain<-stList[[1]]
-dim(stTrain)
-[1] 1457   17
-
-expTrain<-trans_prop(weighted_down(expTMraw2[,rownames(stTrain)], 1.5e3, dThresh=0.25), 1e4)
-
-system.time(cgenes2<-findClassyGenes(expTrain, stTrain, "newAnn", topX=10))
-  user  system elapsed 
- 16.888   3.499  20.506 
-
-
-cgenesA<-cgenes2[['cgenes']]
-grps<-cgenes2[['grps']]
-length(cgenesA)
-[1] 245
-
-# heatmap these genes
-hm_gpa_sel(expTrain, cgenesA, grps, maxPerGrp=20, toScale=T, cRow=F, cCol=F,font=4)
+#### Train Classifier (Short cut)
 ```
-<img src="md_img/heatmap_classGenes_CS_heldOut_122718.png">
 
-
-#### find best pairs and transform query data, and train classifier
-```R
-system.time(xpairs<-ptGetTop(expTrain[cgenesA,], grps, topX=25, sliceSize=5000))
-   user  system elapsed 
-185.198 142.132 163.631 
-
-length(xpairs)
-[1] 374
-
-pdTrain<-query_transform(expTrain[cgenesA, rownames(stTrain)], xpairs)
-
-dim(pdTrain)
-[1]  374 1457
-
-nrand = 50
-system.time(rf_tspAll<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand=nrand, ntrees=1000))
-  user  system elapsed 
- 18.321   0.057  18.373
- ```
+```
 
 #### Apply to held out data
 ```R
-stTest<-stList[[2]]
-expTest <- expTMraw2[cgenesA, rownames(stTest)]
 
-system.time(expQtransAll<-query_transform(expTest, xpairs))
-   user  system elapsed 
-  3.055   0.375   3.489
-
-system.time(classRes_val_all<-rf_classPredict(rf_tspAll, expQtransAll, numRand=nrand))
-   user  system elapsed 
-  7.055   0.254   7.311  
 ```
 
 #### assess classifier
 ```R
-tm_heldoutassessment <- assess_comm(ct_scores = classRes_val_all, stTrain = stTrain, stQuery = stTest, dLevelSID = "cell", classTrain = "newAnn", classQuery = "newAnn")
-plot_PRs(tm_heldoutassessment)
-```
-<img src="md_img/pr_CS_heldout_122718.png">
 
-```R
-plot_metrics(tm_heldoutassessment)
+
 ```
-<img src="md_img/metrics_CS_heldout_122718.png">
 
 #### Classification result heatmap
 ```R
@@ -368,13 +244,11 @@ sla<-append(sla, slaRand)
 # heatmap classification result
 sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
 ```
-<img src="md_img/hmClass_CS_heldOut_122718.png">
 
 #### Attribute plot
 ```R
 plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```
-<img src="md_img/attribution_CS_heldout_122718.png">
 
 #### Apply to human query data
 ```R
@@ -387,6 +261,7 @@ system.time(crHS<-rf_classPredict(rf_tspAll, expQueryTrans, numRand=nqRand))
    user  system elapsed 
   3.592   0.126   3.747 
 ```
+
 #### Assess classifier with external dataset
 ```R
 stQuery$description <- as.character(stQuery$description)
@@ -395,12 +270,10 @@ stQuery[which(stQuery$description == "NK cell"), "description"] = "natural kille
 tm_pbmc_assessment <- assess_comm(ct_scores = crHS, stTrain = stTrain, stQuery = stQuery, classTrain = "newAnn",classQuery="description",dLevelSID="sample_name")
 plot_PRs(tm_pbmc_assessment)
 ```
-<img src="md_img/pr_CS_122718.png">
 
 ```R
 plot_metrics(tm_pbmc_assessment)
 ```
-<img src="md_img/metrics_CS_122718.png">
 
 #### Classification result heatmap
 ```r
@@ -412,7 +285,6 @@ sgrp<-append(sgrp, grpRand)
 
 sc_hmClass(crHS, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 ```
-<img src="md_img/hmClass_CS_122718.png">
 
 Note that the macrophage category seems to be promiscuous in the mouse held out data, too.
 
@@ -420,33 +292,28 @@ Note that the macrophage category seems to be promiscuous in the mouse held out 
 ```R
 sc_violinClass(sampTab = stQuery, classRes = crHS, cellIDCol = "sample_name", dLevel = "description")
 ```
-<img src="md_img/scViolinClass_CS_122718.png">
 
 #### Classification violin plot with adjusted width
 
 ```R
 sc_violinClass(sampTab = stQuery,classRes = crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 12)
 ```
-<img src="md_img/scViolinPlotncol11.png">
 
 #### Classification violin plot with selected cluster
 
 ```R
 sc_violinClass(stQuery, crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 12, sub_cluster = "B cell")
 ```
-<img src="md_img/scViolin_subcluster.png">
 
 #### Attribution plot
 ```R
 plot_attr(crHS, stQuery, nrand=nqRand, sid="sample_name", dLevel="description")
 ```
-<img src="md_img/attribution_CS_122718.png">
 
 #### Attribution plot with subcluster focus
 ```R
 plot_attr(sampTab = stQuery, classRes = crHS, sid = "sample_name", dLevel = "description", nrand = 50, sub_cluster = c("B cell", "T cell"))
 ```
-<img src="md_img/attr_subcluster.png">
 
 #### UMAP by category
 ```R
@@ -455,7 +322,6 @@ system.time(umPrep_HS<-prep_umap_class(crHS, stQuery, nrand=nqRand, dLevel="desc
  26.905   1.014  27.993 
 plot_umap(umPrep_HS)
 ```
-<img src="md_img/umap_CS_122718.png">
 
 ### How to integrate loom file to SCN
 ```R
