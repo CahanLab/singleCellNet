@@ -106,7 +106,37 @@ findClassyGenes<-function
 	list(cgenes=cgenes2, grps=grps, by_ct = cgenes)
 }
 
+#' find genes higher in a cluster compared to all other cells
+#'
+#' ind genes higher in a cluster compared to all other cells
+#'
+#' @param expDat expDat
+#' @param cellLabels named vector of cell groups
+#'
+#' @return list of diffExp data framnes
+#' 
+#' @export
+gnrAll<-function(
+  expDat,
+  cellLabels){
 
+  myPatternG<-sc_sampR_to_pattern(as.character(cellLabels))
+  # sparse matrix?
+  if(class(expDat)[1]!='matrix'){
+    expTrans = Matrix::t(expDat)
+  }
+  else{
+    expTrans = t(expDat)
+  }
+  specificSets<-lapply(myPatternG, sc_testPatternTrans, expDat=expTrans)
+  cat("Done testing\n")
+
+#  grpOrder<-myGrpSort(cellLabels)
+
+#  specificSets[grpOrder]
+
+  specificSets
+}
 
 
 makePairTab<-function(genes){
