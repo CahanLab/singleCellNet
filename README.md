@@ -66,12 +66,12 @@ download.file("https://s3.amazonaws.com/cnobjects/singleCellNet/examples/pbmc_6k
 
 #### Load query data
 ```R
-stPark<-utils_loadObject("sampTab_Park_MouseKidney_062118.rda")
-expPark<-utils_loadObject("expMatrix_Park_MouseKidney_Oct_12_2018.rda")
+stPark = utils_loadObject("sampTab_Park_MouseKidney_062118.rda")
+expPark = utils_loadObject("expMatrix_Park_MouseKidney_Oct_12_2018.rda")
 dim(expPark)
 [1] 16272 43745
 
-genesPark<-rownames(expPark)
+genesPark = rownames(expPark)
 
 rm(expPark)
 gc()
@@ -79,11 +79,11 @@ gc()
 
 #### Load the training data
 ```R
-expTMraw<-utils_loadObject("expMatrix_TM_Raw_Oct_12_2018.rda")
+expTMraw = utils_loadObject("expMatrix_TM_Raw_Oct_12_2018.rda")
 dim(expTMraw)
 [1] 23433 24936
 
-stTM<-utils_loadObject("sampTab_TM_053018.rda")
+stTM = utils_loadObject("sampTab_TM_053018.rda")
 dim(stTM)
 [1] 24936    17
 
@@ -92,26 +92,26 @@ stTM<-droplevels(stTM)
 
 #### Find genes in common to the data sets and limit analysis to these
 ```R
-commonGenes<-intersect(rownames(expTMraw), genesPark)
+commonGenes = intersect(rownames(expTMraw), genesPark)
 length(commonGenes)
 [1] 13831
 
-expTMraw<-expTMraw[commonGenes,]
+expTMraw = expTMraw[commonGenes,]
 ```
 
 #### Split for training and assessment, and transform training data
 ```R
-stList<-splitCommon(stTM, ncells=100, dLevel="newAnn")
-stTrain<-stList[[1]]
-expTrain<-expTMraw[,rownames(stTrain)]
+stList = splitCommon(stTM, ncells=100, dLevel="newAnn")
+stTrain = stList[[1]]
+expTrain = expTMraw[,rownames(stTrain)]
 ```
 
-#### Train the classifier (Shortcut)
+#### Train the classifier (NEW)
 ```
-class_info_test<-scn_train(stTrain = stTrain, expTrain = expTrain, dLevel = "newAnn", colName_samp = "cell")
+class_info_test = scn_train(stTrain = stTrain, expTrain = expTrain, dLevel = "newAnn", colName_samp = "cell")
 ```
 
-#### Apply to held out data
+#### Apply to held out data (NEW)
 ```R
 #validate data
 stTestList = splitCommon(stList[[2]], ncells=100, dLevel="newAnn") 
@@ -131,11 +131,11 @@ plot_PRs(tm_heldoutassessment)
 
 #### Classification result heatmap
 ```R
-sla<-as.vector(stTest$newAnn)
-names(sla)<-rownames(stTest)
-slaRand<-rep("rand", nrand)
-names(slaRand)<-paste("rand_", 1:nrand, sep='')
-sla<-append(sla, slaRand)
+sla = as.vector(stTest$newAnn)
+names(sla) = rownames(stTest)
+slaRand = rep("rand", nrand)
+names(slaRand) = paste("rand_", 1:nrand, sep='')
+sla = append(sla, slaRand)
 
 sc_hmClass(classRes_val_all, sla, max=300, isBig=TRUE)
 ```
@@ -148,21 +148,21 @@ plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 
 #### Apply to Park et al query data
 ```R
-expPark<-utils_loadObject("expMatrix_Park_MouseKidney_Oct_12_2018.rda")
+expPark = utils_loadObject("expMatrix_Park_MouseKidney_Oct_12_2018.rda")
 system.time(kidTransAll<-query_transform(expPark[cgenesA,], xpairs))
    user  system elapsed 
  23.536   1.721  25.338 
   
-nqRand<-100
+nqRand = 100
 system.time(crParkall<-rf_classPredict(rf_tspAll, kidTransAll, numRand=nqRand))
    user  system elapsed 
  60.601   2.898  63.654 
 
-sgrp<-as.vector(stPark$description1)
-names(sgrp)<-rownames(stPark)
-grpRand<-rep("rand", nqRand)
-names(grpRand)<-paste("rand_", 1:nqRand, sep='')
-sgrp<-append(sgrp, grpRand)
+sgrp = as.vector(stPark$description1)
+names(sgrp) = rownames(stPark)
+grpRand =rep("rand", nqRand)
+names(grpRand) = paste("rand_", 1:nqRand, sep='')
+sgrp = append(sgrp, grpRand)
 
 # heatmap classification result
 sc_hmClass(crParkall, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
@@ -176,7 +176,7 @@ sc_violinClass(sampTab = stPark, classRes = crParkall, cellIDCol = "sample_name"
 
 #### Skyline plot of classification results
 ```R
-stKid2<-addRandToSampTab(crParkall, stPark, "description1", "sample_name")
+stKid2 = addRandToSampTab(crParkall, stPark, "description1", "sample_name")
 skylineClass(crParkall, "T cell", stKid2, "description1",.25, "sample_name")
 ```
 
@@ -185,45 +185,45 @@ skylineClass(crParkall, "T cell", stKid2, "description1",.25, "sample_name")
 
 #### Load the human query data
 ```R
-stQuery<-utils_loadObject("stDat_beads_mar22.rda")
-expQuery<-utils_loadObject("6k_beadpurfied_raw.rda") # use Matrix if RAM low
+stQuery = utils_loadObject("stDat_beads_mar22.rda")
+expQuery = utils_loadObject("6k_beadpurfied_raw.rda") # use Matrix if RAM low
 dim(expQuery)
 [1] 32643  6000
 
-stTM<-utils_loadObject("sampTab_TM_053018.rda")
-expTMraw<-utils_loadObject("expMatrix_TM_Raw_Oct_12_2018.rda") # reload training
+stTM = utils_loadObject("sampTab_TM_053018.rda")
+expTMraw = utils_loadObject("expMatrix_TM_Raw_Oct_12_2018.rda") # reload training
 
 ```
 
 #### Load the ortholog table and convert human gene names to mouse ortholog names, and limit analysis to genes in common between the training and query data.
 ```R
-oTab<-utils_loadObject("human_mouse_genes_Jul_24_2018.rda")
+oTab = utils_loadObject("human_mouse_genes_Jul_24_2018.rda")
 dim(oTab)
 [1] 16688     3
 
 aa = csRenameOrth(expQuery, expTMraw, oTab)
-expQueryOrth <- aa[['expQuery']]
-expTrainOrth <- aa[['expTrain']]
+expQueryOrth = aa[['expQuery']]
+expTrainOrth = aa[['expTrain']]
 ```
 
 #### Limit anlaysis to a subset of the TM cell types
 ```R
-cts<-c("B cell",  "cardiac muscle cell", "endothelial cell", "erythroblast", "granulocyte", "hematopoietic precursor cell", "late pro-B cell", "limb_mesenchymal", "macrophage", "mammary_basal_cell", "monocyte", "natural killer cell", "T cell", "trachea_epithelial", "trachea_mesenchymal")
+cts = c("B cell",  "cardiac muscle cell", "endothelial cell", "erythroblast", "granulocyte", "hematopoietic precursor cell", "late pro-B cell", "limb_mesenchymal", "macrophage", "mammary_basal_cell", "monocyte", "natural killer cell", "T cell", "trachea_epithelial", "trachea_mesenchymal")
 
-stTM2<-filter(stTM, newAnn %in% cts)
-stTM2<-droplevels(stTM2)
-rownames(stTM2)<-as.vector(stTM2$cell) # filter strips rownames
+stTM2 = filter(stTM, newAnn %in% cts)
+stTM2 = droplevels(stTM2)
+rownames(stTM2) = as.vector(stTM2$cell) # filter strips rownames
 
-expTMraw2<-expTrainOrth[,rownames(stTM2)]
+expTMraw2 = expTrainOrth[,rownames(stTM2)]
 dim(expTMraw2)
 [1] 14550 15161
 ```
 
 #### Train Classifier (Short cut)
 ```
-stList=splitCommon(stTM2, ncells=100, dLevel="newAnn")
-stTrain=stList[[1]]
-expTrain=expTMraw2[,rownames(stTrain)]
+stList = splitCommon(stTM2, ncells=100, dLevel="newAnn")
+stTrain = stList[[1]]
+expTrain = expTMraw2[,rownames(stTrain)]
 
 system.time(class_info2<-scn_train(stTrain = stTrain, expTrain = expTrain, dLevel = "newAnn", colName_samp = "cell"))
 ```
@@ -254,11 +254,11 @@ plot_metrics(tm_heldoutassessment)
 
 #### Classification result heatmap
 ```R
-sla<-as.vector(stTest$newAnn)
-names(sla)<-rownames(stTest)
-slaRand<-rep("rand", nrand)
-names(slaRand)<-paste("rand_", 1:nrand, sep='')
-sla<-append(sla, slaRand)
+sla = as.vector(stTest$newAnn)
+names(sla) = rownames(stTest)
+slaRand = rep("rand", nrand)
+names(slaRand) = paste("rand_", 1:nrand, sep='')
+sla = append(sla, slaRand)
 
 # heatmap classification result
 sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
@@ -277,10 +277,10 @@ crHS = scn_predict(class_info2[['cnProc']], expQueryOrth, nrand=nqRand)
 
 #### Assess classifier with external dataset
 ```R
-stQuery$description <- as.character(stQuery$description)
+stQuery$description = as.character(stQuery$description)
 stQuery[which(stQuery$description == "NK cell"), "description"] = "natural killer cell"
 
-tm_pbmc_assessment <- assess_comm(ct_scores = crHS, stTrain = stTrain, stQuery = stQuery, classTrain = "newAnn",classQuery="description",dLevelSID="sample_name")
+tm_pbmc_assessment = assess_comm(ct_scores = crHS, stTrain = stTrain, stQuery = stQuery, classTrain = "newAnn",classQuery="description",dLevelSID="sample_name")
 plot_PRs(tm_pbmc_assessment)
 ```
 
@@ -290,11 +290,11 @@ plot_metrics(tm_pbmc_assessment)
 
 #### Classification result heatmap
 ```r
-sgrp<-as.vector(stQuery$prefix)
-names(sgrp)<-rownames(stQuery)
-grpRand<-rep("rand", nqRand)
-names(grpRand)<-paste("rand_", 1:nqRand, sep='')
-sgrp<-append(sgrp, grpRand)
+sgrp = as.vector(stQuery$prefix)
+names(sgrp) = rownames(stQuery)
+grpRand = rep("rand", nqRand)
+names(grpRand) = paste("rand_", 1:nqRand, sep='')
+sgrp = append(sgrp, grpRand)
 
 sc_hmClass(crHS, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 ```
@@ -338,7 +338,7 @@ plot_umap(umPrep_HS)
 
 ### How to integrate loom file to SCN
 ```R
-lfile <- loadLoomExpCluster("pbmc_6k.loom", cellNameCol = "obs_names", xname = "description")
+lfile = loadLoomExpCluster("pbmc_6k.loom", cellNameCol = "obs_names", xname = "description")
 stQuery = lfile$sampTab
 dim(stQuery)
 [1] 6000    2
@@ -353,7 +353,7 @@ dim(expQuery)
 ### Integrate Seurat object to SCN analysis
 ```R
 #exp_type options can be: counts, data, and scale.data if they are available in your sce object
-scefile <- extractSCE(sce_object, exp_slot_name = "counts") 
+scefile = extractSCE(sce_object, exp_slot_name = "counts") 
 sampTab = scefile$sampTab
 expDat = scefile$expDat
 
@@ -362,7 +362,7 @@ expDat = scefile$expDat
 ### Integrate SCE object to SCN analysis
 ```R
 #exp_type options can be: counts, normcounts, and logcounts, if they are available in your sce object
-seuratfile <- extractSeurat(seurat_object, exp_slot_name = "counts")
+seuratfile = extractSeurat(seurat_object, exp_slot_name = "counts")
 sampTab = seuratfile$sampTab
 expDat = seuratfile$expDat
 
