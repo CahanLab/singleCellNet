@@ -320,6 +320,135 @@ cn_correctZmat<-function
   zmat
 }
 
+#' weighted subtraction from mapped reades
+#'
+#' Simulate expression profile of  _total_ mapped reads
+#' @param vector of total mapped reads per gene/transcript
+#' @param total post transformation sum of read counts
+#'
+#' @return vector of downsampled read mapped to genes/transcripts
+#'
+#' @export
+downSampleW<-function
+(vector,
+ total=1e5,
+ dThresh=0){ 
+
+  totalSignal<-sum(vector)
+  wAve<-vector/totalSignal
+###  resid<-sum(vector)-total #num to subtract from sample
+  resid<-totalSignal-total #num to subtract from sample
+  residW<-wAve*resid # amount to substract from each gene
+  ans<-vector-residW
+  ans[which(ans<dThresh)]<-0
+  ans
+}
+
+#' weighted subtraction from mapped reades, applied to all
+#'
+#' Simulate expression profile of  _total_ mapped reads
+#' @param expRaw matrix of total mapped reads per gene/transcript
+#' @param total numeric post transformation sum of read counts
+#'
+#' @return vector of downsampled read mapped to genes/transcripts
+#'
+#' @export
+weighted_down<-function
+(expDat,
+ total,
+ dThresh=0
+ ){
+  if(class(expDat)[1]!='matrix'){
+    cSums  <- Matrix::colSums(expDat)
+    props <- Matrix::t(expDat) / cSums
+    rrids  <- cSums - total
+    tmpAns <- expDat - Matrix::t(props * rrids)
+    tmpAns[Matrix::which(tmpAns<dThresh)] <- 0
+  }
+  else{
+    cSums  <- colSums(expDat)
+    props <- t(expDat) / cSums
+    rrids  <- cSums - total
+    tmpAns <- expDat - t(props * rrids)
+    tmpAns[which(tmpAns<dThresh)] <- 0
+  }
+  
+  tmpAns
+}
+
+
+if(FALSE){
+
+#' weighted subtraction from mapped reades, applied to all
+#'
+#' Simulate expression profile of  _total_ mapped reads
+#' @param expRaw matrix of total mapped reads per gene/transcript
+#' @param total numeric post transformation sum of read counts
+#'
+#' @return vector of downsampled read mapped to genes/transcripts
+#'
+#' @export
+weighted_down<-function
+(expRaw,
+ total,
+ dThresh=0
+ ){
+    expCountDnW<-apply(expRaw, 2, downSampleW, total=total, dThresh=dThresh)
+    #log(1+expCountDnW)
+    expCountDnW
+  }
+}
+
+if(FALSE){
+
+#' @export
+trans_prop<-function 
+(expDat,
+ xFact=1e5
+){
+  ans<-matrix(0, nrow=nrow(expDat), ncol=ncol(expDat))
+  for(i in seq(ncol(expDat))){
+    ans[,i]<-expDat[,i]/sum(expDat[,i]);    
+  }
+  ans<-ans*xFact;
+  colnames(ans)<-colnames(expDat);
+  rownames(ans)<-rownames(expDat);
+  log(1+ans)
+}
+}
+
+#' @export
+trans_prop<-function
+(expDat,
+  xFact=1e5){
+
+  if(class(expDat)[1]!='matrix'){
+    cSums  <- Matrix::colSums(expDat)
+    ans <- Matrix::t(log(1 + xFact * Matrix::t(expDat) / cSums))
+  }
+  else{
+    cSums  <- colSums(expDat)
+    ans<-  t(log(1 + xFact * t(expDat) / cSums))
+  }
+  ans
+ 
+}
+
+#' @export
+trans_zscore<-function
+(expRaw){
+  apply(expRaw, 2, scale)
+}
+
+#' @export
+trans_binarize<-function
+(expRaw,
+  threshold=1){
+  expRaw[expRaw<threshold]<-0
+  expRaw[expRaw>0]<-1
+  expRaw
+}
+
 #' extract sampTab and expDat seurat object into regular S3 objects
 #' @param seurat_object
 #' @param exp_slot_name

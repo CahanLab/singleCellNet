@@ -106,6 +106,32 @@ findClassyGenes<-function
 	list(cgenes=cgenes2, grps=grps, by_ct = cgenes)
 }
 
+#' getClassGenes
+#'
+#' extract genes for training classifier
+#' @param diffRes a df with cval, holm, rownames=genes
+#' @param topX number of genes to select
+#' @param bottom boolean if ture use the top x genes with - cvals
+#'
+#' @return vector of genes
+#'
+#' @export
+getClassGenes<-function(
+  diffRes,
+  topX=25,
+  bottom=TRUE)
+  {
+    #exclude NAs
+    xi<-which(!is.na(diffRes$cval))
+    diffRes<-diffRes[xi,]   
+    diffRes<-diffRes[order(diffRes$cval, decreasing=TRUE),]
+    ans<-rownames(diffRes[1:topX,])
+    if(bottom){
+      ans<-append(ans, rownames( diffRes[nrow(diffRes) - ((topX-1):0),]))
+    }
+    ans
+  }
+
 #' find genes higher in a cluster compared to all other cells
 #'
 #' ind genes higher in a cluster compared to all other cells

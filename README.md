@@ -35,8 +35,6 @@ install_github("thomasp85/patchwork")
 install_github("pcahan1/singleCellNet", ref="v0.3.1")
 library(singleCellNet)
 library(dplyr)
-
-mydate<-utils_myDate()
 ```
 #### Optional set up if you are working with loom files
 ```
@@ -106,26 +104,30 @@ expTMraw<-expTMraw[commonGenes,]
 stList<-splitCommon(stTM, ncells=100, dLevel="newAnn")
 stTrain<-stList[[1]]
 expTrain<-expTMraw[,rownames(stTrain)]
-
+```
 
 #### Train the classifier (Shortcut)
 ```
-
+class_info_test<-scn_train(stTrain = stTrain, expTrain = expTrain, dLevel = "newAnn", colName_samp = "cell")
 ```
 
 #### Apply to held out data
 ```R
+#validate data
+stTestList = splitCommon(stList[[2]], ncells=100, dLevel="newAnn") 
+stTest = stTestList[[1]]
+expTest = expTMraw[commonGenes,rownames(stTest)]
 
-
+#predict
+classRes_val_all = scn_predict(class_info[['cnProc']], expTest, nrand = 50)
 ```
 
 #### Assess classifier
-```R
-
-
-
 ```
+tm_heldoutassessment = assess_comm(ct_scores = classRes_val_all, stTrain = stTrain, stQuery = stTest, dLevelSID = "cell", classTrain = "newAnn", classQuery = "newAnn", nRand = 50)
 
+plot_PRs(tm_heldoutassessment)
+```
 
 #### Classification result heatmap
 ```R
@@ -219,18 +221,35 @@ dim(expTMraw2)
 
 #### Train Classifier (Short cut)
 ```
+stList=splitCommon(stTM2, ncells=100, dLevel="newAnn")
+stTrain=stList[[1]]
+expTrain=expTMraw2[,rownames(stTrain)]
 
+system.time(class_info2<-scn_train(stTrain = stTrain, expTrain = expTrain, dLevel = "newAnn", colName_samp = "cell"))
 ```
 
 #### Apply to held out data
 ```R
+#validate data
+stTestList = splitCommon(stList[[2]], ncells=100, dLevel="newAnn") 
+stTest = stTestList[[1]]
+expTest = expTMraw2[,rownames(stTest)]
 
+#predict
+classRes_val_all2 = scn_predict(class_info2[['cnProc']], expTest, nrand = 50)
+plotting_order = stTest[order(stTest$newAnn), ]
+stTestRand =  addRandToSampTab(classRes_val_all2, plotting_order, "newAnn", "cell")
 ```
 
-#### assess classifier
+#### Assess classifier
 ```R
+tm_heldoutassessment = assess_comm(ct_scores = classRes_val_all2, stTrain = stTrain, stQuery = stTest, dLevelSID = "cell", classTrain = "newAnn", classQuery = "newAnn", nRand = 50)
 
+plot_PRs(tm_heldoutassessment)
+```
 
+```R
+plot_metrics(tm_heldoutassessment)
 ```
 
 #### Classification result heatmap
@@ -252,14 +271,8 @@ plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 
 #### Apply to human query data
 ```R
-system.time(expQueryTrans<-query_transform(expQueryOrth[cgenesA,], xpairs))
-   user  system elapsed 
-  0.308   0.371   0.743
-  
-nqRand<-50
-system.time(crHS<-rf_classPredict(rf_tspAll, expQueryTrans, numRand=nqRand))
-   user  system elapsed 
-  3.592   0.126   3.747 
+nqRand = 100
+crHS = scn_predict(class_info2[['cnProc']], expQueryOrth, nrand=nqRand)
 ```
 
 #### Assess classifier with external dataset

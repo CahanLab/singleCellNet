@@ -4,7 +4,7 @@
 #' Tranining broad class classifier
 #' @param stTrain a dataframe that matches the samples with category
 #' @param expTrain the expression matrix
-#' @param colName_cat the name of the column that contains categories
+#' @param dLevel the name of the column that contains categories
 #' @param colName_samp the name of the column that contains sample names
 #' @param nTopGenes the number of classification genes per category
 #' @param nTopGenePairs the number of top gene pairs per category
@@ -18,16 +18,16 @@
 #' @export
 
 scn_train <- function(stTrain, 
-			    expTrain, 
-			    colName_cat, 
-              		    colName_samp="row.names", 
-			    nTopGenes = 10, 
-			    nTopGenePairs = 25, 
-			    nRand = 50, 
-			    nTrees = 1000, 
-		      	    weightedDown_total = 1.5e3, 
- 	 	 	    weightedDown_dThresh = 0.25, 
-			    transprop_xFact = 1e4) {
+		      expTrain, 
+		      dLevel, 
+              	      colName_samp="row.names", 
+	  	      nTopGenes = 10, 
+		      nTopGenePairs = 25, 
+		      nRand = 50, 
+		      nTrees = 1000, 
+		      weightedDown_total = 1.5e3, 
+ 	 	      weightedDown_dThresh = 0.25, 
+		      transprop_xFact = 1e4) {
 
    if (class(stTrain) != "data.frame") {
       stTrain<-as.data.frame(stTrain)
@@ -42,7 +42,7 @@ scn_train <- function(stTrain,
    expTnorm<-trans_prop(weighted_down(expTrain, weightedDown_total, dThresh = weightedDown_dThresh), transprop_xFact)
    cat("Expression data has been normalized\n")
 
-   system.time(cgenes<-findClassyGenes(expDat = expTnorm, sampTab = stTrain, dLevel = colName_cat, topX = nTopGenes))
+   system.time(cgenes<-findClassyGenes(expDat = expTnorm, sampTab = stTrain, dLevel = dLevel, topX = nTopGenes))
    cat("Finished finding classification genes\n")
 
    cgenesA<-cgenes[['cgenes']]
@@ -51,14 +51,14 @@ scn_train <- function(stTrain,
 
    cat("There are ", length(cgenesA), " classification genes\n")
 
-   system.time(xpairs<-ptGetTop(expTrain[cgenesA,], grps, topX=nTopGenePairs, sliceSize=2000))
+   system.time(xpairs<-ptGetTop(expTrain[cgenesA,], grps, topX=nTopGenePairs, sliceSize=5000))
    cat("Finished finding top gene pairs\n")
 
 
    system.time(pdTrain<-query_transform(expTrain[cgenesA, ], xpairs))
    cat("Finished pair transforming the data\n")
 
-   tspRF<-makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand = nRand, ntrees = nTrees)
+   tspRF<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand = nRand, ntrees = nTrees)
    cnProc<-list("cgenes"= cgenesA, "xpairs"=xpairs, "grps"= grps, "classifier" = tspRF)
 
    returnList<-list("sampTab" = stTrain, "cgenes_list" = cgenes_list, "cnProc" = cnProc)
@@ -276,11 +276,11 @@ rf_classPredict<-function(
   rfObj,
   expQuery,
   numRand=50){
-
+      if(numRand > 0 ){
         randDat<-randomize(expQuery, num=numRand)
         expQuery<-cbind(expQuery, randDat)
-
-    preds<-rownames(rfObj$importance)
+      }
+   	preds<-rownames(rfObj$importance)
         xpreds<-t(predict(rfObj, t(expQuery[preds,]), type='prob'))
         colnames(xpreds)<-colnames(expQuery)
         xpreds
