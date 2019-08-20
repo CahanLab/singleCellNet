@@ -70,21 +70,21 @@ gnrBP<-function(
 }
 
 
-#' find candidate classifier-worthy genes
+#' @title
+#' Find Classifier-Worthy Gene Candidates
+#' @description
+#' Find classifier-worthy genes for each cancer category to train the classifier
 #'
-#' find candidate classifier-worthy genes
+#' @param expDat a matrix of normalized expression data from \code{\link{trans_prop}}
+#' @param sampTab a dataframe of the sample table
+#' @param dLevel a string indicating the column name in sample table that contains the cancer category
+#' @param topX an integer indicating the number of top positive classification genes for each category to select for training. Will also select topX number of negative classification genes.
+#' @param dThresh a number representing the detection threshold
+#' @param alpha1 a number representing proportion of cells in which a gene must be considered detected (as defined in geneStats)
+#' @param alpha2 a number representing lower proportion of cells for genes that must have higher expression level
+#' @param mu a number represeting threshold for average expression level of genes passing the lower proportion criteria
 #'
-#' @param expDat expDat
-#' @param sampTab sampTab
-#' @param dLevel dLevel
-#' @param topX topX
-#' @param dThresh dThresh
-#' @param alpha1 alpha1
-#' @param alpha2 alpha2
-#' @param mu mu
-#'
-#' @return list of cgenes and grps
-#' 
+#' @return a list containing two lists: a list of classifier worthy genes named 'cgenes' and a list of cancer category named 'grps'
 #' @export
 findClassyGenes<-function
 (expDat,
@@ -96,6 +96,14 @@ findClassyGenes<-function
  alpha2=.001,
  mu=2)
 {
+	if((dLevel %in% colnames(sampTab)) == FALSE) {
+    	stop("Please enter the correct column name for sampTab that indicates the categories")
+  	}
+
+	if((topX * 2 > nrow(expDat)) == TRUE) {
+    	stop(paste0("Please enter a topX value smaller than ", as.integer(nrow(expDat) / 2)))
+  	}
+
 	gsTrain<-sc_statTab(expDat, dThresh=dThresh)
 	ggenes<-sc_filterGenes(gsTrain, alpha1=alpha1, alpha2=alpha2, mu=mu)
 	grps<-as.vector(sampTab[,dLevel])
@@ -103,7 +111,7 @@ findClassyGenes<-function
 	xdiff<-gnrAll(expDat[ggenes,], grps)
 	cgenes<-lapply(xdiff, getClassGenes, topX=topX)
 	cgenes2<-unique(unlist(cgenes))
-	list(cgenes=cgenes2, grps=grps, by_ct = cgenes)
+	list(cgenes=cgenes2, grps=grps, cgenes_list = cgenes)
 }
 
 #' getClassGenes
@@ -173,108 +181,109 @@ makePairTab<-function(genes){
 }
 
 
-
-#' makes vector of gene pairs, iterates over this and computes pairDat, sc_testPattern, then, at the end, findBestPairs 
+#' @title
+#' Find the best gene pairs for training
+#' @description
+#' Find the gene pairs that most distinguish a cancer group from the rest
 #'
 #' @param expDat expDat
 #' @param cell_labels named vector, value is grp, name is cell name
-#' @param topX 50
+#' @param cgenes_list the list of labelled cgenes
+#' @param topX number of genepairs for training
+#' @param sliceSize the size of the slice for pair transform. Default at 5e3
+#' @param quickPairs TRUE if wanting to select the gene pairs in a quick fashion
 #'
-#' @return vector of gene-pair names
+#' @import parallel
+#' @return vector of top gene-pair names
 #'
 #' @export
-ptGetTop<-function
-(expDat,
- cell_labels,
- topX=50,
- sliceSize = 5e3,
- ncores = detectCores()){
-
-	ans<-vector()
-	genes<-rownames(expDat)
-
-	mcCores <- 1
-	if(ncores>1){
-		mcCores <- ncores - 1
-	}
-	cat(ncores, "  --> ", mcCores,"\n")
-
-	# make a data frame of pairs of genes that will be sliced later
-	if(FALSE){
-		cat("Making pairTable\n")
-		ngenes<-nrow(expDat)
-		genes<-rownames(expDat)
-		genes1<-vector()
-		genes2<-vector()
-		for(i in 1:ngenes){ # replace with combn?
-			for(j in 1:ngenes){
-				if(j>i){
-					genes1<-append(genes1, genes[i])
-					genes2<-append(genes2, genes[j])				
-				}
-			}
-		}
-
-		pairTab = data.frame(genes1=genes1, genes2=genes2)
-		pairNames<-paste(pairTab[,1], "_",pairTab[,2], sep='')
-		pairTab <- cbind(pairTab, pairName=pairNames)
-	}
-
-	pairTab<-makePairTab(genes)
-
-	###
-	# setup tmp ans list of sc_testPattern
-	cat("setup ans and make pattern\n")
-	grps<-unique(cell_labels)
-	myPatternG<-sc_sampR_to_pattern(as.character(cell_labels))
-	statList<-list()
-	for(grp in grps){
-		statList[[grp]]<-data.frame()
-	}
-
-	# make the pairedDat, and run sc_testPattern
-	cat("make pairDat on slice and test\n")
-	nPairs = nrow(pairTab)
-	cat("nPairs = ",nPairs,"\n")
-	str = 1
-	stp = min(c(sliceSize, nPairs))
-	while(str <= nPairs){
-		if(stp>nPairs){
-			stp <- nPairs
-		}
-		cat(str,"-", stp,"\n")
-		tmpTab<-pairTab[str:stp,]
-		tmpPdat<-ptSmall(expDat, tmpTab)
-
-	### new
-	
-	if (Sys.info()[['sysname']] == "Windows") {
-   		 tmpAns<-lapply(myPatternG, sc_testPattern, expDat=tmpPdat)
-  	}
-  	else {
-    		tmpAns<-parallel::mclapply(myPatternG, sc_testPattern, expDat=tmpPdat, mc.cores=mcCores) # this code cannot run on windows
-  	}
-	
-
-	for(gi in seq(length(myPatternG))){
-	    	grp<-grps[[gi]]
-	    	#cat(i, " grp: ",grp,"\n")
-    		statList[[grp]]<-rbind( statList[[grp]],  tmpAns[[grp]])
-    	}
-
-
-    	str = stp+1
-   	 	stp = str + sliceSize - 1		
-	}
-
-	cat("compile results\n")
-	for(grp in grps){
-    	tmpAns<-findBestPairs(statList[[grp]], topX)
-    	ans<-append(ans, tmpAns)
+ptGetTop <-function(expDat, cell_labels, cgenes_list=NA, topX=50, sliceSize = 5e3, quickPairs = FALSE){
+  if(!quickPairs){
+    ans<-vector()
+    genes<-rownames(expDat)
+    
+    ncores<-parallel::detectCores() # detect the number of cores in the system
+    mcCores<-1
+    if(ncores>1){
+      mcCores<-ncores - 1
     }
-    unique(ans)
+    cat(ncores, "  --> ", mcCores,"\n")
+    
+    # make a data frame of pairs of genes that will be sliced later
+    pairTab<-makePairTab(genes)
+    
+    if(topX > nrow(pairTab)) {
+      stop(paste0("The data set has ", nrow(pairTab), " total combination of gene pairs. Please select a smaller topX."))
+    }
+    
+    # setup tmp ans list of sc_testPattern
+    cat("setup ans and make pattern\n")
+    grps<-unique(cell_labels)
+    myPatternG<-sc_sampR_to_pattern(as.character(cell_labels))
+    statList<-list()
+    for(grp in grps){
+      statList[[grp]]<-data.frame()
+    }
+    
+    # make the pairedDat, and run sc_testPattern
+    cat("make pairDat on slice and test\n")
+    nPairs = nrow(pairTab)
+    cat("nPairs = ",nPairs,"\n")
+    str = 1
+    stp = min(c(sliceSize, nPairs)) # detect what is smaller the slice size or npairs
+    
+    while(str <= nPairs){
+      if(stp>nPairs){
+        stp <- nPairs
+      }
+      cat(str,"-", stp,"\n")
+      tmpTab<-pairTab[str:stp,]
+      tmpPdat<-ptSmall(expDat, tmpTab)
+      
+      if (Sys.info()[['sysname']] == "Windows") {
+        tmpAns<-lapply(myPatternG, sc_testPattern, expDat=tmpPdat)
+      }
+      else {
+        tmpAns<-parallel::mclapply(myPatternG, sc_testPattern, expDat=tmpPdat, mc.cores=mcCores) # this code cannot run on windows
+      }
+      
+      for(gi in seq(length(myPatternG))){
+        grp<-grps[[gi]]
+        statList[[grp]]<-rbind( statList[[grp]],  tmpAns[[grp]])
+      }
+      
+      
+      str<-stp+1
+      stp<-str + sliceSize - 1
+    }
+    
+    cat("compile results\n")
+    for(grp in grps){
+      tmpAns<-findBestPairs(statList[[grp]], topX)
+      ans<-append(ans, tmpAns)
+    }
+    return(unique(ans))
+    
+  }else{
+    myPatternG<-sc_sampR_to_pattern(as.character(cell_labels))
+    ans<-vector()
+    
+    for(cct in names(cgenes_list)){
+      genes<-cgenes_list[[cct]]
+      pairTab<-makePairTab(genes)
+      
+      nPairs<-nrow(pairTab)
+      cat("nPairs = ", nPairs," for ", cct, "\n")
+      
+      tmpPdat<-ptSmall(expDat, pairTab)
+      
+      tmpAns<-findBestPairs( sc_testPattern(myPatternG[[cct]], expDat=tmpPdat), topX)
+      ans<-append(ans, tmpAns)
+    }
+    
+    return(unique(ans))
+  }
 }
-
 ptSmall<-function
 (expDat,
  pTab){
