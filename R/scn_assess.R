@@ -6,7 +6,7 @@
 #' @param propTrain  the proportion of the training data desire
 #' @param nRand  the number of random sample one wants to generate 
 #' @param nTrees number of branches one would like to build on the random forest classifier 
-
+#' @export 
 
 sc_classAssess<-function
 (stDat,
@@ -112,6 +112,7 @@ sc_Accu<-function #calculate the accuracy of the data at each given classificati
 #' @param thresh threshold above which to make a call
 #'
 #' @return accuracy
+#' @export 
 
 sc_classThreshold<-function # assumes rownames(sampTab) == sampTab identifier used as colname for vect
 (vect,
@@ -222,6 +223,7 @@ plot_class_PRs<-function
 #' @param predCol "Predictions"
 #'
 #' @return auprs
+#' @export 
 cn_computeAUCPR<-function
 (perfDF,
  precisionCol="Precision",
@@ -279,6 +281,7 @@ cn_computeAUCPR<-function
 #' @param ptC point C
 #'
 #' @return area
+#' @export 
 cn_rectArea<-function
 (ptA,
  ptB,
@@ -413,6 +416,10 @@ cn_clPerf<-function # assumes rownames(sampTab) == sampTab identifier used as co
   c(TP, FN, FP, TN);  
 }
 
+#' @param ct_score cnRes score
+#' @param stQuery query sample table
+#' @param nRand number of rand used in rand
+#' @param dLevelSID columns used to split the samples
 #' @export
 makeSampleTable <- function(ct_scores, stQuery, nRand, dLevelSID){
   
@@ -424,31 +431,6 @@ makeSampleTable <- function(ct_scores, stQuery, nRand, dLevelSID){
   stVal_tmp <- rbind(stQuery, tmp)
   rownames(stVal_tmp) <- stVal_tmp[,dLevelSID]
   return(stVal_tmp)
-}
-
-#external clustering comparison
-#cluster comparison between different clustering methods with ARI
-#also test cluster stability
-cal_ARI <- function(expDat, sampTab, topPC, maxLevel, dThresh, true_lable, nIter, methods = c("mclust", "kmeans", "cutree", "sNN_clust")){
-  geneStats <- sc_statTab(expDat, dThresh)
-  washedDat_tmp <- list(expDat= expDat, geneStats= geneStats)
-  
-  tmp <- pipe_steam_list(washedDat_tmp, sampTab, topPC = topPC)
-  gpa <- gpa_recurse(expDat, maxLevel = maxLevel, dThresh = dThresh, methods = methods)
-  ARI_score <- as.data.frame(matrix(0, nrow = 3, ncol = 4))
-  colnames(ARI_score) <- c("gpa","dbscan","mclust","cutTree")
-  
-  for (i in 1: nIter){
-    ARI_score[i,1] <- adjustedRandIndex(gpa$grp_list[[length(gpa$grp_list)]], true_lable)
-    ARI_score[i,2] <- adjustedRandIndex(tmp$dbscan$group, true_lable)
-    ARI_score[i,3] <- adjustedRandIndex(tmp$mc$group, true_lable)
-    ARI_score[i,4] <- adjustedRandIndex(tmp$dtree$group, true_lable)  
-  }
-  
-  #return(list(ARI_score, gpa_label = gpa$grp_list[[length(maxLevel)]], dbscan_label = tmp$dbscan$group, mclust_label = tmp$mclust$group, cutTree_label = tmp$dtree$group))
-  
-  return(ARI_score)
-  
 }
 
 #' @export
@@ -556,104 +538,7 @@ assess_comm <- function(ct_scores, #matrix of classification scores, rows = clas
 }
 
 
-#' @export
-assessmentReport_comm <- function(ct_score_com, #matrix of classification scores, rows = classifiers, columns = samples, colnames=sampleids || where query cells is in the training
-                                  stVal_com, #sample table where cells in query are in the training 
-                                  resolution = 0.005,# increment at which to evalutate classification
-                                  classLevels = "description2",
-                                  dLevelSID = "sample_name",
-                                  AUCmethod = "trapezoid"){
-  
-  report <- list()
-  ct_scores_t <- t(ct_score_com)
-  
-  true_label <- as.character(stVal_com[, classLevels])
-  
-  #multiLogLoss
-  names(true_label) <- rownames(ct_scores_t) 
-  
-  if (is.matrix(true_label) == FALSE) {
-    y_true <- model.matrix(~ 0 + ., data.frame(as.character(true_label)))
-  }
-  eps <- 1e-15
-  y_pred <- pmax(pmin(ct_scores_t, 1 - eps), eps)
-  
-  report[['multiLogLoss']] <- (-1 / nrow(ct_scores_t)) * sum(t(y_true)%*% log(y_pred)) #want columns to be the cell types for y_pred
-  
-  #cohen's kappa, accuracy
-  pred_label <- c()
-  pred_label <- colnames(ct_scores_t)[max.col(ct_scores_t,ties.method="random")]
-  
-  cm = as.matrix(table(Actual = true_label, Predicted = pred_label))
-  
-  #in case of misclassfication where there are classifiers that are not used
-  if(length(setdiff(unique(true_label), unique(pred_label))) != 0){
-    misCol <- setdiff(unique(true_label), unique(pred_label))
-    for(i in 1:length(misCol)){
-      cm <- cbind(cm, rep(0, nrow(cm)))
-    }
-    colnames(cm)[(ncol(cm) - length(misCol) +1) : ncol(cm)] <- misCol
-  }
-  
-  if(length(setdiff(unique(pred_label), unique(true_label))) != 0){
-    misRow <- setdiff(unique(pred_label), unique(true_label))
-    for(i in 1:length(misRow)){
-      cm <- rbind(cm, rep(0, ncol(cm)))
-    }
-    rownames(cm)[(nrow(cm) - length(misRow) +1) : nrow(cm)] <- misRow
-  }
-  
-  cm <- cm[,colnames(cm)[match(rownames(cm),colnames(cm))]]  
-  report[['cm']] <- cm
-  
-  #sort table names accordigly
-  
-  n = sum(cm) # number of instances
-  nc = nrow(cm) # number of classes
-  diag = diag(cm) # number of correctly classified instances per class 
-  rowsums = apply(cm, 1, sum) # number of instances per class
-  colsums = apply(cm, 2, sum) # number of predictions per class 
-  p = rowsums / n # distribution of instances over the actual classes
-  q = colsums / n # distribution of instances over the predicted classes
-  expAccuracy = sum(p*q)
-  accuracy = sum(diag) / n 
-  report[['kappa']] <- (accuracy - expAccuracy) / (1 - expAccuracy)
-  report[['accuracy']] <- accuracy
-  
-  #report[['multiLogLoss']]<- MultiLogLoss(y_true = true_comm, y_pred = ct_scores_t)
-  
-  #PR
-  confusionMatrix <- cn_classAssess(ct_score_com, stVal_com, classLevels= classLevels, dLevelSID=dLevelSID, resolution=resolution)
-  report[['confusionMatrix']] <- confusionMatrix
-  
-  #confusionMatrix_comm <- confusionMatrix[c(colnames(cm))]
-  
-  report[['PR_ROC']] <- cal_class_PRs(confusionMatrix)
-  
-  nonNA_PR <- report[['PR_ROC']][which(!is.nan(report[['PR_ROC']]$recall)),]
-  nonNA_PR[which((nonNA_PR$TP == 0 & nonNA_PR$FP ==0)), "precision"] <- 1
-  report[['nonNA_PR']] <- nonNA_PR
-  
-  #totalN <- nrow(nonNA_PR)
-  w <- c()
-  areas <- c()
-  for(i in 1: length(unique(nonNA_PR$ctype))){
-    tmp <- nonNA_PR[which(nonNA_PR$ctype %in% unique(nonNA_PR$ctype)[i]),]
-    #area <- cn_computeAUCPR(tmp, precisionCol = "precision", recallCol = "recall")
-  area <- AUC(tmp$recall, tmp$precision, method = AUCmethod)
-### PC 10-09-19    area <- auc(tmp$recall, tmp$precision, method = AUCmethod)
-    areas <- c(areas,area[1])
-    #w <- c(w,nrow(tmp)/totalN)
-    w <- c(w, sum(stVal_com[,classLevels] %in% unique(nonNA_PR$ctype)[i])/nrow(stVal_com))
-  }
-  
-  #report[['AUPRC_w']] <- weighted.mean(areas, w)
-  report[['AUPRC_w']] <- mean(areas)
-  report[['AUPRC_wc']] <- weighted.mean(areas, w)
-  
-  return(report)
-  
-}
+
 
 cal_class_ROCs<-function
 (assessed
@@ -789,6 +674,7 @@ plot_metrics <- function(assessed){
 
 }
 
+#' @export
 plot_PRs <- function(assessed){
 
   p6 <- ggplot(data=assessed$nonNA_PR, aes(x=as.numeric(as.vector(recall)), y=as.numeric(as.vector(precision)))) + geom_point(size = .5, alpha=.5) +  geom_path(size=.5, alpha=.75) +
@@ -846,127 +732,3 @@ selectTrain <- function(stDat, nCells, dLevel, sample_name){
   
   return(newstTrain)
 } 
-
-#build assessment pipeline for scmap
-
-assessmentReport_scmap <- function(siml, #similarity from scmap
-                                  true_label, #sample table where cells in query are in the training with name 
-                                  pred_label,
-                                  resolution = 0.005,# increment at which to evalutate classification
-                                  classLevels = "description2",
-                                  dLevelSID = "sample_name"){
-  
-  report <- list()
-  
-  #cohen's kappa, accuracy
-  
-  cm = as.matrix(table(Actual = true_label, Predicted = pred_label))
-  
-  #in case of misclassfication where there are classifiers that are not used
-  if(length(setdiff(unique(true_label), unique(pred_label))) != 0){
-    misCol <- setdiff(unique(true_label), unique(pred_label))
-    for(i in 1:length(misCol)){
-      cm <- cbind(cm, rep(0, nrow(cm)))
-    }
-    colnames(cm)[(ncol(cm) - length(misCol) +1) : ncol(cm)] <- misCol
-  }
-  
-  if(length(setdiff(unique(pred_label), unique(true_label))) != 0){
-    misRow <- setdiff(unique(pred_label), unique(true_label))
-    for(i in 1:length(misRow)){
-      cm <- rbind(cm, rep(0, ncol(cm)))
-    }
-    rownames(cm)[(nrow(cm) - length(misRow) +1) : nrow(cm)] <- misRow
-  }
-  
-  cm <- cm[,colnames(cm)[match(rownames(cm),colnames(cm))]]  
-  report[['cm']] <- cm
-  
-  #sort table names accordigly
-  
-  n = sum(cm) # number of instances
-  nc = nrow(cm) # number of classes
-  diag = diag(cm) # number of correctly classified instances per class 
-  rowsums = apply(cm, 1, sum) # number of instances per class
-  colsums = apply(cm, 2, sum) # number of predictions per class 
-  p = rowsums / n # distribution of instances over the actual classes
-  q = colsums / n # distribution of instances over the predicted classes
-  expAccuracy = sum(p*q)
-  accuracy = sum(diag) / n 
-  report[['kappa']] <- (accuracy - expAccuracy) / (1 - expAccuracy)
-  report[['accuracy']] <- accuracy
-  
-  return(report)
-  
-}
-
-plot_scmapAssess <- function(assessed, method = "scmap"){
- metric <- matrix(0, ncol = 2, nrow = 1)
-  colnames(metric) <- c("cohen's kappa", "accuracy")
-  rownames(metric) <- "value"
-  metric[,1:2] <- c(assessed$kappa, assessed$accuracy) 
-  metric <- as.data.frame(metric)
-  
-  p1<-ggplot(metric, aes(x="cohen's kappa", y = metric[1,1])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) +  ylim(0,1) + theme(legend.position="none")
-  
-  p2<-ggplot(metric, aes(x="accuracy", y = metric[1,2])) + geom_bar(stat="identity") +xlab("") + ylab("") + theme(axis.text=element_text(size=8), axis.title=element_text(size=8)) + ylim(0,1) + theme(legend.position="none")
-  
-  p1 + p2
-  
-}
-
-
-
-prep_SimilarityMatrix <- function(projection = sce_test,
-                                  index_list =  metadata(sce)$scmap_cluster_index, #please compare one index_list at a time
-                                  expTest = expTest #only used for the sample names
-                                  ){
-  
-  answer <- list()
-  labels <- list()
-  simls <- list()
-  
-  index <- index_list
-  # find and select only common features, then subset both datasets
-  tmp <- setFeatures(projection, rownames(index))
-  index <- index[rownames(index) %in% rowData(tmp)$feature_symbol[rowData(tmp)$scmap_features], , drop = FALSE]
-  tmp <- tmp[rowData(tmp)$scmap_features, ]
-  
-  if (nrow(index) < 10) {
-    warning("There are less than ten features in common between the `reference` and `projection` datasets. Most probably they come from different organisms! Please redefine your query!")
-    return(projection)
-  }  
-  
-  # get expression values of the projection dataset
-  proj_exprs <- as.matrix(logcounts(tmp))
-  rownames(proj_exprs) <- rowData(tmp)$feature_symbol
-  
-  # prepare projection dataset
-  proj_exprs <- proj_exprs[order(rownames(proj_exprs)), ]
-  
-  # calculate similarities and correlations
-  tmp <- t(index)
-  res_cosine <- proxy::simil(tmp, t(proj_exprs), method = "cosine")
-  res_cosine <- matrix(res_cosine, ncol = nrow(tmp), byrow = TRUE) #cols are training cell types; rows are cells
-  colnames(res_cosine) <- colnames(index)
-  rownames(res_cosine) <- colnames(expTest)
-  histogram(rowSums(res_cosine)) #show distribution of rowSum for res_cosine
-  res_cosine <- res_cosine/rowSums(res_cosine) 
-  
-  res_pearson <- cor(index, proj_exprs, method = "pearson")
-  res_pearson <- matrix(res_pearson, ncol = nrow(tmp), byrow = TRUE)  #cols are training cell types; rows are cells
-  colnames(res_pearson) <- colnames(index)
-  rownames(res_pearson) <- colnames(expTest)
-  histogram(rowSums(res_pearson)) #show distribution of rowSum for res_cosine
-  res_pearson <- res_pearson/rowSums(res_pearson)
-  
-  res_spearman <- cor(index, proj_exprs, method = "spearman")
-  res_spearman <- matrix(res_spearman, ncol = nrow(tmp), byrow = TRUE)  #cols are training cell types; rows are cells
-  colnames(res_spearman) <- colnames(index)
-  rownames(res_spearman) <- colnames(expTest)
-  histogram(rowSums(res_spearman))
-  res_spearman <- res_spearman/rowSums(res_spearman)
-  
-  return(answer= list(res_cosine = res_cosine, res_pearson = res_pearson, res_spearman = res_spearman))
-}
-
