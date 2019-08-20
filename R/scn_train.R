@@ -24,7 +24,8 @@ scn_train <- function(stTrain,
 	  	    nTopGenes = 10, 
 		      nTopGenePairs = 25, 
 		      nRand = 70, 
-		      nTrees = 1000, 
+		      nTrees = 1000,
+          stratify=FALSE, 
 		      weightedDown_total = 1.5e3, 
  	 	      weightedDown_dThresh = 0.25, 
 		      transprop_xFact = 1e4) {
@@ -58,10 +59,10 @@ scn_train <- function(stTrain,
    system.time(pdTrain<-query_transform(expTrain[cgenesA, ], xpairs))
    cat("Finished pair transforming the data\n")
 
-   tspRF<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand = nRand, ntrees = nTrees)
+   tspRF<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand = nRand, ntrees = nTrees, stratify=FALSE)
    cnProc<-list("cgenes"= cgenesA, "xpairs"=xpairs, "grps"= grps, "classifier" = tspRF)
 
-   returnList<-list("sampTab" = stTrain, "cgenes_list" = cgenes_list, "cnProc" = cnProc)
+   returnList<-list("sampTab" = stTrain, "cgenes_list" = cgenes[['cgenes_list']], "cnProc" = cnProc)
 
    cat("All Done\n")
    #return
@@ -247,7 +248,7 @@ randomize<-function(
 #'
 #' @return Random Forest Classifier object
 #' @export
-makeClassifier<-function(expTrain, genes, groups, nRand=70, ntrees=2000, stratify=FALSE, sampsize=40){
+sc_makeClassifier<-function(expTrain, genes, groups, nRand=70, ntrees=2000, stratify=FALSE, sampsize=40){
   randDat<-randomize(expTrain, num=nRand)
   #randDat<-ModifiedRandomize(expTrain, num=nRand)
 
