@@ -51,7 +51,7 @@ scn_train <- function(stTrain,
 
    cat("There are ", length(cgenesA), " classification genes\n")
 
-   system.time(xpairs<-ptGetTop(expTrain[cgenesA,], grps, topX=nTopGenePairs, sliceSize=5000))
+   system.time(xpairs<-ptGetTop(expTrain[cgenesA,], cgenes[['cgenes_list']], topX=nTopGenePairs, sliceSize=5000))
    cat("Finished finding top gene pairs\n")
 
 
