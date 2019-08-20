@@ -20,10 +20,10 @@
 scn_train <- function(stTrain, 
 		      expTrain, 
 		      dLevel, 
-              	      colName_samp="row.names", 
-	  	      nTopGenes = 10, 
+          colName_samp="row.names", 
+	  	    nTopGenes = 10, 
 		      nTopGenePairs = 25, 
-		      nRand = 50, 
+		      nRand = 70, 
 		      nTrees = 1000, 
 		      weightedDown_total = 1.5e3, 
  	 	      weightedDown_dThresh = 0.25, 
@@ -247,7 +247,7 @@ randomize<-function(
 #'
 #' @return Random Forest Classifier object
 #' @export
-makeClassifier<-function(expTrain, genes, groups, nRand=50, ntrees=2000, stratify=FALSE, sampsize=40){
+makeClassifier<-function(expTrain, genes, groups, nRand=70, ntrees=2000, stratify=FALSE, sampsize=40){
   randDat<-randomize(expTrain, num=nRand)
   #randDat<-ModifiedRandomize(expTrain, num=nRand)
 
