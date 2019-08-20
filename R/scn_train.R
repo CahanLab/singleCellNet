@@ -42,18 +42,18 @@ scn_train <- function(stTrain,
    expTnorm<-trans_prop(weighted_down(expTrain, weightedDown_total, dThresh = weightedDown_dThresh), transprop_xFact)
    cat("Expression data has been normalized\n")
 
+   cat("Finding classification genes\n")
    system.time(cgenes<-findClassyGenes(expDat = expTnorm, sampTab = stTrain, dLevel = dLevel, topX = nTopGenes))
-   cat("Finished finding classification genes\n")
 
    cgenesA<-cgenes[['cgenes']]
    grps<-cgenes[['grps']]
-   cgenes_list <- cgenes[['labelled_cgenes']]
-
+  
    cat("There are ", length(cgenesA), " classification genes\n")
+   
+   cat("Finding top pairs\n")
 
-   system.time(xpairs<-ptGetTop(expTrain[cgenesA,], cgenes[['cgenes_list']], topX=nTopGenePairs, sliceSize=5000))
-   cat("Finished finding top gene pairs\n")
-
+   system.time(xpairs<-ptGetTop(expDat = expTrain[cgenesA,], cell_labels = grps, cgenes_list = cgenes[['cgenes_list']], topX=nTopGenePairs, sliceSize=5000))
+   cat("There are", length(xpairs), "top gene pairs\n")
 
    system.time(pdTrain<-query_transform(expTrain[cgenesA, ], xpairs))
    cat("Finished pair transforming the data\n")
