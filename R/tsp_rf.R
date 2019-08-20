@@ -197,7 +197,7 @@ makePairTab<-function(genes){
 #' @return vector of top gene-pair names
 #'
 #' @export
-ptGetTop <-function(expDat, cell_labels, cgenes_list=NA, topX=50, sliceSize = 5e3, quickPairs = FALSE){
+ptGetTop <-function(expDat, cell_labels, cgenes_list=NA, topX=50, sliceSize = 5e3, quickPairs = TRUE){
   if(!quickPairs){
     ans<-vector()
     genes<-rownames(expDat)
