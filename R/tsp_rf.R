@@ -136,8 +136,8 @@ getClassGenes<-function(diffRes, topX=25, bottom=TRUE) {
   }
 
   # get the least differentially expressed genes as house holders
-  sameRes<-diffRes[order(abs(diffRes$cval), decreasing = FALSE), ]
-  ans<-append(ans, rownames(sameRes[1:topX, ]))
+  # sameRes<-diffRes[order(abs(diffRes$cval), decreasing = FALSE), ]
+  # ans<-append(ans, rownames(sameRes[1:topX, ]))
 
   #return
   ans

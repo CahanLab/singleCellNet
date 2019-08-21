@@ -59,7 +59,7 @@ scn_train <- function(stTrain,
    system.time(pdTrain<-query_transform(expTrain[cgenesA, ], xpairs))
    cat("Finished pair transforming the data\n")
 
-   tspRF<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand = nRand, ntrees = nTrees, stratify=FALSE)
+   tspRF<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand = nRand, ntrees = nTrees, stratify=stratify)
    cnProc<-list("cgenes"= cgenesA, "xpairs"=xpairs, "grps"= grps, "classifier" = tspRF)
 
    returnList<-list("sampTab" = stTrain, "cgenes_list" = cgenes[['cgenes_list']], "cnProc" = cnProc)
