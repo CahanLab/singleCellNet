@@ -241,7 +241,7 @@ dim(expTMraw2)
 ```
 
 #### Train Classifier
-```
+```R
 stList = splitCommon(stTM2, ncells=100, dLevel="newAnn")
 stTrain = stList[[1]]
 expTrain = expTMraw2[,rownames(stTrain)]
