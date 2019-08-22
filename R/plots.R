@@ -353,6 +353,236 @@ reorderCellsByGrp<-function(
   newAns
 }
 
+#This will spit out a matrix of genepairs by (query samples + avg of training data) ordered by importance in the RF model
+
+#' @title
+#' Compile genePairs comparison matrix
+#' @description
+#' compile genePairs comparison matrix for users to elucidate the biological significance behind classification results
+#'
+#' @param query_exp the expression matrix of query samples
+#' @param training_exp the expression matrix of training samples
+#' @param training_st the sample table of training data
+#' @param classCol the column name of the sample table that indicates the classes
+#' @param sampleCol the column name of the sample table that indicates the sample names. NULL if sample names are indcated in rownames of the sample table
+#' @param cnProc the cnProc from the training
+#' @param numPairs the number of genes to extract for comparison from most important to least important in the classifier
+#'
+#' @return gene pair comparison matrix
+#'
+#' @export
+
+compareGenePairs<-function(query_exp, training_exp, training_st, classCol, sampleCol = NULL, RF_classifier, numPairs = 20, trainingOnly = TRUE) {
+  
+  
+  importantPairs = RF_classifier$importance
+  importantPairs = sort(importantPairs[, 1], decreasing = TRUE)
+  importantPairs = importantPairs[grep("_", names(importantPairs))]
+  
+  if (numPairs < length(importantPairs)) {
+    userPairs = importantPairs
+  }
+  else {
+    userPairs = importantPairs[1:numPairs]
+  }
+  
+  query_pairs = query_transform(expDat = query_exp, genePairs = names(userPairs))
+  
+  training_pairs = query_transform(expDat = training_exp, genePairs = names(userPairs))
+  
+  avg_training_pairs = avgGeneCat(expDat = training_pairs, sampTab = training_st, dLevel = classCol, sampID = sampleCol)
+  
+  if(!trainingOnly){
+    PairCompareMatrix = makeGeneCompareTab(queryExpTab = query_pairs,
+                                         avgGeneTab = avg_training_pairs,
+                                         geneSamples = names(userPairs))
+    PairCompareMatrix
+    
+  } else{
+    
+    avg_training_pairs
+  }
+  
+}
+
+
+#this is visualizing the matrix above
+#' @title
+#' Gene expression plotting
+#' @description
+#' Plot gene expressions for visualization and comparison
+#'
+#' @param expDat comparison expression matrix from \code{\link{makeGeneCompareTab}}
+#' @param fontsize_row row font size
+#' @param cRows TRUE if cluster the rows
+#' @param cCols TRUE if cluster the columns
+#'
+#' @return a heatmap of gene expressions for the comparsion expression matrix
+#' @importFrom RColorBrewer brewer.pal
+#' @export
+plotGeneComparison<-function(expDat, grps, fontsize_row = 6, cRows = FALSE, cCols = FALSE, toScale = FALSE, ...){
+  #grps = as.vector(colnames(expDat))
+  #names(grps) = colnames(expDat)
+  genes = rownames(expDat)
+
+  value<-expDat[genes,] #select the matrix with cgenes
+
+  if(toScale){
+    value <- t(scale(t(value))) #scales the matrix
+  }
+
+  limits=c(0,10)
+
+  value[value < limits[1]] <- limits[1] # ensures 0 is the smallest
+  value[value > limits[2]] <- limits[2] # ensures 10 is the highest
+
+  groupNames<-unique(grps) # gather the names of the groups
+
+  cells<-names(grps)
+
+  cells2<-vector()
+  for(groupName in groupNames){
+    xi<-which(grps==groupName) #select samples that are in a certain group
+
+
+    tmpCells<-cells[xi] #if not over the maximum number of samples per group, then use all the samples available
+
+    cells2<-append(cells2, tmpCells) # create a vector with all the samples selected for plotting
+  }
+  value<-value[,cells2] # select the samples that are going to be used for plotting
+
+
+  xcol <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(groupNames))
+  names(xcol) <- groupNames
+  anno_colors <- list(group = xcol)
+
+  xx<-data.frame(group=as.factor(grps))
+  rownames(xx)<-cells
+
+  # val_col <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 12,name = "Spectral")))(25)
+  val_col<-colorRampPalette(rev(RColorBrewer::brewer.pal(n = 12,name = "Spectral")))(25)
+  pheatmap(value, color=val_col, cluster_row = cRows, cluster_cols = cCols,
+           show_colnames = FALSE, annotation_names_row = FALSE,
+           annotation_col = xx,
+           annotation_names_col = FALSE,
+           annotation_colors = anno_colors,
+           fontsize_row=fontsize_row, ...)
+}
+
+#' @title
+#' Average Category Gene Expressions
+#' @description
+#' Averaging the gene expression level for each category
+#'
+#' @param expDat the normalized expression table from \code{\link{trans_prop}}
+#' @param sampTab the sample table
+#' @param dLevel the name of the column that contains categories
+#' @param sampID the name of the column that contains sample ID
+#'
+#' @return an average matrix of the gene expressions
+#' @export
+avgGeneCat<-function(expDat, sampTab, dLevel, sampID = NULL){
+
+  if (is.null(sampID) == TRUE) {
+    sampID = "sampID"
+
+    sampTab[, sampID] = rownames(sampTab)
+  }
+
+   returnMatrix = matrix(nrow=nrow(expDat), ncol=0)
+   rownames(returnMatrix) = rownames(expDat)
+
+   for (cat in unique(sampTab[, dLevel])) {
+
+      tempExpDat = expDat[, as.vector(sampTab[sampTab[, dLevel] == cat, sampID])]
+
+      # calculates the mean
+      tempMatrix = matrix(apply(tempExpDat, 1, mean), ncol = 1, nrow = length(apply(tempExpDat, 1, mean)))
+      rownames(tempMatrix) = names(apply(tempExpDat, 1, mean))
+      colnames(tempMatrix) = paste0(cat, "_Avg")
+
+      if(all(rownames(returnMatrix) == rownames(tempMatrix))) {
+         returnMatrix = cbind(returnMatrix, tempMatrix)
+      }
+   }
+
+   #return
+   returnMatrix
+}
+
+#' @title
+#' Make Gene Comparison Table
+#' @description
+#' To compile an expression table for comparison
+#'
+#' @param queryExpTab a matrix of normalized expression query data from \code{\link{trans_prop}}
+#' @param avgGeneTab a matrix of averaged expression of training data from \code{\link{avgGeneCat}}.
+#' @param querySample a vector or string indicating the query samples
+#' @param trainingCat a vector or string indicating the categories of the training data
+#' @param geneSamples a vector or string indicating the genes of interest
+#'
+#' @return a matrix that combines query and training data with genes of interest for comparison
+#' @export
+
+makeGeneCompareTab<-function(queryExpTab, avgGeneTab, querySample = NULL, trainingCat=NULL, geneSamples) {
+
+  if(is.null(querySample) == TRUE) {
+    filteredQuery = queryExpTab[geneSamples, ]
+    querySample = colnames(filteredQuery)
+  }
+  else if(all(querySample %in% colnames(queryExpTab)) == FALSE) {
+    filteredQuery = queryExpTab[geneSamples, ]
+    querySample = colnames(filteredQuery)
+    print("Please enter sample names that are in the query table")
+
+  }
+  else {
+    filteredQuery = queryExpTab[geneSamples, querySample]
+  }
+
+  #
+  if(is.null(trainingCat) == TRUE) {
+    filteredGeneTab = avgGeneTab[geneSamples, ]
+    trainingCat = colnames(filteredGeneTab)
+  }
+  else if(all(trainingCat %in% colnames(avgGeneTab)) == FALSE) { #maybe modified it later
+    filteredGeneTab = avgGeneTab[geneSamples, ]
+    trainingCat = colnames(filteredGeneTab)
+
+    print("Please enter proper category names that are in the filtered gene table")
+
+  }
+  else {
+    filteredGeneTab = avgGeneTab[geneSamples, trainingCat]
+  }
+
+  if(all(rownames(filteredQuery) == rownames(filteredGeneTab)) == TRUE) {
+    print("All Good")
+  }
+
+  returnLabel = c(querySample, trainingCat)
+  returnMatrix = cbind(filteredQuery, filteredGeneTab)
+  colnames(returnMatrix) = returnLabel
+  #return
+  returnMatrix
+}
+
+#' @title
+#' Make training label
+#' @description
+#' To make name vector for plotting purpose
+#'
+#' @param gpTab 
+#' @param stTrain sample table for training data
+#' @param dLevel the annotation for cell type label
+#'
+#' @return a named vector for plotting purposes
+#' @export
+findAvgLabel <- function(gpTab, stTrain, dLevel){
+  sla_avg = colnames(gpTab)[(ncol(gpTab) - length(unique(stTrain[,dLevel])) + 1):ncol(gpTab)]
+  sla = setNames(sla_avg,sla_avg)
+}
+
 #' make tsne from pca
 #'
 #' make tsne from pca
