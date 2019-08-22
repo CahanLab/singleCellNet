@@ -468,15 +468,6 @@ gpaRecRes){
 }
 
 
-
-
-
-
-
-
-
-
-
 myGrpSort<-function(grps){
   grpNames<-unique(grps)
 ###   llevels<- as.numeric(unlist(lapply(strsplit(grpNames, "L"), "[[",2))) NEED TO FIX THIS TO repeat over Ls
@@ -843,36 +834,6 @@ subsample_min<-function
   newVect
 }
 
-
-
-
-#' @export
-dotplot_pipesteamed<-function
-(steamed, # result of running a pipe_steam like pipe_dbscan
- chopMethod="tsne",# tsne or PCA
- steamMethod="dbscan",
- cName="group"
- ){
-
-  sampTab<-steamed[['steamed']][['sampTab']]
-
-  if(chopMethod=='tsne'){
-    choppedDat<-steamed[['cp_tsne']][['choppedDat']]
-  }
-  else{
-    choppedDat<-steamed[['cp_pca']][['choppedDat']]
-  }
-  datTab<-choppedDat[rownames(sampTab),]
-  colnames(datTab)[1:2]<-c("dim.1", "dim.2")
-
-  xres<-cbind(sampTab, datTab)
-  xi<-which(colnames(xres)==cName)
-  colnames(xres)[xi]<-"groupX"
-
-  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(xres$groupX)))
-  ggplot(xres, aes(x=dim.1, y=dim.2, colour=groupX) ) + geom_point(pch=19, alpha=3/4, size=1) + theme_bw() + scale_colour_manual(values=ColorRamp) #+ facet_wrap( ~ k, nrow=3)
-}
-
 #' heatmap of the classification result
 #'
 #' Heatmap of the classification result.
@@ -943,39 +904,6 @@ sc_hmClass<-function(
         annotation_col = xx,
         annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
 
-}
-
-#' heatmap of the classification result
-#'
-#' Heatmap of the classification result.
-#' @param classMat classMat
-#' @param isBig is this a big heatmap? TRUE or FALSE
-#' @param cluster_cols cluster_cols
-#'
-#' @return nothing
-#'
-#' @examples
-#' cn_HmClass(cnRes, isBig=TRUE)
-#'
-#' @export
-hmClass<-function
-(classMat, 
- isBig=FALSE,
- cluster_cols=FALSE
-){
- 
-  cools<-colorRampPalette(c("black", "limegreen", "yellow"))( 100 )
-  bcol<-'white';
-  if(isBig){
-    bcol<-NA;
-  }
-  pheatmap(classMat,
-    col=cools,
-    breaks=seq(from=0, to=1, length.out=100),
-    border_color=bcol,
-    cluster_rows = FALSE,
-    cluster_cols = cluster_cols)
-  # classification heatmap
 }
 
 
@@ -1077,110 +1005,15 @@ hmgenesSimple<-function
 }
 
 #' @export
-hm_varGenes<-function
-(washed,
- steamed, # from steam_pipe so has cp_pca
-  cName="group",
-  cRow=FALSE,
-  cCol=FALSE,
-  limits=c(-3,3),
-  toScale=FALSE,
-  fontsize_row=NULL){
-  
-  expDat<-washed[['expDat']]
-  varGenes<-steamed[['cp_pca']][['varGenes']]
-  sampTab<-steamed[['steamed']][['sampTab']]
-  expDat<-expDat[varGenes,rownames(sampTab)]
-  
-  annTab<-data.frame(group=sampTab[,cName])
-  rownames(annTab)<-rownames(sampTab)
-
-  value<-expDat
-  if(toScale){
-    value <- t(scale(t(expDat)))
-  }
-  
-  value[value < limits[1]] <- limits[1]
-  value[value > limits[2]] <- limits[2]
-
- 
-  groupNames<-unique(annTab[,cName])
-  xcol <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(groupNames))
-  names(xcol) <- groupNames
-  anno_colors <- list(group = xcol)
-
-  xx<-data.frame(group=as.factor(annTab[,cName]))
-  rownames(xx)<-rownames(annTab)
-
-  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol,
-        show_colnames = FALSE, annotation_names_row = FALSE,
-##        annotation_col = annTab,
- ##clustering_distance_rows='correlation',
-        annotation_col = xx,
-        annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
-}
-
-
-#' @export
-hm_genes<-function
-(washed,
- steamed, # from steam_pipe so has cp_pca
- genes,
-  cName="group",
-  cRow=FALSE,
-  cCol=FALSE,
-  limits=c(-3,3),
-  toScale=FALSE,
-  fontsize_row=NULL){
-  
-  expDat<-washed[['expDat']]
-  ###varGenes<-steamed[['cp_pca']][['varGenes']]
-  sampTab<-steamed[['steamed']][['sampTab']]
-  expDat<-expDat[genes,rownames(sampTab)]
-  
-  annTab<-data.frame(group=sampTab[,cName])
-  rownames(annTab)<-rownames(sampTab)
-
-  value<-expDat
-  if(toScale){
-    value <- t(scale(t(expDat)))
-  }
-  
-  value[value < limits[1]] <- limits[1]
-  value[value > limits[2]] <- limits[2]
-
- 
- ### groupNames<-unique(annTab[,cName])
-  groupNames<-unique(sampTab[,cName])
-
-  xcol <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(groupNames))
-  names(xcol) <- groupNames
-  anno_colors <- list(group = xcol)
-
-  xx<-data.frame(group=as.factor(annTab[,"group"]))
-  rownames(xx)<-rownames(annTab)
-
-  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol,
-        show_colnames = FALSE, annotation_names_row = FALSE,
-##        annotation_col = annTab,
-   clustering_distance_rows='correlation',
-   clustering_distance_cols='correlation',
-        annotation_col = xx,
-        annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
-}
-
-
-
-#' @export
 hmgenesSimple2<-function
 (expDat,
   annTab,
   cName="group",
   cRow=FALSE,
   cCol=FALSE,
- limits=c(-3,3),
- toScale=FALSE,
- fontsize_row=NULL){
+  limits=c(-3,3),
+  toScale=FALSE,
+  fontsize_row=NULL){
   
 
   value<-expDat
@@ -1223,35 +1056,6 @@ if(FALSE){
 }
 
 
-#' plot gpa res
-#'
-#' plot gpa res
-#'
-#' @param gpaRes gpRes
-#' @param llevel llevel
-#' @param legend whether to display it
-#'
-#' @return ggplot
-#' 
-#' @export
-#'
-plotGPALevel<-function(gpaRes, llevel="L1_G1",legend=FALSE)
-{
-
-  xdat<-gpaRes$results[[llevel]]$gpRes$pcaRes$pcaRes$x
-  grps<-gpaRes$results[[llevel]]$bundleRes$result
-  xdat<-xdat[names(grps),]
-  aDat<-data.frame(pc1=xdat[,1], pc2=xdat[,2], group=grps) 
- 
-  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
-  if(legend){
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
-  }
-  else{
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
-  }
-  ans
-}
 
 #' plot gpa res
 #'
@@ -1284,132 +1088,6 @@ plotGPApca<-function(xres, legend=FALSE)
 
 
 
-#' plot gpa res
-#'
-#' plot gpa res
-#'
-#' @param xtree xtree
-#' @param legend whether to display it
-#'
-#' @return ggplot
-#' 
-#' @export
-#'
-plot_pca_gpa<-function(xtree, legend=FALSE)
-{
-
-  aDat<-data.frame(pc1=xtree$results[[1]]$gpRes$pcaRes$pcaRes$x[,1], pc2=xtree$results[[1]]$gpRes$pcaRes$pcaRes$x[,2], group=as.factor(xtree$groups)) 
-  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
-  if(legend){
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
-  }
-  else{
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
-  }
-  ans
-}
-
-
-#' plot gpa res
-#'
-#' plot gpa res
-#'
-#' @param gpaRes gpRES
-#' @param legend whether to display it
-#'
-#' @return ggplot
-#' 
-#' @export
-#'
-plotGPA1<-function(gpaRes, legend=FALSE)
-{
-
-  aDat<-data.frame(pc1=gpaRes$pcaRes$pcaRes$x[,1], pc2=gpaRes$pcaRes$pcaRes$x[,2], group=gpaRes$groups) 
-  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
-  if(legend){
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
-  }
-  else{
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
-  }
-  ans
-}
-
-#' plot gpa_recurse res
-#'
-#' plot gpa_recurse res
-#'
-#' @param gpaRes,
-#' @param legend whether to display it
-#'
-#' @return ggplot
-#' 
-#' @export
-#'
-plotGPArec<-function(gpaRes, pcaLevel=1, grpLevel=1,legend=FALSE)
-{
- 
-  if(grpLevel>1){
-    prev<-gpaRes$grp_list[[grpLevel-1]]
-  }
-  else{
-    prev<-rep("1", length(gpaRes$grp_list[[grpLevel]]))
-  }
-  aDat<-data.frame(pc1=gpaRes$results[[pcaLevel]]$pcs[,1], pc2=gpaRes$results[[pcaLevel]]$pcs[,2], group=gpaRes$grp_list[[grpLevel]]) 
-  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
-  if(legend){
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group, shape=prev) ) + geom_point( alpha=3/4, size=.75) + theme_bw() + scale_colour_manual(values=ColorRamp)
-  }
-  else{
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group, shape=prev) ) + geom_point(pch=19, alpha=3/4, size=.75) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
-  }
-  ans
-}
-
-#' plot gpa_recurse res transform coordinates
-#'
-#' plot gpa_recurse res
-#'
-#' @param gpaRes,
-#' @param legend whether to display it
-#'
-#' @return ggplot
-#' 
-#' @export
-#'
-plotGPArecTrans<-function(gpaRes, pcaLevel=1, grpLevel=1,legend=FALSE)
-{
- 
-  pc_l1<-gpaRes$results[[1]]$pcs[,1:2]
-
-  runningPCs<-pc_l1
-  ci<-2
-
-  while(ci<=pcaLevel){
-    weight<-(pcaLevel+1-ci)/pcaLevel
-    cat("CI ",ci, " weight: ",weight,"\n")
-    tmpPCs<-weight*gpaRes$results[[ci]]$pcs[,1:2]
-    runningPCs<-tmpPCs+runningPCs
-    ci<-ci+1
-  }
-
-  if(grpLevel>1){
-    prev<-gpaRes$grp_list[[grpLevel-1]]
-  }
-  else{
-    prev<-rep("1", length(gpaRes$grp_list[[grpLevel]]))
-  }
-  aDat<-data.frame(pc1=runningPCs[,1], pc2=runningPCs[,2], group=gpaRes$grp_list[[grpLevel]]) 
-  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
-  if(legend){
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group, shape=prev) ) + geom_point( alpha=3/4, size=.75) + theme_bw() + scale_colour_manual(values=ColorRamp)
-  }
-  else{
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group, shape=prev) ) + geom_point( alpha=3/4, size=.75) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
-  }
-  ans
-
-}
 
 
 #' plot tsne results
@@ -1482,36 +1160,6 @@ plot_tsne<-function(sampTab, tsRes, cname="study_id", themeWhite=TRUE)
     res <- res + theme_black()
   }
   res
-}
-
-
-#' @export
-tsneClass<-function
-(classRes, #result of butter_classify()
- steamed #from a pipe_wash like pipe_dbscan()
- ){
-  sampTab<-steamed[['steamed']][['sampTab']]
-  choppedDat<-steamed[['cp_tsne']][['choppedDat']]
-  datTab<-choppedDat[rownames(sampTab),]
-  datTab<-cbind(datTab, t(classRes[,rownames(sampTab)]))
-  classNames<-rownames(classRes)
-  datTab<-as.data.frame(datTab)
-  tsneMult(datTab, classNames)
-}
-
-tsneGenes<-function
-(washed,
- steamed,
- genes)
-{
-  sampTab<-steamed[['steamed']][['sampTab']]
-  choppedDat<-steamed[['cp_tsne']][['choppedDat']]
-  expDat<-washed$expDat[genes,rownames(sampTab)]
-
-  datTab<-choppedDat[rownames(sampTab),]
-  datTab<-cbind(datTab, t(expDat))
-  datTab<-as.data.frame(datTab)
-  tsneMult(datTab, genes)
 }
 
 
@@ -1613,12 +1261,6 @@ tsneMultsimp<-function(
 }
 
 
-
-  
-
-
-
-
 # generic red/blue heatmap
 #' @export
 mp_hmVars<-function# basic heatmap
@@ -1702,269 +1344,6 @@ mp_hmVars<-function# basic heatmap
     heatmap.2(expDat[genes,],col=ccol, scale=scale, trace='none', key=T,dendrogram=dendrogram,Rowv=clusterR,Colv=clusterC,density.info='none',margin=margin,main=main,dist=dist,labRow='',labCol='',RowSideColors=RowSideColors,ColSideColors=ColSideColors,cexCol=cexCol,cexRow=cexRow);
   }
 }
-
-#' plot gpa res
-#'
-#' plot gpa res
-#'
-#' @param gpaRes,
-#' @param title
-#' @param legend whether to display it
-#'
-#' @return ggplot
-#' 
-#' @export
-#'
-plotGPA<-function(gpaRes, title='', legend=FALSE)
-{
-
-  aDat<-data.frame(pc1=gpaRes$pcaRes$pcaRes$x[,1], pc2=gpaRes$pcaRes$pcaRes$x[,2], group=gpaRes$groups) 
-  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
-  if(legend){
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
-  }
-  else{
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group) ) + geom_point(pch=19, alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp) + theme(legend.position="none")
-  }
-  ans + ggtitle(title)
-}
-
-plotGPAann<-function(gpaRes, sampTab, dLevel="prefix", title='')
-{
-
-  
-  aDat<-data.frame(pc1=gpaRes$pcaRes$pcaRes$x[,1], pc2=gpaRes$pcaRes$pcaRes$x[,2], group=gpaRes$groups) 
-  rownames(aDat)<-rownames(gpaRes$pcs)
-  aDat<-cbind(aDat, ann=sampTab[rownames(aDat),dLevel])
-  ColorRamp <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(unique(aDat$group)))
-  
-    ans<-ggplot(aDat, aes(x=pc1, y=pc2, colour=group, shape=ann) ) + geom_point(alpha=3/4, size=.5) + theme_bw() + scale_colour_manual(values=ColorRamp)
-  
-  ans + ggtitle(title)
-}
-
-
-
-gpa_multiPlot_ann<-function(
- recRes,
- sampTab,
- dLevel="prefix",
- str_level=1
- ){
-
-  pList<-list()
-  p1<-plotGPAann(recRes$results[[str_level]]$res[[1]], sampTab=sampTab, dLevel=dLevel, title="Top level")
-  xlen<-length(recRes$results[[str_level+1]]$res)
-  pList[[1]]<-p1
-  for(xi in 1:xlen){
-    ttitle<-names(recRes$results[[str_level+1]]$res)[xi]
-    cat(ttitle,"\n")
-    xtmp<-recRes$results[[str_level+1]]$res[[xi]]
-    if(length(xtmp)>1){
-      pList[[xi+1]]<-plotGPAann(xtmp, sampTab=sampTab, dLevel=dLevel,title=ttitle)
-    }
-  }
-  multiplot(plotlist=pList, cols=xlen+1)
-}
-
-
-gpa_multiPlot<-function(
- recRes,
- str_level=1
- ){
-
-  pList<-list()
-  p1<-plotGPA(recRes$results[[str_level]]$res[[1]], legend=T, title="Top level")
-  xlen<-length(recRes$results[[str_level+1]]$res)
-  pList[[1]]<-p1
-  for(xi in 1:xlen){
-    ttitle<-names(recRes$results[[str_level+1]]$res)[xi]
-    cat(ttitle,"\n")
-    xtmp<-recRes$results[[str_level+1]]$res[[xi]]
-    if(length(xtmp)>1){
-      pList[[xi+1]]<-plotGPA(xtmp, legend=F, title=ttitle)
-    }
-  }
-  multiplot(plotlist=pList, cols=xlen+1)
-}
-
-
-
-
-
-
-
-
-
-hm_recRes<-function(
-  expDat,
-  recRes,
-  toLevel=1,
-  topx=10,
-  maxPerGrp=100,
-  toScale=FALSE,
-  cRow=FALSE,
-  cCol=FALSE,
-  fontsize_row=4,
-  limits=c(0,10))
-{
-  
-  tGenes<-vector()
-  nnames<-names(recRes$results)
-  nodeNames<-vector()
-
-  # find matching levels
-  for(i in 1:toLevel){
-    aa<-paste0("L",i)
-    x<-nnames[grep(aa, nnames)]
-    nodeNames<-append(nodeNames, x)
-  }
-
-  nodeNames<-sort(nodeNames)
-  geneGrps<-vector()
-  for(nodeName in nodeNames){
-    #cat(nodeName,"\n")
-    xres<-recRes$results[[nodeName]]
-    diffExp<-xres$diffExp
-    cluNames<-names(diffExp)
-    cluNames<-sort(cluNames)
-    ct1<-lapply( diffExp[cluNames], getTopGenes, topx)
-    ct1<-unique(unlist(ct1))
-    tGenes<-append(tGenes, ct1)
-  }
-
-  tGenes<-unique(tGenes)
-
-  value<-expDat[tGenes,]
-  if(toScale){
-      value <- t(scale(t(value)))
-  }
-
-  value[value < limits[1]] <- limits[1]
-  value[value > limits[2]] <- limits[2]
-
-###  grps<-recRes$groups
-  grps<-recRes$grp_list[[toLevel]]
-  grps<-sort(grps)
-  cells<-names(grps)
-  groupNames<-unique(grps)
-
-#  
-  
-
-###  bundleRes$result<-sort(bundleRes$result)
-
-  cells2<-vector()
-  for(groupName in groupNames){
-    #cat(groupName,"\n")
-    xi<-which(grps==groupName)
-    if(length(xi)>maxPerGrp){
-      tmpCells<-sample(cells[xi], maxPerGrp)
-    }
-    else{
-      tmpCells<-cells[xi]
-    }
-    cells2<-append(cells2, tmpCells)
-  }
-  value<-value[,cells2]
-
-  xcol <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(groupNames))
-    names(xcol) <- groupNames
-    anno_colors <- list(group = xcol)
-
-    xx<-data.frame(group=as.factor(grps))
-    rownames(xx)<-cells
-
-##    yy<-data.frame(group=as.factor(geneGrps))
-##    rownames(yy)<-tGenes
-
-
-  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol,
-        show_colnames = FALSE, annotation_names_row = FALSE,
-##        annotation_col = annTab,
-        annotation_col = xx,
-##        annotation_row = yy,
-        annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
-
-
-}
-
-hm_gpa<-function(
-  expDat,
-  gpaRes,
-  topx=10,
-  maxPerGrp=100,
-  toScale=FALSE,
-  limits=c(0,10),
-  fontsize_row=5)
-{
-  
-  hm_diff(expDat, gpaRes$diffExp, gpaRes$bundleRes, topx=topx, maxPerGrp=maxPerGrp, toScale=toScale, limits=limits, fontsize_row=fontsize_row)
-}
-
-
-hm_diff<-function(
-  expDat,
-  diffRes,
-  bundleRes,
-  maxPerGrp=100,
-  topx=10, 
-  cRow=FALSE,
-    cCol=FALSE,
-    limits=c(0,10),
-    toScale=FALSE,
-  fontsize_row=3){
-  
-  ct1<-lapply( diffRes, getTopGenes, topx)
-  ct1<-unique(unlist(ct1))
-  value<-expDat[ct1,]
-  if(toScale){
-      value <- t(scale(t(value)))
-    }
-
-  value[value < limits[1]] <- limits[1]
-    value[value > limits[2]] <- limits[2]
-
-    bundleRes$result<-sort(bundleRes$result)
-
-
-    cells<-names(bundleRes$result)
-
-#   value<-value[,cells]
- 
-  groupNames<-unique(bundleRes$result)
-
-  cells2<-vector()
-  for(groupName in groupNames){
-    cat(groupName,"\n")
-    xi<-which(bundleRes$result==groupName)
-    cat(length(xi),"\n")
-    if(length(xi)>maxPerGrp){
-      cat(maxPerGrp,"\n")
-      tmpCells<-sample(cells[xi], maxPerGrp)
-    }
-    else{
-      tmpCells<-cells[xi]
-    }
-    cells2<-append(cells2, tmpCells)
-  }
-  value<-value[,cells2]
-
-  xcol <- colorRampPalette(rev(brewer.pal(n = 12,name = "Paired")))(length(groupNames))
-    names(xcol) <- groupNames
-    anno_colors <- list(group = xcol)
-
-    xx<-data.frame(group=as.factor(bundleRes$result))
-    rownames(xx)<-cells
-
-  pheatmap(value, cluster_rows = cRow, cluster_cols = cCol,
-        show_colnames = FALSE, annotation_names_row = FALSE,
-##        annotation_col = annTab,
-        annotation_col = xx,
-        annotation_names_col = FALSE, annotation_colors = anno_colors, fontsize_row=fontsize_row)
-}
-
-
 
 # Multiple plot function
 #
