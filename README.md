@@ -108,7 +108,10 @@ expTrain = expTMraw[,rownames(stTrain)]
 
 #### Train the classifier (NEW)
 ```
-class_info_test = scn_train(stTrain = stTrain, expTrain = expTrain, dLevel = "newAnn", colName_samp = "cell")
+system.time(class_info<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGenes = 10, nRand = 70, nTrees = 1000, nTopGenePairs = 25, dLevel = "newAnn", colName_samp = "cell", stratify = TRUE))
+   user  system elapsed 
+ 223.344  15.451 239.364
+
 ```
 
 #### Apply to held out data (NEW)
@@ -128,6 +131,12 @@ tm_heldoutassessment = assess_comm(ct_scores = classRes_val_all, stTrain = stTra
 
 plot_PRs(tm_heldoutassessment)
 ```
+![](md_img/tm_heldout_pr_082219.png]
+
+```
+plot_metrics(tm_heldoutassessment)
+```
+![](md_img/tm_heldout_metrics_082219.png]
 
 #### Classification result heatmap
 ```R
@@ -139,12 +148,23 @@ sla = append(sla, slaRand)
 
 sc_hmClass(classRes_val_all, sla, max=300, isBig=TRUE)
 ```
+![](md_img/tm_heldout_hm_082219.png]
 
 #### Attribution plot
 ```R
 plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```
+![](md_img/tm_heldout_attr_082219.png]
 
+#### Viusalize average top pairs genes expression for training data
+```R
+gpTab = compareGenePairs(query_exp = expTest, training_exp = expTrain, training_st = stTrain, classCol = "newAnn", sampleCol = "cell", RF_classifier = class_info$cnProc$classifier, numPairs = 20, trainingOnly= TRUE)
+
+train <- findAvgLabel(gpTab, stTrain = stTrain, dLevel = "newAnn")
+
+hm_gpa_sel(gpTab, genes = class_info$cnProc$xpairs, grps = train, maxPerGrp = 50)
+```
+![](md_img/tm_heldout_tp_082219.png]
 
 #### Apply to Park et al query data
 ```R
@@ -153,10 +173,10 @@ system.time(kidTransAll<-query_transform(expPark[cgenesA,], xpairs))
    user  system elapsed 
  23.536   1.721  25.338 
   
-nqRand = 100
-system.time(crParkall<-rf_classPredict(rf_tspAll, kidTransAll, numRand=nqRand))
+nqRand = 50
+system.time(crParkall<-scn_predict(class_info[['cnProc']], expPark, nrand=nqRand))
    user  system elapsed 
- 60.601   2.898  63.654 
+ 89.633   5.010  95.041 
 
 sgrp = as.vector(stPark$description1)
 names(sgrp) = rownames(stPark)
@@ -167,19 +187,20 @@ sgrp = append(sgrp, grpRand)
 # heatmap classification result
 sc_hmClass(crParkall, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 ```
+![](md_img/tm_park_hm_082219.png]
 
-
-#### classification result violin plot
+#### Classification result violin plot
 ```R
 sc_violinClass(sampTab = stPark, classRes = crParkall, cellIDCol = "sample_name", dLevel = "description1", addRand = nrand)
 ```
+![](md_img/tm_park_vio_082219.png]
 
 #### Skyline plot of classification results
 ```R
 stKid2 = addRandToSampTab(crParkall, stPark, "description1", "sample_name")
 skylineClass(crParkall, "T cell", stKid2, "description1",.25, "sample_name")
 ```
-
+![](md_img/tm_park_sky_082219.png]
 
 ### Cross-species classification
 
@@ -219,13 +240,15 @@ dim(expTMraw2)
 [1] 14550 15161
 ```
 
-#### Train Classifier (Short cut)
+#### Train Classifier
 ```
 stList = splitCommon(stTM2, ncells=100, dLevel="newAnn")
 stTrain = stList[[1]]
 expTrain = expTMraw2[,rownames(stTrain)]
 
-system.time(class_info2<-scn_train(stTrain = stTrain, expTrain = expTrain, dLevel = "newAnn", colName_samp = "cell"))
+system.time(class_info2<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGenes = 10, nRand = 70, nTrees = 1000, nTopGenePairs = 25, dLevel = "newAnn", colName_samp = "cell", stratify = TRUE))
+   user  system elapsed 
+ 41.029   6.747  47.963 
 ```
 
 #### Apply to held out data
@@ -236,9 +259,9 @@ stTest = stTestList[[1]]
 expTest = expTMraw2[,rownames(stTest)]
 
 #predict
-classRes_val_all2 = scn_predict(class_info2[['cnProc']], expTest, nrand = 50)
-plotting_order = stTest[order(stTest$newAnn), ]
-stTestRand =  addRandToSampTab(classRes_val_all2, plotting_order, "newAnn", "cell")
+system.time(classRes_val_all2 = scn_predict(class_info2[['cnProc']], expTest, nrand = 50))
+   user  system elapsed 
+  0.691   0.032   0.724 
 ```
 
 #### Assess classifier
@@ -247,10 +270,12 @@ tm_heldoutassessment = assess_comm(ct_scores = classRes_val_all2, stTrain = stTr
 
 plot_PRs(tm_heldoutassessment)
 ```
+![](md_img/tm2_heldout_pr_082219.png]
 
 ```R
 plot_metrics(tm_heldoutassessment)
 ```
+![](md_img/tm2_heldout_metrics_082219.png]
 
 #### Classification result heatmap
 ```R
@@ -263,30 +288,36 @@ sla = append(sla, slaRand)
 # heatmap classification result
 sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
 ```
+![](md_img/tm2_heldout_hm_082219.png]
 
 #### Attribute plot
 ```R
 plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```
+![](md_img/tm2_heldout_attr_082219.png]
 
 #### Apply to human query data
-```R
-nqRand = 100
-crHS = scn_predict(class_info2[['cnProc']], expQueryOrth, nrand=nqRand)
-```
-
-#### Assess classifier with external dataset
 ```R
 stQuery$description = as.character(stQuery$description)
 stQuery[which(stQuery$description == "NK cell"), "description"] = "natural killer cell"
 
+nqRand = 50
+system.time(crHS <- scn_predict(class_info2[['cnProc']], expQueryOrth, nrand=nqRand))
+   user  system elapsed 
+  3.566   0.548   4.166 
+```
+
+#### Assess classifier with external dataset
+```R
 tm_pbmc_assessment = assess_comm(ct_scores = crHS, stTrain = stTrain, stQuery = stQuery, classTrain = "newAnn",classQuery="description",dLevelSID="sample_name")
 plot_PRs(tm_pbmc_assessment)
 ```
+![](md_img/tm2_pbmc_pr_082219.png]
 
 ```R
 plot_metrics(tm_pbmc_assessment)
 ```
+![](md_img/tm2_pbmc_metrics_082219.png]
 
 #### Classification result heatmap
 ```r
@@ -298,6 +329,7 @@ sgrp = append(sgrp, grpRand)
 
 sc_hmClass(crHS, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 ```
+![](md_img/tm2_pbmc_hm_082219.png]
 
 Note that the macrophage category seems to be promiscuous in the mouse held out data, too.
 
@@ -305,36 +337,57 @@ Note that the macrophage category seems to be promiscuous in the mouse held out 
 ```R
 sc_violinClass(sampTab = stQuery, classRes = crHS, cellIDCol = "sample_name", dLevel = "description")
 ```
+![](md_img/tm2_pbmc_vio_082219.png]
 
 #### Classification violin plot with adjusted width
 
 ```R
 sc_violinClass(sampTab = stQuery,classRes = crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 12)
 ```
+![](md_img/tm2_pbmc_vio_adjW_082219.png]
 
 #### Classification violin plot with selected cluster
 
 ```R
 sc_violinClass(stQuery, crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 12, sub_cluster = "B cell")
 ```
+![](md_img/tm2_pbmc_vio_sub_082219.png]
 
 #### Attribution plot
 ```R
 plot_attr(crHS, stQuery, nrand=nqRand, sid="sample_name", dLevel="description")
 ```
+![](md_img/tm2_pbmc_attr_082219.png]
 
 #### Attribution plot with subcluster focus
 ```R
 plot_attr(sampTab = stQuery, classRes = crHS, sid = "sample_name", dLevel = "description", nrand = 50, sub_cluster = c("B cell", "T cell"))
 ```
+![](md_img/tm2_pbmc_attr_sub_082219.png]
+
+#### Heatmap top pairs genes for training sample average
+```R
+system.time(gpTab2 <- compareGenePairs(query_exp = expQueryOrth, training_exp = expTrainOrth, training_st = stTrain, classCol = "newAnn", sampleCol = "cell", RF_classifier = class_info2$cnProc$classifier, numPairs = 20, trainingOnly = FALSE))
+   user  system elapsed 
+ 84.130   0.677  84.826
+
+sgrp<-as.vector(stQuery$prefix)
+names(sgrp)<-rownames(stQuery)
+train2 <- findAvgLabel(gpTab2, stTrain = stTrain, dLevel = "newAnn")
+sgrp <- append(sgrp, train2)
+
+hm_gpa_sel(gpTab2, genes = class_info2$cnProc$xpairs, grps = sgrp, maxPerGrp = 5)
+```
+![](md_img/tm2_pbmc_tp_082219.png]
 
 #### UMAP by category
 ```R
 system.time(umPrep_HS<-prep_umap_class(crHS, stQuery, nrand=nqRand, dLevel="description", sid="sample_name", topPC=5))
-  user  system elapsed
- 26.905   1.014  27.993 
+  user  system elapsed 
+ 25.703   0.740  26.450 
 plot_umap(umPrep_HS)
 ```
+![](md_img/tm2_pbmc_umap_082219.png]
 
 ### How to integrate loom file to SCN
 ```R
