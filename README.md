@@ -107,11 +107,10 @@ expTrain = expTMraw[,rownames(stTrain)]
 ```
 
 #### Train the classifier (NEW)
-```
+```R
 system.time(class_info<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGenes = 10, nRand = 70, nTrees = 1000, nTopGenePairs = 25, dLevel = "newAnn", colName_samp = "cell", stratify = TRUE))
    user  system elapsed 
  223.344  15.451 239.364
-
 ```
 
 #### Apply to held out data (NEW)
@@ -126,14 +125,14 @@ classRes_val_all = scn_predict(class_info[['cnProc']], expTest, nrand = 50)
 ```
 
 #### Assess classifier
-```
+```R
 tm_heldoutassessment = assess_comm(ct_scores = classRes_val_all, stTrain = stTrain, stQuery = stTest, dLevelSID = "cell", classTrain = "newAnn", classQuery = "newAnn", nRand = 50)
 
 plot_PRs(tm_heldoutassessment)
 ```
 <img src="md_img/tm_heldout_pr_082219.png">
 
-```
+```R
 plot_metrics(tm_heldoutassessment)
 ```
 <img src="md_img/tm_heldout_metrics_082219.png">
@@ -213,7 +212,6 @@ dim(expQuery)
 
 stTM = utils_loadObject("sampTab_TM_053018.rda")
 expTMraw = utils_loadObject("expMatrix_TM_Raw_Oct_12_2018.rda") # reload training
-
 ```
 
 #### Load the ortholog table and convert human gene names to mouse ortholog names, and limit analysis to genes in common between the training and query data.
@@ -320,7 +318,7 @@ plot_metrics(tm_pbmc_assessment)
 <img src="md_img/tm2_pbmc_metrics_082219.png">
 
 #### Classification result heatmap
-```r
+```R
 sgrp = as.vector(stQuery$prefix)
 names(sgrp) = rownames(stQuery)
 grpRand = rep("rand", nqRand)
@@ -409,7 +407,6 @@ dim(expQuery)
 scefile = extractSCE(sce_object, exp_slot_name = "counts") 
 sampTab = scefile$sampTab
 expDat = scefile$expDat
-
 ```
 
 ### Integrate SCE object to SCN analysis
@@ -418,7 +415,6 @@ expDat = scefile$expDat
 seuratfile = extractSeurat(seurat_object, exp_slot_name = "counts")
 sampTab = seuratfile$sampTab
 expDat = seuratfile$expDat
-
 ```
 
 ### More training data for your own analysis
