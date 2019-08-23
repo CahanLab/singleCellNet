@@ -1,7 +1,7 @@
 # singleCellNet
 
 ### Introduction
-SingleCellNet enables the classifcation of single cell RNA-Seq data across species and platforms. See [BioRxiv](https://www.biorxiv.org/content/early/2018/12/31/508085) for details. 
+SingleCellNet enables the classifcation of single cell RNA-Seq data across species and platforms. See our recent [publication](https://doi.org/10.1016/j.cels.2019.06.004) for more details. Additionally, we have a [vignette](https://pcahan1.github.io/singleCellNet/) to guide you through the steps as well.  
 
 Here, we illustrate ... 
 
@@ -435,4 +435,4 @@ expDat = seuratfile$expDat
 |    Darmanis |    human   |    cortex   |     C1     | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Darminis.rda)|
 |    Gokce*   |    human   |   striatum  |C1 and Smart-Seq2| [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Gocke.rda)|
 
-* the expresion data is log-transformed.
+*the expresion data is log-transformed.
