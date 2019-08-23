@@ -130,7 +130,7 @@ tm_heldoutassessment = assess_comm(ct_scores = classRes_val_all, stTrain = stTra
 
 plot_PRs(tm_heldoutassessment)
 ```
-<img src="md_img/tm_heldout_pr_082219.png">
+<img src="md_img/tm_heldout_pr_082219.png"/>
 
 ```R
 plot_metrics(tm_heldoutassessment)
