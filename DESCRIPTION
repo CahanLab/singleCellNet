@@ -27,3 +27,4 @@ Imports:
     reshape2
 Remotes:
     thomasp85/patchwork
+RoxygenNote: 6.1.1

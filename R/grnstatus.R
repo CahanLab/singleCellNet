@@ -361,7 +361,7 @@ scn_score<-function
 #' 
 #' @return list of trainingScores, normVals, raw_scores, minVals, tVals=tVals
 #' @export
-scn_trainNorm<-function # 
+scn_trainGRN<-function # 
 (expTrain,
  stTrain,
  subNets,

@@ -2,31 +2,31 @@
 % Please edit documentation in R/tsp_rf.R
 \name{findClassyGenes}
 \alias{findClassyGenes}
-\title{find candidate classifier-worthy genes}
+\title{Find Classifier-Worthy Gene Candidates}
 \usage{
 findClassyGenes(expDat, sampTab, dLevel, topX = 25, dThresh = 0,
   alpha1 = 0.05, alpha2 = 0.001, mu = 2)
 }
 \arguments{
-\item{expDat}{expDat}
+\item{expDat}{a matrix of normalized expression data from \code{\link{trans_prop}}}
 
-\item{sampTab}{sampTab}
+\item{sampTab}{a dataframe of the sample table}
 
-\item{dLevel}{dLevel}
+\item{dLevel}{a string indicating the column name in sample table that contains the cancer category}
 
-\item{topX}{topX}
+\item{topX}{an integer indicating the number of top positive classification genes for each category to select for training. Will also select topX number of negative classification genes.}
 
-\item{dThresh}{dThresh}
+\item{dThresh}{a number representing the detection threshold}
 
-\item{alpha1}{alpha1}
+\item{alpha1}{a number representing proportion of cells in which a gene must be considered detected (as defined in geneStats)}
 
-\item{alpha2}{alpha2}
+\item{alpha2}{a number representing lower proportion of cells for genes that must have higher expression level}
 
-\item{mu}{mu}
+\item{mu}{a number represeting threshold for average expression level of genes passing the lower proportion criteria}
 }
 \value{
-list of cgenes and grps
+a list containing two lists: a list of classifier worthy genes named 'cgenes' and a list of cancer category named 'grps'
 }
 \description{
-find candidate classifier-worthy genes
+Find classifier-worthy genes for each cancer category to train the classifier
 }

@@ -4,8 +4,8 @@
 \alias{cn_barplot_grnSing_base}
 \title{barplot this specific GRN}
 \usage{
-cn_barplot_grnSing_base(qScores, ctrlScores, stQuery, dLevelQ, snName, ctrSamps,
-  bOrder, sidCol = "sample_id")
+cn_barplot_grnSing_base(qScores, ctrlScores, stQuery, dLevelQ, snName,
+  ctrSamps, bOrder, sidCol = "sample_id")
 }
 \arguments{
 \item{qScores}{queryScores}
