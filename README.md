@@ -101,7 +101,7 @@ expTMraw = expTMraw[commonGenes,]
 
 #### Split for training and assessment, and transform training data
 ```R
-stList = splitCommon(stTM, ncells=100, dLevel="newAnn")
+stList = splitCommon(sampTab=stTM, ncells=100, dLevel="newAnn")
 stTrain = stList[[1]]
 expTrain = expTMraw[,rownames(stTrain)]
 ```
@@ -116,12 +116,12 @@ system.time(class_info<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGe
 #### Apply to held out data (NEW)
 ```R
 #validate data
-stTestList = splitCommon(stList[[2]], ncells=100, dLevel="newAnn") 
+stTestList = splitCommon(sampTab=stList[[2]], ncells=100, dLevel="newAnn") 
 stTest = stTestList[[1]]
 expTest = expTMraw[commonGenes,rownames(stTest)]
 
 #predict
-classRes_val_all = scn_predict(class_info[['cnProc']], expTest, nrand = 50)
+classRes_val_all = scn_predict(cnProc=class_info[['cnProc']], expDat=expTest, nrand = 50)
 ```
 
 #### Assess classifier
@@ -145,13 +145,13 @@ slaRand = rep("rand", nrand)
 names(slaRand) = paste("rand_", 1:nrand, sep='')
 sla = append(sla, slaRand)
 
-sc_hmClass(classRes_val_all, sla, max=300, isBig=TRUE)
+sc_hmClass(classMat = classRes_val_all,grps = sla, max=300, isBig=TRUE)
 ```
 <img src="md_img/tm_heldout_hm_082219.png">
 
 #### Attribution plot
 ```R
-plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
+plot_attr(classRes=classRes_val_all, sampTab=stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```
 <img src="md_img/tm_heldout_attr_082219.png">
 
@@ -159,7 +159,7 @@ plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```R
 gpTab = compareGenePairs(query_exp = expTest, training_exp = expTrain, training_st = stTrain, classCol = "newAnn", sampleCol = "cell", RF_classifier = class_info$cnProc$classifier, numPairs = 20, trainingOnly= TRUE)
 
-train <- findAvgLabel(gpTab, stTrain = stTrain, dLevel = "newAnn")
+train = findAvgLabel(gpTab = gpTab, stTrain = stTrain, dLevel = "newAnn")
 
 hm_gpa_sel(gpTab, genes = class_info$cnProc$xpairs, grps = train, maxPerGrp = 50)
 ```
@@ -257,7 +257,7 @@ stTest = stTestList[[1]]
 expTest = expTMraw2[,rownames(stTest)]
 
 #predict
-system.time(classRes_val_all2 = scn_predict(class_info2[['cnProc']], expTest, nrand = 50))
+system.time(classRes_val_all2 <- scn_predict(class_info2[['cnProc']], expTest, nrand = 50))
    user  system elapsed 
   0.691   0.032   0.724 
 ```
@@ -369,10 +369,10 @@ system.time(gpTab2 <- compareGenePairs(query_exp = expQueryOrth, training_exp = 
    user  system elapsed 
  84.130   0.677  84.826
 
-sgrp<-as.vector(stQuery$prefix)
-names(sgrp)<-rownames(stQuery)
-train2 <- findAvgLabel(gpTab2, stTrain = stTrain, dLevel = "newAnn")
-sgrp <- append(sgrp, train2)
+sgrp = as.vector(stQuery$prefix)
+names(sgrp) = rownames(stQuery)
+train2 = findAvgLabel(gpTab2, stTrain = stTrain, dLevel = "newAnn")
+sgrp = append(sgrp, train2)
 
 hm_gpa_sel(gpTab2, genes = class_info2$cnProc$xpairs, grps = sgrp, maxPerGrp = 5)
 ```
