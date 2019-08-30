@@ -26,9 +26,8 @@ scn_train <- function(stTrain,
 		      nRand = 70, 
 		      nTrees = 1000,
           	      stratify=FALSE, 
-		      weightedDown_total = 1.5e3, 
- 	 	      weightedDown_dThresh = 0.25, 
-		      transprop_xFact = 1e4) {
+		      weightedDown_total = 1e4, 
+ 	 	      weightedDown_dThresh = 0.25 {
 
    if (class(stTrain) != "data.frame") {
       stTrain<-as.data.frame(stTrain)
@@ -40,7 +39,7 @@ scn_train <- function(stTrain,
 
    cat("Sample table has been prepared\n")
 
-   expTnorm<-trans_prop(weighted_down(expTrain, weightedDown_total, dThresh = weightedDown_dThresh), transprop_xFact)
+   expTnorm<-trans_prop(expTrain, weightedDown_total, dThresh = weightedDown_dThresh)
    cat("Expression data has been normalized\n")
 
    cat("Finding classification genes\n")
