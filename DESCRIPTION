@@ -3,7 +3,7 @@ Title: cell identity from single cell RNA-Seq data
 Version: 0.1.0
 Authors@R: c(person("Patrick", "Cahan", email = "patrick.cahan@gmail.com", role = c("aut", "cre")), person("Yuqi", "Tan", email="ytan19@jhmi.edu", role=c("aut")))
 Description: Determining cell identity from single cell RNA-Seq data
-Depends: R (>= 3.3.1), ggplot2
+Depends: R (>= 3.3.1), ggplot2, dplyr
 Requires: data.tree, ggplot2, pheatmap, RColorBrewer, randomForest, tidyr,
         DescTools, patchwork, viridis, Matrix, umap, parallel, cowplot, reshape2
 License: PRIVATE
