@@ -168,7 +168,7 @@ hm_gpa_sel(gpTab, genes = class_info$cnProc$xpairs, grps = train, maxPerGrp = 50
 #### Apply to Park et al query data
 ```R
 expPark = utils_loadObject("expMatrix_Park_MouseKidney_Oct_12_2018.rda")
-system.time(kidTransAll<-query_transform(expPark[cgenesA,], xpairs))
+system.time(kidTransAll<-query_transform(expPark[cgenesA,], class_info$cnProc$xpairs))
    user  system elapsed 
  23.536   1.721  25.338 
   

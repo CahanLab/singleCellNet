@@ -27,7 +27,7 @@ scn_train <- function(stTrain,
 		      nTrees = 1000,
           	      stratify=FALSE, 
 		      weightedDown_total = 1e4, 
- 	 	      weightedDown_dThresh = 0.25 {
+ 	 	      weightedDown_dThresh = 0.25) {
 
    if (class(stTrain) != "data.frame") {
       stTrain<-as.data.frame(stTrain)
