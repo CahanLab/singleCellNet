@@ -518,7 +518,7 @@ assess_comm <- function(ct_scores, #matrix of classification scores, rows = clas
   areas <- c()
   for(i in 1: length(unique(nonNA_PR$ctype))){
     tmp <- nonNA_PR[which(nonNA_PR$ctype %in% unique(nonNA_PR$ctype)[i]),]
-    area <- AUC(tmp$recall, tmp$precision, method = AUCmethod)
+    area <- DescTools::AUC(tmp$recall, tmp$precision, method = AUCmethod)
     areas <- c(areas,area[1])
     w <- c(w, sum(stVal_com[,classQuery] %in% unique(nonNA_PR$ctype)[i])/nrow(stVal_com))
   }
