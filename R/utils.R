@@ -403,7 +403,7 @@ trans_prop<-function
     props <- t(expDat) / cSums
     rrids  <- cSums - total
     tmpAns <- expDat - t(props * rrids)
-    tmpAns[which(tmpAns<dThresh)] <- 
+    tmpAns[which(tmpAns<dThresh)] <- 0
   }
   ans = log(1+tmpAns)
   ans
