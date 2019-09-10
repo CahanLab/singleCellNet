@@ -108,7 +108,7 @@ expTrain = expTMraw[,rownames(stTrain)]
 
 #### Train the classifier (NEW)
 ```R
-system.time(class_info<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGenes = 10, nRand = 70, nTrees = 1000, nTopGenePairs = 25, dLevel = "newAnn", colName_samp = "cell", stratify = TRUE))
+system.time(class_info<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGenes = 10, nRand = 70, nTrees = 1000, nTopGenePairs = 25, dLevel = "newAnn", colName_samp = "cell"))
    user  system elapsed 
  223.344  15.451 239.364
 ```
@@ -244,7 +244,7 @@ stList = splitCommon(stTM2, ncells=100, dLevel="newAnn")
 stTrain = stList[[1]]
 expTrain = expTMraw2[,rownames(stTrain)]
 
-system.time(class_info2<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGenes = 10, nRand = 70, nTrees = 1000, nTopGenePairs = 25, dLevel = "newAnn", colName_samp = "cell", stratify = TRUE))
+system.time(class_info2<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGenes = 10, nRand = 70, nTrees = 1000, nTopGenePairs = 25, dLevel = "newAnn", colName_samp = "cell"))
    user  system elapsed 
  41.029   6.747  47.963 
 ```
