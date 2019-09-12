@@ -1,5 +1,5 @@
 ---
-title: "`SingeleCellNet` vignette"
+title: "`SingleCellNet` Vignette"
 author:
 - name: Yuqi Tan
   affiliation: 
@@ -30,11 +30,11 @@ BiocStyle::markdown()
 
 # Introduction
 
-Traditionally, single cell annotation is based on the expression of cell type-specific markers, which obscures a quantitative assessment of the cell identity. Despite many attempts to address the issue, classification or cell annotation methods remain largely restricted in a platform-specific manner. Our computational tool, SingleCellNet (SCN), implements a Random Forest classifier to learn cell type-specific gene pairs from cross-platform and cross-species datasets and thus quantitatively assesses cell identity at a single-cell resolution. See the [BioRviv for more details](https://www.biorxiv.org/content/10.1101/508085v1). To cite our tool, our manuscript in press, stay tuned. 
+Traditionally, single cell annotation is based on the expression of cell type-specific markers, which obscures a quantitative assessment of the cell identity. Despite many attempts to address the issue, classification or cell annotation methods remain largely restricted in a platform-specific manner. Our computational tool, SingleCellNet (SCN), implements a Random Forest classifier to learn cell type-specific gene pairs from cross-platform and cross-species datasets and thus quantitatively assesses cell identity at a single-cell resolution. See the [our publication for more details](https://doi.org/10.1016/j.cels.2019.06.004).
 
 This vignette demonstrate 1) Training 2) Query 3) Visualiztion features of SCN. If you want to use bulk RNAseq data, please go to [bulk CellNet](https://github.com/pcahan1/CellNet).  
 
-# `SCN` input
+# SCN input
 
 ## Load data
 
@@ -78,7 +78,6 @@ In this vigenette, A subset of mouse Tabula Muris 10x data set [The Tabula Muris
 
 ```{r input,  message=FALSE}
 library(singleCellNet)
-library(dplyr)
 ```
 
 ```{r}
@@ -114,7 +113,7 @@ expQuery <- expQuery[commonGenes, ]
 
 ## Training the data
 
-We use the same number of cells per cell type, i.e. balanced data, to train Top-Pair Random Forest classifier. The remaining of the data or the held-out data will be used as validation data to evaluate the performance of the TP-RF classifier.
+We use the same number of cells per cell type, i.e. balanced data, to train Top-Pair Random Forest classifier. The remaining of the data or the held-out data will be used as validation data to evaluate the performance of the TP-RF classifier. Empirically we have found 50 cells to be a minimal cell number to create a classifier with good performance, however it may vary depend on the quality of your reference data, so it is really important to assess the performance of your classifier before proceeding to query your sample of interest.   
 
 ```{r, message = FALSE}
 stList<-splitCommon(sampTab = stTM, ncells = 50, dLevel = "newAnn")
@@ -134,7 +133,7 @@ Once we have the properly normalized and transformed training expression matirx 
 After the training data binarized using the top gene-pairs, we use it to built a multi-class Random Forest classifier with 1000 trees. We create 50 randomized single cell profile by randomly permutating the expression matrix within the training data. The addition category in the multi-class Random Forest classifier serves as a "Garagbe Collector" so that query cells whose true cell identity is not contained in the training data set will not be coerced into the most similar cell type within the training.
 
 ```{r}
-system.time(class_info<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGenes = 10, nRand = 70, nTrees = 1000, nTopGenePairs = 25, dLevel = "newAnn", colName_samp = "cell", stratify = TRUE))
+system.time(class_info<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGenes = 10, nRand = 70, nTrees = 1000, nTopGenePairs = 25, dLevel = "newAnn", colName_samp = "cell"))
 ```
 
 ## Assess the Top-pair Random Forest classifier with heldout data
@@ -153,7 +152,7 @@ plot_PRs(tm_heldoutassessment)
 
 ## Apply human PBMC 10x query data
 
-One of the kep features of TP-RF is that the classification step is robust to the normalization and transformation steps of the query data sets. One can even directly use raw data to query and still obtains accurate classification. Refer to [SCN manuscript](https://www.biorxiv.org/content/10.1101/508085v1) to see what combination of cell cycle regression may affect the classification result. 
+One of the kep features of TP-RF is that the classification step is robust to the normalization and transformation steps of the query data sets. One can even directly use raw data to query and still obtains accurate classification. Refer to [SCN manuscript](https://doi.org/10.1016/j.cels.2019.06.004) for more details on how cell cycle regression may affect your classification result. 
 
 In this example, we binarize the human PBMC 10x raw query data by template matching it with the topX gene-pair selected from the previous steps. Then we classify the human PBMC 10x query data with the TP-RF classifier which showed favorable performance in the previous step. We create another 50 randomized single cell RNA-seq profiles which serve as positive controls that should be mostly classified as Rand or unknown category in the TP-RF classifer.
 
@@ -161,7 +160,7 @@ In this example, we binarize the human PBMC 10x raw query data by template match
 system.time(crPBMC <- scn_predict(class_info[['cnProc']], expQueryOrth, nrand = 50))
 ```
 
-# Visualization
+# SCN Visualization
 
 There are three major ways to visualize the classification output or the classification matrix. The first one is to visualize the result with a classification heatmpa. We create a vector of the labels for each cell in the query data. Here since we know the true idenity of each single cell, we use that as label. Most cases where the true identity of the query is unknown, clustering assignment will be used instead.
 
