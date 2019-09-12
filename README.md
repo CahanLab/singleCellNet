@@ -274,6 +274,7 @@ plot_metrics(tm_heldoutassessment)
 
 #### Classification result heatmap
 ```R
+nrand=50
 sla = as.vector(stTest$newAnn)
 names(sla) = rownames(stTest)
 slaRand = rep("rand", nrand)
