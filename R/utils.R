@@ -48,12 +48,14 @@ splitCommon<-function(sampTab, ncells = 50, dLevel="cell_ontology_class"){
     stX<-sampTab[sampTab[,dLevel]==ct,]
 
      # Error catching mechanism if the ncells exceeds the smallest sample size
-    if(nrow(stX) < ncells) {
-      stop(paste0("Category ", ct, " has ", nrow(stX), " samples. Please pick a samller number for ncells. "))
-    }
     if(ncells <= 3) {
       stop(paste0("Category ", ct, " has ", nrow(stX), " samples. Please remove this category from training. "))
     }
+
+    if(nrow(stX) < ncells) {
+      cat(paste0("Category ", ct, " has ", nrow(stX), " samples. Note this category has a samller number than ncells. "))
+    }
+
 
     ccount<-nrow(stX)-3
     ccount<-min(ccount, ncells)
