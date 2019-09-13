@@ -27,13 +27,34 @@ ctRename<-function(sampTab, annCol, oldName, newName){
   cbind(ans, newAnn=newann)
 } 
 
+#' @title
+#' Split Sample Table
+#'
+#' @description
+#' Split the sample table into training and validation through random sampling.
+#'
+#' @param sampTab sample table
+#' @param ncells number of samples for training in each category. If left empty, will automatically select half of the number of samples in the smallest category.
+#' @param dLevel the column name with the classification categories.
+#' @return a list containing training sample table and validation sample table
+#'
 #' @export
-splitCommon<-function(sampTab, ncells, dLevel="cell_ontology_class"){
+splitCommon<-function(sampTab, ncells = 50, dLevel="cell_ontology_class"){
+  
   cts<-unique(as.vector(sampTab[,dLevel]))
   trainingids<-vector()
   for(ct in cts){
     cat(ct,": ")
     stX<-sampTab[sampTab[,dLevel]==ct,]
+
+     # Error catching mechanism if the ncells exceeds the smallest sample size
+    if(nrow(stX) < ncells) {
+      stop(paste0("Category ", ct, " has ", nrow(stX), " samples. Please pick a samller number for ncells. "))
+    }
+    if(ncells <= 3) {
+      stop(paste0("Category ", ct, " has ", nrow(stX), " samples. Please remove this category from training. "))
+    }
+
     ccount<-nrow(stX)-3
     ccount<-min(ccount, ncells)
     cat(nrow(stX),"\n")
