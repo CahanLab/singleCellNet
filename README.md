@@ -139,12 +139,15 @@ plot_metrics(tm_heldoutassessment)
 
 #### Classification result heatmap
 ```R
+
+#create a name vector label used later in classification heatmap where the values are cell types/ clusters and names are the sample names
+ 
 nrand = 50
 sla = as.vector(stTest$newAnn)
-names(sla) = rownames(stTest)
-slaRand = rep("rand", nrand)
+names(sla) = as.vector(stTest$cell)
+slaRand = rep("rand", nrand) 
 names(slaRand) = paste("rand_", 1:nrand, sep='')
-sla = append(sla, slaRand)
+sla = append(sla, slaRand) #include in the random cells profile created
 
 sc_hmClass(classMat = classRes_val_all,grps = sla, max=300, isBig=TRUE)
 ```
@@ -176,7 +179,7 @@ system.time(crParkall<-scn_predict(class_info[['cnProc']], expPark, nrand=nqRand
  89.633   5.010  95.041 
 
 sgrp = as.vector(stPark$description1)
-names(sgrp) = rownames(stPark)
+names(sgrp) = as.vector(stPark$sample_name)
 grpRand =rep("rand", nqRand)
 names(grpRand) = paste("rand_", 1:nqRand, sep='')
 sgrp = append(sgrp, grpRand)
@@ -277,7 +280,7 @@ plot_metrics(tm_heldoutassessment)
 ```R
 nrand=50
 sla = as.vector(stTest$newAnn)
-names(sla) = rownames(stTest)
+names(sla) = as.vector(stTest$cell)
 slaRand = rep("rand", nrand)
 names(slaRand) = paste("rand_", 1:nrand, sep='')
 sla = append(sla, slaRand)
@@ -319,7 +322,7 @@ plot_metrics(tm_pbmc_assessment)
 #### Classification result heatmap
 ```R
 sgrp = as.vector(stQuery$prefix)
-names(sgrp) = rownames(stQuery)
+names(sgrp) = as.vector(stQuery$sample_name)
 grpRand = rep("rand", nqRand)
 names(grpRand) = paste("rand_", 1:nqRand, sep='')
 sgrp = append(sgrp, grpRand)
