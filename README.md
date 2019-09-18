@@ -106,17 +106,17 @@ stTrain = stList[[1]]
 expTrain = expTMraw[,rownames(stTrain)]
 ```
 
-#### Train the classifier (NEW)
+#### Train the classifier
 ```R
 system.time(class_info<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGenes = 10, nRand = 70, nTrees = 1000, nTopGenePairs = 25, dLevel = "newAnn", colName_samp = "cell"))
    user  system elapsed 
  223.344  15.451 239.364
 ```
 
-#### Apply to held out data (NEW)
+#### Apply to held out data
 ```R
 #validate data
-stTestList = splitCommon(sampTab=stList[[2]], ncells=100, dLevel="newAnn") 
+stTestList = splitCommon(sampTab=stList[[2]], ncells=100, dLevel="newAnn") #normalize validation data so that the assessment is as fair as possible
 stTest = stTestList[[1]]
 expTest = expTMraw[commonGenes,rownames(stTest)]
 
