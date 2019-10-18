@@ -468,28 +468,35 @@ hm_gpa_sel(gpTab, genes = class_info$cnProc$xpairs, grps = sgrp, maxPerGrp = 5)<
 <div id="Main function docs" class="section level1">
 <h1><span class="header-section-number">6</span> Main function docs </h1>
 <h2> Main functions </h2>
-<pre> 
+<pre>
+
 - Data preparation 
     - `splitCommon()` -- split sample table into training and validation through random sampling
+
 - Classifier 
     - `scn_train()` -- train random forest classifier using top gene pairs
     - `scn_predict()` -- predict class for input data
+
 - Assessment
     - `assess_comm()` -- summarize data for precision recall curve (plot_PRs()) and Cohen's kappa (plot_metrics())
     - `sc_hmClass()` -- heatmap showing classification scores for each input cluster
     - `plot_attr()` -- barplot showing fraction of each input cluster that is classified into a category
     - `hm_gpa_sel()` -- heatmap showing average expression for top gene pairs
     - `sc_violinClass()` -- violin plot showing distribution of classification scores for each input cluster
+
 </pre>
 
 <h2> Main objects </h2>
 <pre> 
+
 - Training data
     	- `stTM` -- sample table for Tabula Muris containing cell metadata
     	- `expTM` -- raw counts matrix for Tabula Muris
+
 - Query data
     - `stPark` -- sample table for Park et al 2018 containing mouse kidney cells
     - `expPark` -- raw counts for Park et al 2018
+
 - Training
     - Train
         - `stList` -- list containing cells for training and assessment
@@ -502,8 +509,10 @@ hm_gpa_sel(gpTab, genes = class_info$cnProc$xpairs, grps = sgrp, maxPerGrp = 5)<
         - `expTest` -- assessment cells counts
         - `classRes_validation` -- matrix of classification results for assessment cells
        - `tm_heldoutassessment` -- summary data for Tabula Muris assessment
- - Predicting query
+
+- Predicting query
     - `classRes_Park` -- matrix of classification results for Park et al 2018
+
 </pre>    
 </div>
 
