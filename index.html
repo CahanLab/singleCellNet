@@ -468,41 +468,43 @@ hm_gpa_sel(gpTab, genes = class_info$cnProc$xpairs, grps = sgrp, maxPerGrp = 5)<
 <div id="Main function docs" class="section level1">
 <h1><span class="header-section-number">6</span> Main function docs </h1>
 <h2> Main functions </h2>
-<p> - Data preparation <br>
-    - `splitCommon()` -- split sample table into training and validation through random sampling <br>
-- Classifier <br>
-    - `scn_train()` -- train random forest classifier using top gene pairs <br>
-    - `scn_predict()` -- predict class for input data <br>
-- Assessment <br>
-    - `assess_comm()` -- summarize data for precision recall curve (plot_PRs()) and Cohen's kappa (plot_metrics()) <br>
-    - `sc_hmClass()` -- heatmap showing classification scores for each input cluster <br>
-    - `plot_attr()` -- barplot showing fraction of each input cluster that is classified into a category <br>
-    - `hm_gpa_sel()` -- heatmap showing average expression for top gene pairs <br>
+<pre> 
+- Data preparation 
+    - `splitCommon()` -- split sample table into training and validation through random sampling
+- Classifier 
+    - `scn_train()` -- train random forest classifier using top gene pairs
+    - `scn_predict()` -- predict class for input data
+- Assessment
+    - `assess_comm()` -- summarize data for precision recall curve (plot_PRs()) and Cohen's kappa (plot_metrics())
+    - `sc_hmClass()` -- heatmap showing classification scores for each input cluster
+    - `plot_attr()` -- barplot showing fraction of each input cluster that is classified into a category
+    - `hm_gpa_sel()` -- heatmap showing average expression for top gene pairs
     - `sc_violinClass()` -- violin plot showing distribution of classification scores for each input cluster
-</p>
+</pre>
 
 <h2> Main objects </h2>
-<p> - Training data <br>
-    	- `stTM` -- sample table for Tabula Muris containing cell metadata <br>
-    	- `expTM` -- raw counts matrix for Tabula Muris <br>
-- Query data <br>
-    - `stPark` -- sample table for Park et al 2018 containing mouse kidney cells <br>
-    - `expPark` -- raw counts for Park et al 2018 <br>
-- Training <br>
-    - Train <br>
-        - `stList` -- list containing cells for training and assessment <br>
-        - `stTrain` -- training cells metadata <br>
-        - `expTrain` -- training cells counts <br>
-        - `class_info` -- random forest classifier <br>
-    - Assess <br>
-        - `stTestList` -- list containing cells for assessment and un-assessed cells <br>
-        - `stTest` -- assessment cells metadata <br>
-        - `expTest` -- assessment cells counts <br>
-        - `classRes_validation` -- matrix of classification results for assessment cells <br>
-       - `tm_heldoutassessment` -- summary data for Tabula Muris assessment <br>
- - Predicting query <br>
-    - `classRes_Park` -- matrix of classification results for Park et al 2018 <br>
-</p>    
+<pre> 
+- Training data
+    	- `stTM` -- sample table for Tabula Muris containing cell metadata
+    	- `expTM` -- raw counts matrix for Tabula Muris
+- Query data
+    - `stPark` -- sample table for Park et al 2018 containing mouse kidney cells
+    - `expPark` -- raw counts for Park et al 2018
+- Training
+    - Train
+        - `stList` -- list containing cells for training and assessment
+        - `stTrain` -- training cells metadata
+        - `expTrain` -- training cells counts
+        - `class_info` -- random forest classifier
+    - Assess
+        - `stTestList` -- list containing cells for assessment and un-assessed cells
+        - `stTest` -- assessment cells metadata
+        - `expTest` -- assessment cells counts
+        - `classRes_validation` -- matrix of classification results for assessment cells
+       - `tm_heldoutassessment` -- summary data for Tabula Muris assessment
+ - Predicting query
+    - `classRes_Park` -- matrix of classification results for Park et al 2018
+</pre>    
 </div>
 
 <div id="session-information" class="section level1">
