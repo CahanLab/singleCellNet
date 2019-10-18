@@ -465,9 +465,10 @@ hm_gpa_sel(gpTab, genes = class_info$cnProc$xpairs, grps = sgrp, maxPerGrp = 5)<
 </div>
 </div>
 
-<div id="session-information" class="section level1">
-<h1><span class="header-section-number">6</span> Main function documentation </h1>
+<div id="Main function docs" class="section level1">
+<h1><span class="header-section-number">6</span> Main function docs </h1>
 <h2> Main functions </h2>
+<pre class="r"><code>
 - Data preparation
     - `splitCommon()` -- split sample table into training and validation through random sampling
 - Classifier
@@ -479,8 +480,10 @@ hm_gpa_sel(gpTab, genes = class_info$cnProc$xpairs, grps = sgrp, maxPerGrp = 5)<
     - `plot_attr()` -- barplot showing fraction of each input cluster that is classified into a category
     - `hm_gpa_sel()` -- heatmap showing average expression for top gene pairs
     - `sc_violinClass()` -- violin plot showing distribution of classification scores for each input cluster
-    
+</code></pre>
+
 <h2> Main objects </h2>
+<pre class="r"><code>
 - Training data
     - `stTM` -- sample table for Tabula Muris containing cell metadata
     - `expTM` -- raw counts matrix for Tabula Muris
@@ -501,6 +504,7 @@ hm_gpa_sel(gpTab, genes = class_info$cnProc$xpairs, grps = sgrp, maxPerGrp = 5)<
         - `tm_heldoutassessment` -- summary data for Tabula Muris assessment
 - Predicting query
     - `classRes_Park` -- matrix of classification results for Park et al 2018
+</code></pre>    
 </div>
 
 <div id="session-information" class="section level1">
