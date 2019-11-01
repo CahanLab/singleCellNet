@@ -191,8 +191,8 @@ sc_hmClass(crParkall, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 
 #### Classification annotation assignment
 ```R
-#this assign cell with the cell type that has a classification score higher than 0.5 or the highest classification score
-#this result is in the category column
+# This classifies a cell with the category that has a classification score higher than 0.5 or the catgory with the highest classification score. 
+# The annotation result can be found in a column named category in the query sample table.
 
 stPark <- assign_cate(crParkall[,1:nrow(stPark)], stPark, cThresh = 0.5)
 ```
