@@ -411,6 +411,10 @@ plot_PRs(tm_heldoutassessment)</code></pre>
 #&gt; All Done
 #&gt;    user  system elapsed 
 #&gt;   0.122   0.006   0.128</code></pre>
+
+<p>This classifies a cell with the category that has a classification score higher than 0.5 or the catgory with the highest classification score. The annotation result can be found in a column named category in the query sample table. </p>
+<pre class="r"><code> stQuery &lt;- assign_cate(classRes = crPBMC, sampTab = stQuery, cThresh = 0.5) </code></pre>  
+
 </div>
 </div>
 <div id="scn-visualization" class="section level1">
@@ -476,6 +480,7 @@ hm_gpa_sel(gpTab, genes = class_info$cnProc$xpairs, grps = sgrp, maxPerGrp = 5)<
 - Classifier 
     - `scn_train()` -- train random forest classifier using top gene pairs
     - `scn_predict()` -- predict class for input data
+    - `assign_cate()` -- assign cell annotation based on highest classification score
 
 - Assessment
     - `assess_comm()` -- summarize data for precision recall curve (plot_PRs()) and Cohen's kappa (plot_metrics())
