@@ -103,7 +103,7 @@ expTMraw = expTMraw[commonGenes,]
 ```R
 stList = splitCommon(sampTab=stTM, ncells=100, dLevel="newAnn")
 stTrain = stList[[1]]
-expTrain = expTMraw[,rownames(stTrain)]
+expTrain = expTMraw[,rownames(stTrain)]`
 ```
 
 #### Train the classifier
@@ -188,6 +188,14 @@ sgrp = append(sgrp, grpRand)
 sc_hmClass(crParkall, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 ```
 <img src="md_img/tm_park_hm_082219.png">
+
+#### Classification annotation assignment
+```R
+#this assign cell with the cell type that has a classification score higher than 0.5 or the highest classification score
+#this result is in the category column
+
+stPark <- assign_cate(crParkall[,1:nrow(stPark)], stPark, cThresh = 0.5)
+```
 
 #### Classification result violin plot
 ```R
