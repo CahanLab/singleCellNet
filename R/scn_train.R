@@ -46,9 +46,14 @@ scn_train <- function(stTrain,
    system.time(cgenes<-findClassyGenes(expDat = expTnorm, sampTab = stTrain, dLevel = dLevel, topX = nTopGenes))
 
    cgenesA<-cgenes[['cgenes']]
-   grps<-cgenes[['grps']]
-  
    cat("There are ", length(cgenesA), " classification genes\n")
+
+   grps<-cgenes[['grps']]
+
+   #catch errors when there is NA or emtpy string in cluster/cell type label
+   if(sum(grps == "")>1 | sum(is.na(outs$cgenes$grps))>1){
+    stop("There is NA or empty string in your dLevel. Please remove them before proceeding.")
+   }
    
    cat("Finding top pairs\n")
 
