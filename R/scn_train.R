@@ -50,8 +50,8 @@ scn_train <- function(stTrain,
 
    grps<-cgenes[['grps']]
 
-   #catch errors when there is NA or emtpy string in cluster/cell type label
-   if(sum(grps == "")>1 | sum(is.na(grps))>1){
+   #catch errors when there is NA or emtpy string in cluster or cell type label
+   if(sum(grps == "") >1 | sum(is.na(grps)) >1 ){
     stop("There is NA or empty string in your dLevel. Please remove them before proceeding.")
    }
    
