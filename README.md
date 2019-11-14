@@ -140,7 +140,7 @@ plot_metrics(tm_heldoutassessment)
 #### Classification result heatmap
 ```R
 
-#create a name vector label used later in classification heatmap where the values are cell types/ clusters and names are the sample names
+#Create a name vector label used later in classification heatmap where the values are cell types/ clusters and names are the sample names
  
 nrand = 50
 sla = as.vector(stTest$newAnn)
