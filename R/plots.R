@@ -1085,7 +1085,8 @@ sc_hmClass<-function(
   cRow=FALSE,
   cCol=FALSE,
   fontsize_row=4,
-  scale=FALSE
+  scale=FALSE,
+  label_reorder = TRUE
 ){
  
   cools<-colorRampPalette(c("black", "limegreen", "yellow"))( 100 )
@@ -1095,9 +1096,15 @@ sc_hmClass<-function(
   }
 
 
-  grps<-grps[order(grps)]
-  cells<-names(grps)
-  groupNames<-sort(unique(grps))
+  if(label_reorder){
+    grps <- grps[order(grps)]
+    cells <- names(grps)
+    groupNames <- sort(unique(grps))
+  }else{
+    cells <- names(grps)
+    groupNames <- unique(grps)
+  }
+  
 
   cells2<-vector()
   for(groupName in groupNames){
