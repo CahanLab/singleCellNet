@@ -124,10 +124,17 @@ addToST<-function(sampTab, nrand, sid="sample_name", dLevels=c("description1")){
 
 
 #' @export
-assign_cate<-function(classRes, sampTab, cThresh=0){
-  topCats<-rownames(classRes)[apply(classRes, 2, which.max)]
-  sampTab<-cbind(sampTab, category=topCats)
-  sampTab
+assign_cate <- function (classRes, cThresh = 0) 
+{
+  topCats <- rownames(classRes)[apply(classRes, 2, which.max)]
+  names(topCats) = colnames(classRes)
+  
+  #Filter based on classification score or cThresh
+  topCatsRes <- classRes[apply(classRes, 2, which.max)]
+  names(topCatsRes) <- colnames(classRes)
+  topCats[topCatsRes<=cThresh] = "unknown"
+  topCats[which(topCats=="rand")] = "unknown"
+  return(topCats) #return a names vector
 }
 
 #' @export
