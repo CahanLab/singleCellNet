@@ -194,7 +194,7 @@ sc_hmClass(crParkall, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 # This classifies a cell with the category that has a classification score higher than 0.5 or the catgory with the highest classification score. 
 # The annotation result can be found in a column named category in the query sample table.
 
-stPark$category <- assign_cate(crParkall[,1:nrow(stPark)], stPark)
+stPark$category <- assign_cate(classRes = crParkall[,1:nrow(stPark)], cThresh = 0)
 ```
 
 #### Classification result violin plot
