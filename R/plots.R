@@ -143,7 +143,7 @@ plot_attr<-function(classRes, sampTab, nrand, dLevel, sid="sample_name", sub_clu
     stTmp<-addToST(sampTab, nrand=nrand, sid=sid, dLevels=dLevel)} else{
       stTmp = sampTab
     }
-  stTmp<-assign_cate(classRes, stTmp)
+  stTmp$category <- as.vector(assign_cate(classRes))
   colnames(stTmp)[which(colnames(stTmp) == dLevel)]="group"
   getPalette = colorRampPalette(brewer.pal(12, "Paired"))
   myPal = getPalette(length(unique(stTmp$category)))
