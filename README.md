@@ -199,7 +199,7 @@ stPark <- get_cate(classRes = crParkall, sampTab = stPark, dLevel = "description
 
 #### Classification result violin plot
 ```R
-sc_violinClass(sampTab = stPark, classRes = crParkall, cellIDCol = "sample_name", dLevel = "description1", addRand = nrand)
+sc_violinClass(sampTab = stPark, classRes = crParkall, sid = "sample_name", dLevel = "description1", addRand = nrand)
 ```
 <img src="md_img/tm_park_vio_082219.png">
 
@@ -343,21 +343,21 @@ Note that the macrophage category seems to be promiscuous in the mouse held out 
 
 #### Classification violin plot
 ```R
-sc_violinClass(sampTab = stQuery, classRes = crHS, cellIDCol = "sample_name", dLevel = "description")
+sc_violinClass(sampTab = stQuery, classRes = crHS, sid = "sample_name", dLevel = "description")
 ```
 <img src="md_img/tm2_pbmc_vio_082219.png">
 
 #### Classification violin plot with adjusted width
 
 ```R
-sc_violinClass(sampTab = stQuery,classRes = crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 12)
+sc_violinClass(sampTab = stQuery,classRes = crHS, sid = "sample_name", dLevel = "description", ncol = 12)
 ```
 <img src="md_img/tm2_pbmc_vio_adjW_082219.png">
 
 #### Classification violin plot with selected cluster
 
 ```R
-sc_violinClass(stQuery, crHS, cellIDCol = "sample_name", dLevel = "description", ncol = 12, sub_cluster = "B cell")
+sc_violinClass(stQuery, crHS, sid = "sample_name", dLevel = "description", ncol = 12, sub_cluster = "B cell")
 ```
 <img src="md_img/tm2_pbmc_vio_sub_082219.png">
 

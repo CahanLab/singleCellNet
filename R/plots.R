@@ -6,14 +6,14 @@
 sc_violinClass<-function
 (sampTab,
  classRes,
- cellIDCol = "cell_name",
+ sid = "cell_name",
  dLevel="cluster",
  addRand=0,
  threshold=0.20, 
  ncol =1,
  sub_cluster = NA){
 
-  rownames(sampTab) = sampTab[,cellIDCol]
+  rownames(sampTab) = sampTab[,sid]
   sids <- rownames(sampTab)
   colnames(sampTab)[which(colnames(sampTab) == dLevel)] = "cluster"
   dLevel = "cluster"
@@ -23,7 +23,7 @@ sc_violinClass<-function
   maxX <-apply(classRes, 1, max)
   meaVar <-names(which(maxX>threshold))
 
-  test <- melt(stQ2, id.vars = c(cellIDCol, dLevel), measure.vars =  meaVar)
+  test <- melt(stQ2, id.vars = c(sid, dLevel), measure.vars =  meaVar)
 
   cnames <- colnames(test)
   cnames[which(cnames=='value')] <- "classification_score"
