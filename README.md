@@ -34,7 +34,7 @@ library(devtools)
 install_github("thomasp85/patchwork")
 install_github("pcahan1/singleCellNet")
 library(singleCellNet)
-library(dplyr)
+library(patchwork)
 ```
 #### Optional set up if you are working with loom files
 ```
@@ -103,7 +103,7 @@ expTMraw = expTMraw[commonGenes,]
 ```R
 stList = splitCommon(sampTab=stTM, ncells=100, dLevel="newAnn")
 stTrain = stList[[1]]
-expTrain = expTMraw[,rownames(stTrain)]`
+expTrain = expTMraw[,rownames(stTrain)]
 ```
 
 #### Train the classifier
@@ -194,7 +194,7 @@ sc_hmClass(crParkall, sgrp, max=5000, isBig=TRUE, cCol=F, font=8)
 # This classifies a cell with the category that has a classification score higher than 0.5 or the catgory with the highest classification score. 
 # The annotation result can be found in a column named category in the query sample table.
 
-stPark$category <- assign_cate(classRes = crParkall[,1:nrow(stPark)], cThresh = 0)
+stPark <- get_cate(classRes = crParkall, sampTab = stPark, dLevel = "description1", sid = "sample_name", nrand = nqRand)
 ```
 
 #### Classification result violin plot

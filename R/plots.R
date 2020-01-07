@@ -124,36 +124,58 @@ addToST<-function(sampTab, nrand, sid="sample_name", dLevels=c("description1")){
 
 
 #' @export
-assign_cate <- function (classRes, cThresh = 0) 
+assign_cate <- function (classRes, sampTab, cThresh = 0) 
 {
   topCats <- rownames(classRes)[apply(classRes, 2, which.max)]
-  names(topCats) = colnames(classRes)
-  
-  #Filter based on classification score or cThresh
-  topCatsRes <- classRes[apply(classRes, 2, which.max)]
-  names(topCatsRes) <- colnames(classRes)
-  topCats[topCatsRes<=cThresh] = "unknown"
-  topCats[which(topCats=="rand")] = "unknown"
-  return(topCats) #return a names vector
+  sampTab <- cbind(sampTab, category = topCats)
+  sampTab
 }
 
 #' @export
-plot_attr<-function(classRes, sampTab, nrand, dLevel, sid="sample_name", sub_cluster = NA){
-  if(nrand>0){
-    stTmp<-addToST(sampTab, nrand=nrand, sid=sid, dLevels=dLevel)} else{
-      stTmp = sampTab
-    }
-  stTmp$category <- as.vector(assign_cate(classRes))
-  colnames(stTmp)[which(colnames(stTmp) == dLevel)]="group"
+get_cate <- function (classRes, sampTab, dLevel, sid, nrand) 
+{
+  stTmp <- addToST(sampTab, nrand = nrand, sid = sid, dLevels = dLevel)
+  stTmp <- assign_cate(classRes, stTmp)
+  colnames(stTmp)[2] <- "group"
+  
+  topCats <- rownames(classRes)[apply(classRes, 2, which.max)]
+
+  sampTab <- cbind(sampTab, category = topCats[1:nrow(sampTab)])
+  
+  return(sampTab)
+}
+
+
+#' @export
+plot_attr <- function (classRes, sampTab, nrand, dLevel, sid = "sample_name", sub_cluster = NA) 
+{
+  if (nrand > 0) {
+    stTmp <- addToST(sampTab, nrand = nrand, sid = sid, dLevels = dLevel)
+  }
+  else {
+    stTmp = sampTab
+  }
+  
+  stTmp <- addToST(sampTab, nrand = nrand, sid = sid, dLevels = dLevel)
+  stTmp <- assign_cate(classRes, stTmp)
+  colnames(stTmp)[2] <- "group"
   getPalette = colorRampPalette(brewer.pal(12, "Paired"))
   myPal = getPalette(length(unique(stTmp$category)))
-  p1 = ggplot(stTmp, aes(x=group, fill=category)) +  geom_bar(position = "fill", width=.6) + scale_y_continuous(labels = scales::percent) + scale_fill_manual(values=myPal) +  theme_bw() + coord_flip()
-if(all(is.na(sub_cluster))){
-  p1
-}else{
-  ggplot(stTmp[which(stTmp$group %in% sub_cluster),], aes(x = group, fill = category)) + geom_bar(position = "fill", width = 0.6) + scale_y_continuous(labels = scales::percent) + 
-    scale_fill_manual(values = myPal) + theme_bw()+ theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
-}}
+  p1 = ggplot(stTmp, aes(x = group, fill = category)) + geom_bar(position = "fill", 
+                                                                 width = 0.6) + scale_y_continuous(labels = scales::percent) + 
+    scale_fill_manual(values = myPal) + theme_bw() + coord_flip()
+  if (all(is.na(sub_cluster))) {
+    p1
+  }
+  else {
+    ggplot(stTmp[which(stTmp$group %in% sub_cluster), ], 
+           aes(x = group, fill = category)) + geom_bar(position = "fill", 
+                                                       width = 0.6) + scale_y_continuous(labels = scales::percent) + 
+      scale_fill_manual(values = myPal) + theme_bw() + 
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                       hjust = 1))
+  }
+}
 
 
 #' @export
