@@ -294,13 +294,13 @@ names(slaRand) = paste("rand_", 1:nrand, sep='')
 sla = append(sla, slaRand)
 
 # heatmap classification result
-sc_hmClass(classRes_val_all, sla, max=300, font=7, isBig=TRUE)
+sc_hmClass(classRes_val_all2, sla, max=300, font=7, isBig=TRUE)
 ```
 <img src="md_img/tm2_heldout_hm_082219.png">
 
 #### Attribute plot
 ```R
-plot_attr(classRes_val_all, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
+plot_attr(classRes_val_all2, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```
 <img src="md_img/tm2_heldout_attr_082219.png">
 
