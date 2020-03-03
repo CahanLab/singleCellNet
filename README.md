@@ -30,11 +30,8 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 #### Setup
 ```R
 install.packages("devtools")
-library(devtools)
-install_github("thomasp85/patchwork")
-install_github("pcahan1/singleCellNet")
+devtools::install_github("pcahan1/singleCellNet")
 library(singleCellNet)
-library(patchwork)
 ```
 #### Optional set up if you are working with loom files
 ```
