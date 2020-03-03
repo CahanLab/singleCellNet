@@ -1113,7 +1113,7 @@ sc_hmClass<-function(
   maxPerGrp=100,
   cRow=FALSE,
   cCol=FALSE,
-  fontsize_row=4,
+  fontsize_row=8,
   scale=FALSE,
   label_reorder = TRUE
 ){
