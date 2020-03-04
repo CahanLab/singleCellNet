@@ -134,7 +134,11 @@ assign_cate <- function (classRes, sampTab, cThresh = 0)
 #' @export
 get_cate <- function (classRes, sampTab, dLevel, sid, nrand) 
 {
-  stTmp <- addToST(sampTab, nrand = nrand, sid = sid, dLevels = dLevel)
+  if(nrand == 0){
+    stTmp = sampTab[,c(sid, dLevel)]
+  }else{
+    stTmp <- addToST(sampTab, nrand = nrand, sid = sid, dLevels = dLevel)
+  }
   stTmp <- assign_cate(classRes, stTmp)
   colnames(stTmp)[2] <- "group"
   
