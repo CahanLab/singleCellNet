@@ -665,10 +665,13 @@ plot_metrics <- function(assessed){
  rownames(metric) <- "value"
  metric[,1:2] <- c(assessed$kappa,assessed$AUPRC_w)
 
- df = melt(as.data.frame(metric))
-
- ggplot(df, aes(x=Var2, y = value, fill = Var2)) + geom_bar(stat="identity") +xlab("") + ylab("") + ylim(0,1) + scale_fill_brewer(palette="Set2") +
-  theme(axis.text=element_text(size=8), axis.title=element_text(size=8))  + theme_bw()+ theme(legend.position="none")
+ df = as.data.frame(t(metric))
+ df$eval = rownames(df)
+ 
+ ggplot(df, aes(x = eval, y = value, fill = eval)) + geom_bar(stat = "identity") + 
+  xlab("") + ylab("") + ylim(0, 1) + scale_fill_brewer(palette = "Set2") + 
+  theme(axis.text = element_text(size = 8), axis.title = element_text(size = 8)) + 
+  theme_bw() + theme(legend.position = "none")
 
 
 }
