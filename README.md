@@ -434,9 +434,9 @@ expDat = seuratfile$expDat
 |  Segerstolp |    human   |   pancreas  | Smart-Seq  | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Segerstolpe.rda)|
 |    Park     |    human   |    kidney   |     10x    | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Park.rda)|
 |    Haber    |    mouse   |   intestine | Smart-Seq2 | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Haber.rda)|
-|    TM10x    |    mouse   |   subset    |     10x    | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_tm10x.rda)|
+|    TM10x    |    mouse   | atlas subset|     10x    | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_tm10x.rda)|
 |    TM10x    |    mouse   |    atlas    |     10x    | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_tm10x_full.rda)|
-|    TMfacs   |    mouse   |   subset    |  Smart-Seq |[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_tmfacs.rda)|
+|    TMfacs   |    mouse   | atlas subset|  Smart-Seq |[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_tmfacs.rda)|
 |    TMfacs   |    mouse   |    atlas    |  Smart-Seq |[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_tmfacs_full.rda)|
 |    MWS      |    mouse   |    atlas    |microwell-seq|[data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_MWS.rda)|
 |    Zeisel   |    mouse   | barin altas |     10x    | [data](https://s3.amazonaws.com/cnobjects/singleCellNet/resources/stList_Zeisel.rda)|
