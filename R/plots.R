@@ -134,6 +134,9 @@ assign_cate <- function (classRes, sampTab, cThresh = 0)
 #' @export
 get_cate <- function (classRes, sampTab, dLevel, sid, nrand, cThresh=0) 
 {
+  if(is.data.frame(classRes)){
+    classRes = as.matrix(classRes)
+  }
   if(nrand == 0){
     stTmp = sampTab[,c(sid, dLevel)]
   }else{
