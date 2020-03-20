@@ -132,20 +132,34 @@ assign_cate <- function (classRes, sampTab, cThresh = 0)
 }
 
 #' @export
-get_cate <- function (classRes, sampTab, dLevel, sid, nrand) 
+get_cate <- function (classRes, sampTab, dLevel, sid, nrand, cThresh=0) 
 {
   if(nrand == 0){
     stTmp = sampTab[,c(sid, dLevel)]
   }else{
     stTmp <- addToST(sampTab, nrand = nrand, sid = sid, dLevels = dLevel)
   }
-  stTmp <- assign_cate(classRes, stTmp)
+  #stTmp <- assign_cate(classRes, stTmp)
   colnames(stTmp)[2] <- "group"
   
-  topCats <- rownames(classRes)[apply(classRes, 2, which.max)]
+  topCat_score=c()
+  topCats = c()
 
-  sampTab <- cbind(sampTab, category = topCats[1:nrow(sampTab)])
+  for(i in 1:ncol(classRes)){
+    tmp =  max(classRes[,i])
+    topCat_score=c(topCat_score, tmp)
+    if(tmp < cThresh){
+      tmp2 = "rand"
+      topCats = c(topCats, tmp2)
+    }else{
+      tmp2 = names(classRes[,i][classRes[,i] == tmp])[1]
+      topCats = c(topCats, tmp2)
+    }
+    
+  }
   
+  sampTab <- cbind(sampTab, category = topCats, scn_score = topCat_score)
+
   return(sampTab)
 }
 
