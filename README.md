@@ -98,6 +98,7 @@ expTMraw = expTMraw[commonGenes,]
 
 #### Split for training and assessment, and transform training data
 ```R
+set.seed(100) #can be any random seed number
 stList = splitCommon(sampTab=stTM, ncells=100, dLevel="newAnn")
 stTrain = stList[[1]]
 expTrain = expTMraw[,rownames(stTrain)]
