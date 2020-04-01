@@ -17,62 +17,144 @@
 #' @return a list containing normalized expression data, classification gene list, cnPRoc
 #' @export
 
-scn_train <- function(stTrain, 
-		      expTrain, 
-		      dLevel, 
-          	      colName_samp="row.names", 
-	  	      nTopGenes = 10, 
-		      nTopGenePairs = 25, 
-		      nRand = 70, 
-		      nTrees = 1000,
-          	      stratify=FALSE, 
-		      weightedDown_total = 1e4, 
- 	 	      weightedDown_dThresh = 0.25) {
-
-   if (class(stTrain) != "data.frame") {
-      stTrain<-as.data.frame(stTrain)
-   }
-
-   if (colName_samp != "row.names") {
-     rownames(stTrain)<-stTrain[, colName_samp]
-   }
-
-   cat("Sample table has been prepared\n")
-
-   expTnorm<-trans_prop(expTrain, weightedDown_total, dThresh = weightedDown_dThresh)
-   cat("Expression data has been normalized\n")
-
-   cat("Finding classification genes\n")
-   system.time(cgenes<-findClassyGenes(expDat = expTnorm, sampTab = stTrain, dLevel = dLevel, topX = nTopGenes))
-
-   cgenesA<-cgenes[['cgenes']]
-   cat("There are ", length(cgenesA), " classification genes\n")
-
-   grps<-cgenes[['grps']]
-
-   #catch errors when there is NA or emtpy string in cluster or cell type label
-   if(sum(grps == "") >1 | sum(is.na(grps)) >1 ){
+scn_train <- function (stTrain, expTrain, dLevel, colName_samp = "row.names", 
+          nTopGenes = 10, nTopGenePairs = 25, nRand = 70, nTrees = 1000, 
+          stratify = FALSE, weightedDown_total = 10000, weightedDown_dThresh = 0.25,
+          sampsize=40) 
+{
+  if (class(stTrain) != "data.frame") {
+    stTrain <- as.data.frame(stTrain)
+  }
+  if (colName_samp != "row.names") {
+    rownames(stTrain) <- stTrain[, colName_samp]
+  }
+  cat("Sample table has been prepared\n")
+  expTnorm <- trans_prop(expTrain, weightedDown_total, dThresh = weightedDown_dThresh)
+  
+  cat("Expression data has been normalized\n")
+  system.time(cgenes <- findClassyGenes(expDat = expTnorm, sampTab = stTrain, dLevel = dLevel, topX = nTopGenes))
+  cgenesA <- cgenes[["cgenes"]]
+  cat("There are ", length(cgenesA), " classification genes\n")
+  
+  grps <- cgenes[["grps"]]
+  if (sum(grps == "") > 1 | sum(is.na(grps)) > 1) {
     stop("There is NA or empty string in your dLevel. Please remove them before proceeding.")
-   }
-   
-   cat("Finding top pairs\n")
-
-   system.time(xpairs<-ptGetTop(expDat = expTrain[cgenesA,], cell_labels = grps, cgenes_list = cgenes[['cgenes_list']], topX=nTopGenePairs, sliceSize=5000))
-   cat("There are", length(xpairs), "top gene pairs\n")
-
-   system.time(pdTrain<-query_transform(expTrain[cgenesA, ], xpairs))
-   cat("Finished pair transforming the data\n")
-
-   tspRF<-sc_makeClassifier(pdTrain[xpairs,], genes=xpairs, groups=grps, nRand = nRand, ntrees = nTrees, stratify=stratify)
-   cnProc<-list("cgenes"= cgenesA, "xpairs"=xpairs, "grps"= grps, "classifier" = tspRF)
-
-   returnList<-list("sampTab" = stTrain, "cgenes_list" = cgenes[['cgenes_list']], "cnProc" = cnProc)
-
-   cat("All Done\n")
-   #return
-   returnList
+  }
+  cat("Finding top pairs\n")
+  
+  cat("Calculating xpairs\n")
+  
+  #pb <- progress_bar$new(
+    #format = "  Calculating xpairs [:bar] :percent eta: :eta",
+  #  total = 100, clear = FALSE, width= 60)
+  
+  #for(i in 1:100){
+  #  pb$tick()
+    system.time(xpairs_list <- ptGetTop(expDat = expTrain[cgenesA, ], cell_labels = grps, cgenes_list = cgenes[["cgenes_list"]], 
+                                   topX = nTopGenePairs, sliceSize = 5000))
+  #  if(i == 100) cat("There are", length(xpairs_list$xpairs), "top gene pairs\n")
+  #}
+  #close(pb)
+  
+  xpairs = xpairs_list$xpairs
+  
+  system.time(pdTrain <- query_transform(expTrain[cgenesA, ], xpairs))
+  cat("Finished pair transforming the data\n")
+  
+  system.time(tspRF <- sc_makeClassifier(pdTrain[xpairs, ], genes = xpairs, 
+                               groups = grps, nRand = nRand, ntrees = nTrees, stratify = stratify, sampsize = sampsize))
+    
+  cat("Done scn classifier training!")
+  
+  cnProc <- list(cgenes = cgenesA, xpairs = xpairs, grps = grps, classifier = tspRF)
+  returnList <- list(sampTab = stTrain, cgenes_list = cgenes[["cgenes_list"]], 
+                     cnProc = cnProc, xpairs = xpairs, xpairs_list = xpairs_list$xpairs_list)
+  cat("All Done\n")
+  returnList
 }
 
+
+###
+ptGetTop<-function (expDat, cell_labels, cgenes_list = NA, topX = 50, sliceSize = 5000, 
+          quickPairs = TRUE) 
+{
+  if (!quickPairs) {
+    ans <- vector()
+    #ans_list <- list()
+    genes <- rownames(expDat)
+    ncores <- parallel::detectCores()
+    mcCores <- 1
+    if (ncores > 1) {
+      mcCores <- ncores - 1
+    }
+    cat(ncores, "  --> ", mcCores, "\n")
+    pairTab <- makePairTab(genes)
+    if (topX > nrow(pairTab)) {
+      stop(paste0("The data set has ", nrow(pairTab), " total combination of gene pairs. Please select a smaller topX."))
+    }
+    cat("setup ans and make pattern\n")
+    grps <- unique(cell_labels)
+    myPatternG <- sc_sampR_to_pattern(as.character(cell_labels))
+    statList <- list()
+    for (grp in grps) {
+      statList[[grp]] <- data.frame()
+    }
+    cat("make pairDat on slice and test\n")
+    nPairs = nrow(pairTab)
+    cat("nPairs = ", nPairs, "\n")
+    str = 1
+    stp = min(c(sliceSize, nPairs))
+    
+    while (str <= nPairs) {
+      if (stp > nPairs) {
+        stp <- nPairs
+      }
+      cat(str, "-", stp, "\n")
+      tmpTab <- pairTab[str:stp, ]
+      tmpPdat <- ptSmall(expDat, tmpTab)
+      if (Sys.info()[["sysname"]] == "Windows") {
+        tmpAns <- lapply(myPatternG, sc_testPattern, 
+                         expDat = tmpPdat)
+      }
+      else {
+        tmpAns <- parallel::mclapply(myPatternG, sc_testPattern, 
+                                     expDat = tmpPdat, mc.cores = mcCores)
+      }
+      for (gi in seq(length(myPatternG))) {
+        grp <- grps[[gi]]
+        statList[[grp]] <- rbind(statList[[grp]], tmpAns[[grp]])
+      }
+      str <- stp + 1
+      stp <- str + sliceSize - 1
+    }
+    cat("compile results\n")
+    for (grp in grps) {
+      tmpAns <- findBestPairs(statList[[grp]], topX)
+      ans <- append(ans, tmpAns)
+      ans_list[[grp]] = tmpAns
+    }
+    #return(unique(ans))
+    return(list(xpairs = unique(ans), xpairs_list = ans_list))
+  }
+  else {
+    myPatternG <- sc_sampR_to_pattern(as.character(cell_labels))
+    ans <- vector()
+    ans_list <- list()
+    for (cct in names(cgenes_list)) {
+      genes <- cgenes_list[[cct]]
+      pairTab <- makePairTab(genes)
+      nPairs <- nrow(pairTab)
+      #cat("nPairs = ", nPairs, " for ", cct, "\n")
+      tmpPdat <- ptSmall(expDat, pairTab)
+      tmpAns <- findBestPairs(sc_testPattern(myPatternG[[cct]], 
+                                             expDat = tmpPdat), topX)
+      ans <- append(ans, tmpAns)
+      ans_list[[cct]] <- tmpAns
+    }
+    #return(unique(ans))
+    return(list(xpairs = ans, xpairs_list = ans_list))
+  }
+}
 
  
 #' Predict query using broad class classifier 
@@ -260,7 +342,7 @@ sc_makeClassifier<-function(expTrain, genes, groups, nRand=70, ntrees=2000, stra
 
   allgenes<-rownames(expTrain)
   missingGenes<-setdiff(unique(genes), allgenes)
-  cat("Number of missing genes ", length(missingGenes),"\n")
+  #cat("Number of missing genes ", length(missingGenes),"\n")
   ggenes<-intersect(unique(genes), allgenes)
 
   # return random forest object
