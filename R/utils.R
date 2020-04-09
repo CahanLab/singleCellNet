@@ -36,10 +36,11 @@ ctRename<-function(sampTab, annCol, oldName, newName){
 #' @param sampTab sample table
 #' @param ncells number of samples for training in each category. If left empty, will automatically select half of the number of samples in the smallest category.
 #' @param dLevel the column name with the classification categories.
+#' @param cells_reserved number of cell saved for validation, default to 3
 #' @return a list containing training sample table and validation sample table
 #'
 #' @export
-splitCommon<-function(sampTab, ncells = 50, dLevel="cell_ontology_class"){
+splitCommon<-function(sampTab, ncells = 50, dLevel="cell_ontology_class", cells_reserved = 3){
   
   cts<-unique(as.vector(sampTab[,dLevel]))
   trainingids<-vector()
@@ -48,7 +49,7 @@ splitCommon<-function(sampTab, ncells = 50, dLevel="cell_ontology_class"){
     stX<-sampTab[sampTab[,dLevel]==ct,]
 
      # Error catching mechanism if the ncells exceeds the smallest sample size
-    if(ncells <= 3) {
+    if(ncells <= cells_reserved) {
       stop(paste0("Category ", ct, " has ", nrow(stX), " samples. Please remove this category from training. "))
     }
 
@@ -57,7 +58,7 @@ splitCommon<-function(sampTab, ncells = 50, dLevel="cell_ontology_class"){
     }
 
 
-    ccount<-nrow(stX)-3
+    ccount<-nrow(stX)-cells_reserved
     ccount<-min(ccount, ncells)
     cat(nrow(stX),"\n")
     trainingids<-append(trainingids, sample(rownames(stX), ccount))
