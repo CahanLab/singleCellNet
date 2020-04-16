@@ -108,7 +108,7 @@ expTrain = expTMraw[,rownames(stTrain)]
 ```R
 system.time(class_info<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGenes = 10, nRand = 70, nTrees = 1000, nTopGenePairs = 25, dLevel = "newAnn", colName_samp = "cell"))
    user  system elapsed 
- 223.344  15.451 239.364
+ 476.839  25.809 503.351
 ```
 
 #### Apply to held out data
@@ -128,12 +128,12 @@ tm_heldoutassessment = assess_comm(ct_scores = classRes_val_all, stTrain = stTra
 
 plot_PRs(tm_heldoutassessment)
 ```
-<img src="md_img/tm_heldout_pr_082219.png"/>
+<img src="md_img/tm_heldout_pr_041620.png"/>
 
 ```R
 plot_metrics(tm_heldoutassessment)
 ```
-<img src="md_img/tm_heldout_metrics_082219.png">
+<img src="md_img/tm_heldout_metrics_041620.png">
 
 #### Classification result heatmap
 ```R
@@ -197,12 +197,13 @@ stPark <- get_cate(classRes = crParkall, sampTab = stPark, dLevel = "description
 
 #### Classification result violin plot
 ```R
-sc_violinClass(sampTab = stPark, classRes = crParkall, sid = "sample_name", dLevel = "description1", addRand = nrand)
+sc_violinClass(sampTab = stPark, classRes = crParkall, sid = "sample_name", dLevel = "description1", addRand = nqRand)
 ```
 <img src="md_img/tm_park_vio_082219.png">
 
 #### Skyline plot of classification results
 ```R
+library(viridis)
 stKid2 = addRandToSampTab(crParkall, stPark, "description1", "sample_name")
 skylineClass(crParkall, "T cell", stKid2, "description1",.25, "sample_name")
 ```
@@ -323,7 +324,7 @@ plot_PRs(tm_pbmc_assessment)
 ```R
 plot_metrics(tm_pbmc_assessment)
 ```
-<img src="md_img/tm2_pbmc_metrics_082219.png">
+<img src="md_img/tm2_pbmc_metrics_041620.png">
 
 #### Classification result heatmap
 ```R
