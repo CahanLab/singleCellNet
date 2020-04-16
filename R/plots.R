@@ -132,7 +132,7 @@ assign_cate <- function (classRes, sampTab, cThresh = 0)
 }
 
 #' @export
-get_cate <- function (classRes, sampTab, dLevel, sid, nrand, cThresh=0) 
+get_cate <- function (classRes, sampTab, dLevel, sid, nrand, cThresh=0, keepRand = FALSE) 
 {
   if(is.data.frame(classRes)){
     classRes = as.matrix(classRes)
@@ -161,9 +161,13 @@ get_cate <- function (classRes, sampTab, dLevel, sid, nrand, cThresh=0)
     
   }
   
-  sampTab <- cbind(sampTab, category = topCats, scn_score = topCat_score)
-
-  return(sampTab)
+  if(keepRand){
+    sampTab <- cbind(stTmp, category = topCats, scn_score = topCat_score)
+    return(sampTab)
+  }
+  
+  sampTab <- cbind(sampTab, category = topCats[1:nrow(sampTab)], scn_score = topCat_score[1:nrow(sampTab)])
+  return(sampTab) 
 }
 
 
