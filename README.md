@@ -281,7 +281,7 @@ plot_PRs(tm_heldoutassessment)
 ```R
 plot_metrics(tm_heldoutassessment)
 ```
-<img src="md_img/tm2_heldout_metrics_082219.png">
+<img src="md_img/tm2_heldout_metrics_041620.png">
 
 #### Classification result heatmap
 ```R
@@ -324,7 +324,7 @@ plot_PRs(tm_pbmc_assessment)
 ```R
 plot_metrics(tm_pbmc_assessment)
 ```
-<img src="md_img/tm2_pbmc_metrics_041620.png">
+<img src="md_img/tm2_pbmc_metrics_082219.png">
 
 #### Classification result heatmap
 ```R
