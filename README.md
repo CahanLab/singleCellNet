@@ -105,7 +105,9 @@ expTrain = expTMraw[,rownames(stTrain)]
 ```
 
 #### Train the classifier
-<p style="color:red"> If you increase nTopGenes and nTopGenePairs, you may get a even better classifier performance on query data!</p>
+```diff
+- If you increase nTopGenes and nTopGenePairs, you may get a even better classifier performance on query data!
+```
 
 ```R
 system.time(class_info<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGenes = 10, nRand = 70, nTrees = 1000, nTopGenePairs = 25, dLevel = "newAnn", colName_samp = "cell"))
