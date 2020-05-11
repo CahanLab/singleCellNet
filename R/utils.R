@@ -71,12 +71,13 @@ splitCommon<-function(sampTab, ncells = 50, dLevel="cell_ontology_class", cells_
 #' @export
 loadLoomExp<-function# load a loom object containing expression data
 (path,
-  cellNameCol='obs_names'
+  cellNameCol='obs_names',
+  varName = "var_names"
   ){
 
-  lfile <- connect(filename = path)
-  geneNames<-lfile[["row_attrs"]][["var_names"]][]
-  cellNames<-lfile[["col_attrs"]][["obs_names"]][]
+  lfile <- connect(filename = path, skip.validate=T)
+  geneNames<-lfile[["row_attrs"]][[varName]][]
+  cellNames<-lfile[["col_attrs"]][[cellNameCol]][]
   expMat<- t(lfile[["matrix"]][1:length(cellNames),])
   rownames(expMat)<-geneNames
   colnames(expMat)<-cellNames
@@ -87,11 +88,12 @@ loadLoomExp<-function# load a loom object containing expression data
 loadLoomExpCluster<-function# load a loom object containing expression  + cluster info
 (path,
   cellNameCol='obs_names',
+  varName = "var_names",
   xname='cluster'
   ){
   lfile <- connect(filename = path, skip.validate = TRUE)
-  geneNames<-lfile[["row_attrs"]][["var_names"]][]
-  cellNames<-lfile[["col_attrs"]][["obs_names"]][]
+  geneNames<-lfile[["row_attrs"]][[varName]][]
+  cellNames<-lfile[["col_attrs"]][[cellNameCol]][]
   expMat<- t(lfile[["matrix"]][1:length(cellNames),])
   rownames(expMat)<-geneNames
   colnames(expMat)<-cellNames
