@@ -677,13 +677,23 @@ plot_metrics <- function(assessed){
 }
 
 #' @export
-plot_PRs <- function(assessed){
-
-  p6 <- ggplot(data=assessed$nonNA_PR, aes(x=as.numeric(as.vector(recall)), y=as.numeric(as.vector(precision)))) + geom_point(size = .5, alpha=.5) +  geom_path(size=.5, alpha=.75) +
-    theme_bw() + xlab("Recall") + ylab("Precision") + facet_wrap( ~ ctype, ncol=4) +
-    theme(axis.text = element_text(size=5)) + ggtitle("Classification performance_PR Curve")
-  p6
-  
+plot_PRs <- function(assessed, collapse=F){
+  if(collapse){
+    ggplot(data = assessed$nonNA_PR, aes(x = as.numeric(as.vector(recall)),y = as.numeric(as.vector(precision)),colour =ctype)) + 
+      geom_point(size = 0.5, alpha = 0.5) + 
+      geom_path(size = 0.5, alpha = 0.75) + 
+      theme_bw() + xlab("Recall") + ylab("Precision") + 
+      theme(axis.text = element_text(size = 5)) +
+      ggtitle("Classification performance_PR Curve")
+  }else{
+    ggplot(data = assessed$nonNA_PR, aes(x = as.numeric(as.vector(recall)), y = as.numeric(as.vector(precision)))) + 
+      geom_point(size = 0.5,alpha = 0.5) + 
+      geom_path(size = 0.5, alpha = 0.75) + 
+      theme_bw() + xlab("Recall") + ylab("Precision") + 
+      facet_wrap(~ctype, ncol = 4) + 
+      theme(axis.text = element_text(size = 5)) + 
+      ggtitle("Classification performance_PR Curve")
+  }
 }
 
 
