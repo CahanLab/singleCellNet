@@ -200,93 +200,122 @@ makePairTab<-function(genes){
 #' @return vector of top gene-pair names
 #'
 #' @export
-ptGetTop <-function(expDat, cell_labels, cgenes_list=NA, topX=50, sliceSize = 5e3, quickPairs = TRUE){
+ptGetTop<-function(expDat, cell_labels, cgenes_list=NA, topX=50, sliceSize = 5e3, quickPairs = FALSE, coreProportion = 1/4){
+
+  ncores = parallel::detectCores(logical = TRUE) # detect the number of cores in the system
+  mcCores = 1
+  if(ncores * coreProportion > 1){
+    mcCores = round(ncores * coreProportion)
+  }
+
   if(!quickPairs){
-    ans<-vector()
-    genes<-rownames(expDat)
-    
-    ncores<-parallel::detectCores() # detect the number of cores in the system
-    mcCores<-1
-    if(ncores>1){
-      mcCores<-ncores - 1
-    }
-    cat(ncores, "  --> ", mcCores,"\n")
-    
+    #ans<-vector()
+    ans = list()
+    genes = rownames(expDat)
+
+    cat(ncores, "logical cores in total", "  --> ", mcCores, "cores running to find top scoring gene pairs...","\n")
+
     # make a data frame of pairs of genes that will be sliced later
-    pairTab<-makePairTab(genes)
-    
+    pairTab = makePairTab(genes)
+
     if(topX > nrow(pairTab)) {
       stop(paste0("The data set has ", nrow(pairTab), " total combination of gene pairs. Please select a smaller topX."))
     }
-    
+
     # setup tmp ans list of sc_testPattern
     cat("setup ans and make pattern\n")
-    grps<-unique(cell_labels)
-    myPatternG<-sc_sampR_to_pattern(as.character(cell_labels))
-    statList<-list()
+    grps = unique(cell_labels)
+    myPatternG = sc_sampR_to_pattern(as.character(cell_labels))
+    statList = list()
     for(grp in grps){
-      statList[[grp]]<-data.frame()
+      statList[[grp]] = data.frame()
     }
-    
+
     # make the pairedDat, and run sc_testPattern
     cat("make pairDat on slice and test\n")
     nPairs = nrow(pairTab)
     cat("nPairs = ",nPairs,"\n")
     str = 1
     stp = min(c(sliceSize, nPairs)) # detect what is smaller the slice size or npairs
-    
-    while(str <= nPairs){
-      if(stp>nPairs){
-        stp <- nPairs
+
+
+    if(mcCores == 1) {
+      while(str <= nPairs){
+        if(stp>nPairs){
+          stp = nPairs
+        }
+        tmpTab = pairTab[str:stp,]
+        tmpPdat = ptSmall(expDat, tmpTab)
+
+        tmpAns = lapply(X = myPatternG, FUN = sc_testPattern, expDat=tmpPdat)
+        cat(str,"-", stp,"\n")
+
+        for(gi in seq(length(myPatternG))){
+          grp = grps[[gi]]
+          statList[[grp]] = rbind( statList[[grp]],  tmpAns[[grp]])
+        }
+
+
+        str = stp+1
+        stp = str + sliceSize - 1
+
       }
-      cat(str,"-", stp,"\n")
-      tmpTab<-pairTab[str:stp,]
-      tmpPdat<-ptSmall(expDat, tmpTab)
-      
-      if (Sys.info()[['sysname']] == "Windows") {
-        tmpAns<-lapply(myPatternG, sc_testPattern, expDat=tmpPdat)
-      }
-      else {
-        tmpAns<-parallel::mclapply(myPatternG, sc_testPattern, expDat=tmpPdat, mc.cores=mcCores) # this code cannot run on windows
-      }
-      
-      for(gi in seq(length(myPatternG))){
-        grp<-grps[[gi]]
-        statList[[grp]]<-rbind( statList[[grp]],  tmpAns[[grp]])
-      }
-      
-      
-      str<-stp+1
-      stp<-str + sliceSize - 1
     }
-    
+     else {
+       cl = snow::makeCluster(mcCores, type="SOCK")
+       while(str <= nPairs){
+         if(stp>nPairs){
+           stp = nPairs
+         }
+         tmpTab = pairTab[str:stp,]
+         tmpPdat = ptSmall(expDat, tmpTab)
+
+         tmpAns = snow::parLapply(cl = cl, x = myPatternG, fun = sc_testPattern, expDat=tmpPdat)
+         cat(str,"-", stp,"\n")
+
+         for(gi in seq(length(myPatternG))){
+           grp = grps[[gi]]
+           statList[[grp]] = rbind( statList[[grp]],  tmpAns[[grp]])
+         }
+
+
+         str = stp+1
+         stp = str + sliceSize - 1
+
+       }
+       snow::stopCluster(cl)
+     }
+
+
     cat("compile results\n")
     for(grp in grps){
-      tmpAns<-findBestPairs(statList[[grp]], topX)
-      ans<-append(ans, tmpAns)
+      tmpAns = findBestPairs(statList[[grp]], topX)
+      ans[[grp]] = tmpAns
     }
-    return(unique(ans))
-    
-  }else{
-    myPatternG<-sc_sampR_to_pattern(as.character(cell_labels))
-    ans<-vector()
-    
+    return(ans)
+  }
+  else {
+
+    myPatternG = sc_sampR_to_pattern(as.character(cell_labels))
+    ans = list()
     for(cct in names(cgenes_list)){
-      genes<-cgenes_list[[cct]]
-      pairTab<-makePairTab(genes)
-      
-      nPairs<-nrow(pairTab)
+      genes = cgenes_list[[cct]]
+      pairTab = makePairTab(genes)
+
+      nPairs = nrow(pairTab)
       cat("nPairs = ", nPairs," for ", cct, "\n")
-      
-      tmpPdat<-ptSmall(expDat, pairTab)
-      
-      tmpAns<-findBestPairs( sc_testPattern(myPatternG[[cct]], expDat=tmpPdat), topX)
-      ans<-append(ans, tmpAns)
+
+      tmpPdat = ptSmall(expDat, pairTab)
+
+      tmpAns = findBestPairs( sc_testPattern(myPatternG[[cct]], expDat=tmpPdat), topX)
+
+      ans[[cct]] = tmpAns
     }
-    
-    return(unique(ans))
+
+    return(ans)
   }
 }
+
 ptSmall<-function
 (expDat,
  pTab){

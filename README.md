@@ -11,7 +11,10 @@ Here, we illustrate ...
 
 - how to use these classifiers to quantify 'cell identity' from query scRNA-Seq data
 
-If you want to use the bulk RNA-Seq version of CellNet, go to [bulk CellNet](https://github.com/pcahan1/CellNet). 
+If you want to use the bulk RNA-Seq version of CellNet, go to [bulk CellNet](https://github.com/pcahan1/CellNet).
+
+### 
+This particular branch is to implement parallelization for Windows user which uses Socket archeitecture (snow) instead of Fork.   
 
 
 ### DATA
@@ -30,7 +33,8 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 #### Setup
 ```R
 install.packages("devtools")
-devtools::install_github("pcahan1/singleCellNet")
+install.packages("snow")
+devtools::install_github("pcahan1/singleCellNet", ref = "scn_windows")
 library(singleCellNet)
 ```
 #### Optional set up if you are working with loom files
