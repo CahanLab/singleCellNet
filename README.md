@@ -402,13 +402,16 @@ plot_umap(umPrep_HS)
 
 ### How to calibrate/make sense of a given SCN score
 ```R
-#this function aims to give you a sense of how precise/sensitive SCN is with this assigned score of a given cell type for a cell
+#this function aims to give you a sense of how precise/sensitive SCN is with the assigned score of a given cell type for a cell
 
-matrix = e_assess_matrix
-score = 0.307
-celltype = "Allantois"
+#tm_assess_matrix = tm_heldoutassessment$nonNA_PR
 
-calibration = scn_calibration(score, celltype, matrix)
+#tm_assess_matrix is a held_out assessment metric extracted from tm_heldoutassessment, which is already stored in SCN.
+
+score = 0.6
+celltype = "B cell"
+
+calibration = scn_calibration(score = score, celltype = celltype, matrix=tm_assess_matrix)
 
 calibration
 ```

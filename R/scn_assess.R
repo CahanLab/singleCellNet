@@ -703,6 +703,15 @@ plot_PRs <- function(assessed, collapse=F){
 #' @return a list of queried score, cell type, and PR
 #' @export 
 scn_calibration <- function(score, celltype, matrix){
+
+  #input qc
+  if(score > 1 || score < 0){
+    print("Score is not within range! Please re-enter the score.")
+  }
+  
+  if(!celltype %in% unique(matrix$ctype)){
+    print("Cell type is not in the assessment matrix. Please re-enter celltype or check to see if there are cells left in heldout data to assess this cell type of interest.")
+  }
   
   #figure out the lower bound and upper bounds
   score_rounded = round(score, digits = 2)
