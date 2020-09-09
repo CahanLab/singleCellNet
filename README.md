@@ -191,7 +191,7 @@ hm_gpa_sel(gpTab, genes = class_info$cnProc$xpairs, grps = train, maxPerGrp = 50
 ```
 <img src="md_img/tm_heldout_tp_082219.png">
 
-### Query <a name="train"></a>
+### Query <a name="query"></a>
 #### Apply to Park et al query data
 ```R
 expPark = utils_loadObject("expMatrix_Park_MouseKidney_Oct_12_2018.rda") 
