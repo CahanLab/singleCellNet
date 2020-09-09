@@ -696,6 +696,37 @@ plot_PRs <- function(assessed, collapse=F){
   }
 }
 
+#' report sensitivity and precision of a scn score for a given cell type
+#' @param score   a scn score for a given cell, numerical value
+#' @param celltype  the cell type assigned by SCN
+#' @param matrix  the helout assessment matrix obtained in SCN
+#' @return a list of queried score, cell type, and PR
+#' @export 
+scn_calibration <- function(score, celltype, matrix){
+  
+  #figure out the lower bound and upper bounds
+  score_rounded = round(score, digits = 2)
+  if(score_rounded > score){
+    score_lowerb = score_rounded - 0.005
+    score_upperb = score_rounded
+  }else{
+    score_lowerb = score_rounded
+    score_upperb = score_rounded + 0.005
+  }
+  confInt = c(score_lowerb, score_upperb)
+  precision = c()
+  recall = c()
+  
+  #access 
+  precision = round(matrix[matrix$thresh %in% confInt & matrix$ctype == celltype, "precision"], digits = 3)
+  recall = round(matrix[matrix$thresh %in% confInt & matrix$ctype == celltype, "recall"], digits = 3)
+  
+  print(paste("SCN score of", score, "for cell type", celltype, "has precision of", precision[1], "~", precision[2], 
+              "and sensitivity of", recall[1], "~", recall[2], sep = " "))
+  
+  return(list(score = score, celltype=celltype, precision = precision, recall = recall))
+  
+}
 
 plot_multiAssess <- function(assessed, method = "tsp_rf", ylimForMultiLogLoss = x){
 

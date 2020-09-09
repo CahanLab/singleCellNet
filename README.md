@@ -400,6 +400,20 @@ plot_umap(umPrep_HS)
 ```
 <img src="md_img/tm2_pbmc_umap_082219.png">
 
+### How to calibrate/make sense of a given SCN score
+```R
+#this function aims to give you a sense of how precise/sensitive SCN is with this assigned score of a given cell type for a cell
+
+matrix = e_assess_matrix
+score = 0.307
+celltype = "Allantois"
+
+calibration = scn_calibration(score, celltype, matrix)
+
+calibration
+```
+
+
 ### How to integrate loom file to SCN
 ```R
 lfile = loadLoomExpCluster("pbmc_6k.loom", cellNameCol = "obs_names", xname = "description")
