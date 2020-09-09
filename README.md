@@ -1,6 +1,8 @@
 # singleCellNet
+1. [Introduction](###introduction)
 
-### Introduction
+
+### Introduction <a name="introduction"></a>
 SingleCellNet enables the classifcation of single cell RNA-Seq data across species and platforms. See our recent [publication](https://doi.org/10.1016/j.cels.2019.06.004) for more details. Additionally, we have a [vignette](https://pcahan1.github.io/singleCellNet/) to guide you through the steps as well.  
 
 Here, we illustrate ... 
