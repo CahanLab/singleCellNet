@@ -407,13 +407,27 @@ plot_umap(umPrep_HS)
 #tm_assess_matrix = tm_heldoutassessment$nonNA_PR
 
 #tm_assess_matrix is a held_out assessment metric extracted from tm_heldoutassessment, which is already stored in SCN.
+#e_assess_matrix is also provided for a gastrulation SCN classifier 
 
 score = 0.6
 celltype = "B cell"
 
 calibration = scn_calibration(score = score, celltype = celltype, matrix=tm_assess_matrix)
+#[1] "SCN score of 0.6 for cell type B cell has precision of 0.979 ~ 0.979 and sensitivity of 0.93 ~ 0.93"
 
 calibration
+
+#$score
+#[1] 0.6
+
+#$celltype
+#[1] "B cell"
+
+#$precision
+#[1] 0.979 0.979
+
+#$recall
+#[1] 0.93 0.93
 ```
 
 
