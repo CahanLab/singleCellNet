@@ -1,22 +1,22 @@
 # singleCellNet
 
 ## Table of content
-1. [Introduction](###introduction)
-2. [Data](###data)
-3. [Train SCN claissfier](###train)
-4. [Assess SCN claissfier with heldout data](###assess)
-5. [Query](###query)
-6. [Visualization](###visualization)
-7. [Train cross-species SCN classifier](###cs_train)
-8. [Query for cross-species data](###cs_query)
-9. [Assess SCN claissfier with external dataset](###ex_assess)
-10. [More detailed visualization examples](###vis_more)
-11. [Explore important celltype-specific top-pairs](###toppairs)
-12. [SCN score calibration](###calibration)
-13. [Loom integration](###loom)
-14. [Seurat integration](###seurat)
-15. [SCE integration](###sce)
-16. [Available training datasets](###trainsets)
+1. [Introduction](#introduction)
+2. [Data](#data)
+3. [Train SCN claissfier](#train)
+4. [Assess SCN claissfier with heldout data](#assess)
+5. [Query](#query)
+6. [Visualization](#visualization)
+7. [Train cross-species SCN classifier](#cs_train)
+8. [Query for cross-species data](#cs_query)
+9. [Assess SCN claissfier with external dataset](#ex_assess)
+10. [More detailed visualization examples](#vis_more)
+11. [Explore important celltype-specific top-pairs](#toppairs)
+12. [SCN score calibration](#calibration)
+13. [Loom integration](#loom)
+14. [Seurat integration](#seurat)
+15. [SCE integration](#sce)
+16. [Available training datasets](#trainsets)
 
 ### Introduction <a name="introduction"></a>
 SingleCellNet enables the classifcation of single cell RNA-Seq data across species and platforms. See our recent [publication](https://doi.org/10.1016/j.cels.2019.06.004) for more details. Additionally, we have a [vignette](https://pcahan1.github.io/singleCellNet/) to guide you through the steps as well.  
