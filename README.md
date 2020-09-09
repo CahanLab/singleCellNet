@@ -1,6 +1,22 @@
 # singleCellNet
-1. [Introduction](###introduction)
 
+## Table of content
+1. [Introduction](###introduction)
+2. [Data](###data)
+3. [Train SCN claissfier](###train)
+4. [Assess SCN claissfier with heldout data](###assess)
+5. [Query](###query)
+6. [Visualization](###visualization)
+7. [Train cross-species SCN classifier](###cs_train)
+8. [Query for cross-species data](###cs_query)
+9. [Assess SCN claissfier with external dataset](###ex_assess)
+10. [More detailed visualization examples](###vis_more)
+11. [Explore important celltype-specific top-pairs](###toppairs)
+12. [SCN score calibration](###calibration)
+13. [Loom integration](###loom)
+14. [Seurat integration](###seurat)
+15. [SCE integration](###sce)
+16. [Available training datasets](###trainsets)
 
 ### Introduction <a name="introduction"></a>
 SingleCellNet enables the classifcation of single cell RNA-Seq data across species and platforms. See our recent [publication](https://doi.org/10.1016/j.cels.2019.06.004) for more details. Additionally, we have a [vignette](https://pcahan1.github.io/singleCellNet/) to guide you through the steps as well.  
@@ -16,7 +32,7 @@ Here, we illustrate ...
 If you want to use the bulk RNA-Seq version of CellNet, go to [bulk CellNet](https://github.com/pcahan1/CellNet). 
 
 
-### DATA
+### Data <a name="data"></a>
 
 In this example, we use a subset of the Tabula Muris data to train singleCellNet. To learn more about the Tabula Muris project, see the [manuscript](https://www.biorxiv.org/content/early/2018/03/29/237446). As query data, we use scRNA-Seq of kidney cells as reported in [Park et al 2018](https://www.ncbi.nlm.nih.gov/pubmed/29622724). We also provide an example of classifying human, bead enriched PBMCs (from https://www.ncbi.nlm.nih.gov/pubmed/28091601). You can download this data here:
 
@@ -29,6 +45,7 @@ In this example, we use a subset of the Tabula Muris data to train singleCellNet
 
 *more training datasets (metadata and expression data) are provided at the bottom of the page.
 
+### Training <a name="train"></a>
 #### Setup
 ```R
 install.packages("devtools")
@@ -116,7 +133,7 @@ system.time(class_info<-scn_train(stTrain = stTrain, expTrain = expTrain, nTopGe
    user  system elapsed 
  476.839  25.809 503.351
 ```
-
+### Assessing the classifier with heldout data <a name="assess"></a>
 #### Apply to held out data
 ```R
 #validate data
@@ -140,6 +157,7 @@ plot_PRs(tm_heldoutassessment)
 plot_metrics(tm_heldoutassessment)
 ```
 <img src="md_img/tm_heldout_metrics_041620.png">
+
 
 #### Classification result heatmap
 ```R
@@ -173,6 +191,7 @@ hm_gpa_sel(gpTab, genes = class_info$cnProc$xpairs, grps = train, maxPerGrp = 50
 ```
 <img src="md_img/tm_heldout_tp_082219.png">
 
+### Query <a name="train"></a>
 #### Apply to Park et al query data
 ```R
 expPark = utils_loadObject("expMatrix_Park_MouseKidney_Oct_12_2018.rda") 
@@ -181,7 +200,11 @@ nqRand = 50
 system.time(crParkall<-scn_predict(class_info[['cnProc']], expPark, nrand=nqRand))
    user  system elapsed 
  89.633   5.010  95.041 
+```
 
+### Visualization <a name="visualization"></a>
+
+```R
 sgrp = as.vector(stPark$description1)
 names(sgrp) = as.vector(stPark$sample_name)
 grpRand =rep("rand", nqRand)
@@ -215,9 +238,9 @@ skylineClass(crParkall, "T cell", stKid2, "description1",.25, "sample_name")
 ```
 <img src="md_img/tm_park_sky_082219.png">
 
-### Cross-species classification
+### Cross-species classification <a name="cs_train"></a>
 
-#### Load the human query data
+#### Load the mouse training and human query data
 ```R
 stQuery = utils_loadObject("stDat_beads_mar22.rda")
 expQuery = utils_loadObject("6k_beadpurfied_raw.rda") # use Matrix if RAM low
@@ -309,7 +332,7 @@ plot_attr(classRes_val_all2, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```
 <img src="md_img/tm2_heldout_attr_082219.png">
 
-#### Apply to human query data
+### Apply to human query data <a name="cs_quert"></a>
 ```R
 stQuery$description = as.character(stQuery$description)
 stQuery[which(stQuery$description == "NK cell"), "description"] = "natural killer cell"
@@ -320,7 +343,8 @@ system.time(crHS <- scn_predict(class_info2[['cnProc']], expQueryOrth, nrand=nqR
   3.566   0.548   4.166 
 ```
 
-#### Assess classifier with external dataset
+### Assess classifier with external dataset <a name="ex_assess"></a>
+
 ```R
 tm_pbmc_assessment = assess_comm(ct_scores = crHS, stTrain = stTrain, stQuery = stQuery, classTrain = "newAnn",classQuery="description",dLevelSID="sample_name")
 plot_PRs(tm_pbmc_assessment)
@@ -331,6 +355,8 @@ plot_PRs(tm_pbmc_assessment)
 plot_metrics(tm_pbmc_assessment)
 ```
 <img src="md_img/tm2_pbmc_metrics_082219.png">
+
+### More visualization <a name="vis_more"></a>
 
 #### Classification result heatmap
 ```R
@@ -378,7 +404,17 @@ plot_attr(sampTab = stQuery, classRes = crHS, sid = "sample_name", dLevel = "des
 ```
 <img src="md_img/tm2_pbmc_attr_sub_082219.png">
 
-#### Heatmap top pairs genes for training sample average
+#### UMAP by category
+```R
+system.time(umPrep_HS<-prep_umap_class(crHS, stQuery, nrand=nqRand, dLevel="description", sid="sample_name", topPC=5))
+  user  system elapsed 
+ 25.703   0.740  26.450 
+plot_umap(umPrep_HS)
+```
+<img src="md_img/tm2_pbmc_umap_082219.png">
+
+
+### Heatmap top pairs genes for training sample average <a name="toppairs"></a>
 ```R
 system.time(gpTab2 <- compareGenePairs(query_exp = expQueryOrth, training_exp = expTrainOrth, training_st = stTrain, classCol = "newAnn", sampleCol = "cell", RF_classifier = class_info2$cnProc$classifier, numPairs = 20, trainingOnly = FALSE))
    user  system elapsed 
@@ -393,16 +429,7 @@ hm_gpa_sel(gpTab2, genes = class_info2$cnProc$xpairs, grps = sgrp, maxPerGrp = 5
 ```
 <img src="md_img/tm2_pbmc_tp_082219.png">
 
-#### UMAP by category
-```R
-system.time(umPrep_HS<-prep_umap_class(crHS, stQuery, nrand=nqRand, dLevel="description", sid="sample_name", topPC=5))
-  user  system elapsed 
- 25.703   0.740  26.450 
-plot_umap(umPrep_HS)
-```
-<img src="md_img/tm2_pbmc_umap_082219.png">
-
-### How to calibrate/make sense of a given SCN score
+### How to calibrate/make sense of a given SCN score <a name="calibration"></a>
 ```R
 #this function aims to give you a sense of how precise/sensitive SCN is with the assigned score of a given cell type for a cell
 
@@ -432,8 +459,7 @@ calibration
 #[1] 0.93 0.93
 ```
 
-
-### How to integrate loom file to SCN
+### How to integrate loom file to SCN <a name="loom"></a>
 ```R
 lfile = loadLoomExpCluster("pbmc_6k.loom", cellNameCol = "obs_names", xname = "description")
 stQuery = lfile$sampTab
@@ -447,15 +473,7 @@ dim(expQuery)
 #With this you can rerun the cross-species analysis and follow the exact same steps
 ```
 
-### Integrate Seurat object to SCN analysis
-```R
-#exp_type options can be: counts, data, and scale.data if they are available in your sce object
-scefile = extractSCE(sce_object, exp_slot_name = "counts") 
-sampTab = scefile$sampTab
-expDat = scefile$expDat
-```
-
-### Integrate SCE object to SCN analysis
+### Integrate Seurat object to SCN analysis <a name="seurat"></a>
 ```R
 #exp_type options can be: counts, normcounts, and logcounts, if they are available in your sce object
 seuratfile = extractSeurat(seurat_object, exp_slot_name = "counts")
@@ -463,7 +481,15 @@ sampTab = seuratfile$sampTab
 expDat = seuratfile$expDat
 ```
 
-### More training data for your own analysis
+### Integrate SCE object to SCN analysis <a name="sce"></a>
+```R
+#exp_type options can be: counts, data, and scale.data if they are available in your sce object
+scefile = extractSCE(sce_object, exp_slot_name = "counts") 
+sampTab = scefile$sampTab
+expDat = scefile$expDat
+```
+
+### More training data for your own analysis <a name="trainsets"></a>
 
 |    study    |   species  | organ/tissue| seq method |    data    |
 |-------------|------------|-------------|------------|------------|
