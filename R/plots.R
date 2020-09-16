@@ -181,9 +181,9 @@ plot_attr <- function (classRes, sampTab, nrand, dLevel, sid = "sample_name", su
     stTmp = sampTab
   }
   
-  stTmp <- addToST(sampTab, nrand = nrand, sid = sid, dLevels = dLevel)
+  #stTmp <- addToST(sampTab, nrand = nrand, sid = sid, dLevels = dLevel)
   stTmp <- assign_cate(classRes, stTmp)
-  colnames(stTmp)[2] <- "group"
+  colnames(stTmp)[which(colnames(stTmp) == dLevel)] <- "group"
   getPalette = colorRampPalette(brewer.pal(12, "Paired"))
   myPal = getPalette(length(unique(stTmp$category)))
   p1 = ggplot(stTmp, aes(x = group, fill = category)) + geom_bar(position = "fill", 
