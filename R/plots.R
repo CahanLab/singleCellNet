@@ -433,10 +433,9 @@ compareGenePairs<-function(query_exp, training_exp, training_st, classCol, sampl
   importantPairs = sort(importantPairs[, 1], decreasing = TRUE)
   importantPairs = importantPairs[grep("_", names(importantPairs))]
   
-  if (numPairs < length(importantPairs)) {
+  if (numPairs > length(importantPairs)) {
     userPairs = importantPairs
-  }
-  else {
+  }else {
     userPairs = importantPairs[1:numPairs]
   }
   
