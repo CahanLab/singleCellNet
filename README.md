@@ -29,7 +29,7 @@ Here, we illustrate ...
 
 - how to use these classifiers to quantify 'cell identity' from query scRNA-Seq data
 
-<span style="color:magneta"> If you want to use the bulk RNA-Seq version of CellNet, go to [bulk CellNet](https://github.com/pcahan1/CellNet). </span> 
+<span style="color:red"> If you want to use the bulk RNA-Seq version of CellNet, go to [bulk CellNet](https://github.com/pcahan1/CellNet). </span> 
 
 <span style="color:navy"> Our singleCellNet is available on Python [pySCN](https://github.com/pcahan1/PySingleCellNet/tree/master) which is Scanpy and AnnData compatible. </span> 
 
