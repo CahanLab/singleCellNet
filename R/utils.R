@@ -469,7 +469,7 @@ extractSeurat <- function(seurat_object, exp_slot_name = "counts"){
 
 #' extract sampTab and expDat sce object into regular S3 objects
 #' @param sce_object
-#' @param exp_type
+#' @param exp_slot_name
 #' @param list
 #' @export
 extractSCE <- function(sce_object, exp_slot_name = "counts"){
