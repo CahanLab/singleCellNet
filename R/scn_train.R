@@ -37,6 +37,12 @@ scn_train <- function(stTrain,
      rownames(stTrain)<-stTrain[, colName_samp]
    }
 
+   x = grep("_", rownames(expTrain))
+   if(is.integer(x) && length(x) != 0L){
+      cat("converting _ in gene names to .\n")
+      rownames(expTrain) = gsub("_",".",rownames(expTrain))
+   }
+
    cat("Sample table has been prepared\n")
 
    expTnorm<-trans_prop(expTrain, weightedDown_total, dThresh = weightedDown_dThresh)
@@ -86,7 +92,13 @@ scn_train <- function(stTrain,
 #' @export 
 scn_predict<-function(cnProc, expDat, nrand = 2) {
 
-   expVal = expDat 
+   expVal = expDat
+
+   x = grep("_", rownames(expVal))
+   if(is.integer(x) && length(x) != 0L){
+      cat("converting _ in gene names to .\n")
+      rownames(expVal) = gsub("_",".",rownames(expVal))
+   } 
 
    rf_tsp<-cnProc[['classifier']]
    cgenes<-cnProc[['cgenes']]
