@@ -43,6 +43,11 @@ ctRename<-function(sampTab, annCol, oldName, newName){
 splitCommon<-function(sampTab, ncells = 50, dLevel="cell_ontology_class", cells_reserved = 3){
   
   cts<-unique(as.vector(sampTab[,dLevel]))
+
+  if(sum(is.na(cts)) > 0){
+    stop("There are NAs in your training labels, please remove them first!")
+  }
+  
   trainingids<-vector()
   for(ct in cts){
     cat(ct,": ")
