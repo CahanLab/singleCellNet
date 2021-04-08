@@ -334,7 +334,7 @@ plot_attr(classRes_val_all2, stTest, nrand=nrand, dLevel="newAnn", sid="cell")
 ```
 <img src="md_img/tm2_heldout_attr_082219.png">
 
-### Apply to human query data <a name="cs_quert"></a>
+### Apply to human query data <a name="cs_query"></a>
 ```R
 stQuery$description = as.character(stQuery$description)
 stQuery[which(stQuery$description == "NK cell"), "description"] = "natural killer cell"
