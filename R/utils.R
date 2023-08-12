@@ -483,15 +483,15 @@ extractSCE <- function(sce_object, exp_slot_name = "counts"){
   sampTab$sample_name = rownames(sampTab)
   
   #extract expression matrix
-  if(exp_type == "counts"){
+  if(exp_slot_name == "counts"){
     expDat = counts(sce_object)
   }
   
-  if(exp_type == "normcounts"){
+  if(exp_slot_name == "normcounts"){
     expDat = normcounts(sce_object)
   }
   
-  if(exp_type == "logcounts"){
+  if(exp_slot_name == "logcounts"){
     expDat = logcounts(sce_object)
   }
   
