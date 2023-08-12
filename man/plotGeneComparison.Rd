@@ -4,8 +4,15 @@
 \alias{plotGeneComparison}
 \title{Gene expression plotting}
 \usage{
-plotGeneComparison(expDat, grps, fontsize_row = 6, cRows = FALSE,
-  cCols = FALSE, toScale = FALSE, ...)
+plotGeneComparison(
+  expDat,
+  grps,
+  fontsize_row = 6,
+  cRows = FALSE,
+  cCols = FALSE,
+  toScale = FALSE,
+  ...
+)
 }
 \arguments{
 \item{expDat}{comparison expression matrix from \code{\link{makeGeneCompareTab}}}

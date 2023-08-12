@@ -4,8 +4,7 @@
 \alias{scn_extract_SN_DF}
 \title{returns a DF of: sample_id, description, ctt, subnet_name, score}
 \usage{
-scn_extract_SN_DF(scores, sampTab, dLevel, rnames = NULL,
-  sidCol = "sample_id")
+scn_extract_SN_DF(scores, sampTab, dLevel, rnames = NULL, sidCol = "sample_id")
 }
 \arguments{
 \item{scores}{a matrix of subNet scores}

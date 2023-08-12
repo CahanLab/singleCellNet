@@ -4,8 +4,7 @@
 \alias{pca_to_tsne}
 \title{make tsne from pca}
 \usage{
-pca_to_tsne(expDat, recRes, perplexity = 30, theta = 0.3,
-  weighted = TRUE)
+pca_to_tsne(expDat, recRes, perplexity = 30, theta = 0.3, weighted = TRUE)
 }
 \arguments{
 \item{expDat}{expDat}

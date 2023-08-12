@@ -4,8 +4,14 @@
 \alias{ptGetTop}
 \title{Find the best gene pairs for training}
 \usage{
-ptGetTop(expDat, cell_labels, cgenes_list = NA, topX = 50,
-  sliceSize = 5000, quickPairs = TRUE)
+ptGetTop(
+  expDat,
+  cell_labels,
+  cgenes_list = NA,
+  topX = 50,
+  sliceSize = 5000,
+  quickPairs = TRUE
+)
 }
 \arguments{
 \item{expDat}{expDat}

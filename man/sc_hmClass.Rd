@@ -4,8 +4,17 @@
 \alias{sc_hmClass}
 \title{heatmap of the classification result}
 \usage{
-sc_hmClass(classMat, grps, isBig = FALSE, maxPerGrp = 100,
-  cRow = FALSE, cCol = FALSE, fontsize_row = 4, scale = FALSE)
+sc_hmClass(
+  classMat,
+  grps,
+  isBig = FALSE,
+  maxPerGrp = 100,
+  cRow = FALSE,
+  cCol = FALSE,
+  fontsize_row = 8,
+  scale = FALSE,
+  label_reorder = TRUE
+)
 }
 \arguments{
 \item{classMat}{classMat}

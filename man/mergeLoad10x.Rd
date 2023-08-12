@@ -4,8 +4,12 @@
 \alias{mergeLoad10x}
 \title{Loads 10x data mtx}
 \usage{
-mergeLoad10x(basePath, pNames, nCells = 1000,
-  secPath = "filtered_matrices_mex/hg19")
+mergeLoad10x(
+  basePath,
+  pNames,
+  nCells = 1000,
+  secPath = "filtered_matrices_mex/hg19"
+)
 }
 \arguments{
 \item{basePath}{path}

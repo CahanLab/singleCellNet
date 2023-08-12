@@ -4,8 +4,7 @@
 \alias{hm_enr}
 \title{heatmap of the enrichment result}
 \usage{
-hm_enr(esList, threshold = 0.05, cRows = FALSE, cCols = FALSE,
-  fsr = 4)
+hm_enr(esList, threshold = 0.05, cRows = FALSE, cCols = FALSE, fsr = 4)
 }
 \arguments{
 \item{esList}{returned from ks.extract.more}

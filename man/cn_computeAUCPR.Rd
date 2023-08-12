@@ -4,8 +4,12 @@
 \alias{cn_computeAUCPR}
 \title{compute AUPCR}
 \usage{
-cn_computeAUCPR(perfDF, precisionCol = "Precision",
-  recallCol = "Recall", predCol = "Predictions")
+cn_computeAUCPR(
+  perfDF,
+  precisionCol = "Precision",
+  recallCol = "Recall",
+  predCol = "Predictions"
+)
 }
 \arguments{
 \item{perfDF}{a df}
