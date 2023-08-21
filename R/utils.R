@@ -25,7 +25,7 @@ ctRename<-function(sampTab, annCol, oldName, newName){
   xnot<-which(colnames(sampTab)!=annCol)
   ans<-sampTab[,xnot]
   cbind(ans, newAnn=newann)
-} 
+}
 
 #' @title
 #' Split Sample Table
@@ -41,13 +41,13 @@ ctRename<-function(sampTab, annCol, oldName, newName){
 #'
 #' @export
 splitCommon<-function(sampTab, ncells = 50, dLevel="cell_ontology_class", cells_reserved = 3){
-  
+
   cts<-unique(as.vector(sampTab[,dLevel]))
 
   if(sum(is.na(cts)) > 0){
     stop("There are NAs in your training labels, please remove them first!")
   }
-  
+
   trainingids<-vector()
   for(ct in cts){
     cat(ct,": ")
@@ -102,7 +102,7 @@ loadLoomExpCluster<-function# load a loom object containing expression  + cluste
   expMat<- t(lfile[["matrix"]][1:length(cellNames),])
   rownames(expMat)<-geneNames
   colnames(expMat)<-cellNames
-  
+
   cluster_old <- lfile[['col_attrs']][[xname]][]
 
   sampTab <- data.frame(cell_name=cellNames, cluster=cluster_old)
@@ -117,7 +117,7 @@ loadLoomExpCluster<-function# load a loom object containing expression  + cluste
 #' @export
 getGenesFromGO<-function# return the entrez gene ids of a given a GOID, for now assumes mouse
 (GOID, # GO id to find genes for
- annList 
+ annList
 ){
   sort(as.vector(unlist(annList[['egSymbols']][annList[['goegs']][[GOID]]])));
 }
@@ -149,15 +149,15 @@ GEP_makeMean<-function
  groupings,
  type='mean'
 ){
-  
-  
+
+
   ans<-data.frame();
   grps<-unique(groupings);
   if(type=='mean'){
     for(grp in grps){
       gi<-which(groupings==grp);
       if(length(gi)==1){
-        
+
         if(nrow(ans)==0){
           ans<-data.frame(exp[,gi]);
         }else{
@@ -187,7 +187,7 @@ GEP_makeMean<-function
       }
     }
   }
-  
+
   colnames(ans)<-grps;
   ans;
   ### data.frame of mean or median-ed data based on given groupings
@@ -215,8 +215,8 @@ library(GO.db)
 #'
 #' 1-PCC distance
 #' @param x numeric matrix
-#' 
-#' @return distance matrix  
+#'
+#' @return distance matrix
 #'
 #' @examples
 #' xdist<-utils_myDist(t(expDat))
@@ -254,7 +254,7 @@ utils_loadObject<-function
 #'
 #' @export
 utils_stripwhite<-function
-### 
+###
 (string
  #### string
  ){
@@ -268,7 +268,7 @@ utils_stripwhite<-function
 #'
 #' @export
 utils_myDate<-function
-### 
+###
 ()
 {
   format(Sys.time(), "%b_%d_%Y");
@@ -299,11 +299,11 @@ zscore<-function
 ### compute zscore
 (x,
  ### numeric vector
- meanVal, 
- ### mean of distribution to compute zscore of x against 
+ meanVal,
+ ### mean of distribution to compute zscore of x against
  sdVal
  ### standard deviation of distribution to compute zscore of x agains
- ){ 
+ ){
   (x-meanVal)/sdVal;
   ### zscore
 }
@@ -363,7 +363,7 @@ cn_correctZmat<-function
 downSampleW<-function
 (vector,
  total=1e5,
- dThresh=0){ 
+ dThresh=0){
 
   totalSignal<-sum(vector)
   wAve<-vector/totalSignal
@@ -403,7 +403,7 @@ weighted_down<-function
     tmpAns <- expDat - t(props * rrids)
     tmpAns[which(tmpAns<dThresh)] <- 0
   }
-  
+
   tmpAns
 }
 
@@ -461,15 +461,15 @@ trans_binarize<-function
 #' @return list
 #' @export
 extractSeurat <- function(seurat_object, exp_slot_name = "counts"){
-  
+
   #extract metadata
   sampTab = seurat_object@meta.data
-  
+
   #extract expression matrix
-  expDat = as.matrix(GetAssayData(seurat_object, slot = exp_slot_name))   
-  
+  expDat = as.matrix(GetAssayData(seurat_object, slot = exp_slot_name))
+
   return(list(sampTab = sampTab, expDat = expDat))
-  
+
 }
 
 #' extract sampTab and expDat sce object into regular S3 objects
@@ -479,24 +479,24 @@ extractSeurat <- function(seurat_object, exp_slot_name = "counts"){
 #' @export
 extractSCE <- function(sce_object, exp_slot_name = "counts"){
   #extract metadata
-  sampTab = as.data.frame(colData(sce_object, internal = TRUE))
+  sampTab = as.data.frame(colData(sce_object))
   sampTab$sample_name = rownames(sampTab)
-  
+
   #extract expression matrix
   if(exp_slot_name == "counts"){
     expDat = counts(sce_object)
   }
-  
+
   if(exp_slot_name == "normcounts"){
     expDat = normcounts(sce_object)
   }
-  
+
   if(exp_slot_name == "logcounts"){
     expDat = logcounts(sce_object)
   }
-  
+
   return(list(sampTab = sampTab, expDat = expDat))
-  
+
 }
 
 #' @export
@@ -590,7 +590,7 @@ load10x<-function
 
 	# sample_name == prefix + inc
 	# sample_id == prefix + inc + barcode
-	
+
 	# barcode == barcode
 	# colnames of expDat == sample_name
 	# rownames(sampTab) = sample_name
@@ -657,7 +657,7 @@ mergeLoad10x<-function
 	##stp<-nCells
 	cat(pNames[1],"\n")
 	cat("named:",ncol(expList[[pNames[1]]][['expDat']]),"\n")
-	cat("numbered:",ncol(expList[[1]]),"\n")	
+	cat("numbered:",ncol(expList[[1]]),"\n")
 	stp<-ncol(expList[[pNames[1]]][['expDat']])
 #	for(pName in pNames){
 	for(i in seq(length(pNames))){
