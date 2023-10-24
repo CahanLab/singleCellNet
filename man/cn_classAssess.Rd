@@ -4,8 +4,13 @@
 \alias{cn_classAssess}
 \title{Assess classifiers based on validation data}
 \usage{
-cn_classAssess(ct_scores, stVal, classLevels = "description2",
-  dLevelSID = "sample_id", resolution = 0.005)
+cn_classAssess(
+  ct_scores,
+  stVal,
+  classLevels = "description2",
+  dLevelSID = "sample_id",
+  resolution = 0.005
+)
 }
 \arguments{
 \item{ct_scores}{matrix of classification scores, rows = classifiers, columns = samples, colnames=sampleids}

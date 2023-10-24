@@ -4,8 +4,16 @@
 \alias{scn_netScores}
 \title{GRN status}
 \usage{
-scn_netScores(expDat, genes, tVals, ctt, classList = NULL,
-  classWeight = FALSE, exprWeight = TRUE, xmax = 1000)
+scn_netScores(
+  expDat,
+  genes,
+  tVals,
+  ctt,
+  classList = NULL,
+  classWeight = FALSE,
+  exprWeight = TRUE,
+  xmax = 1000
+)
 }
 \arguments{
 \item{expDat}{query expression matrix}

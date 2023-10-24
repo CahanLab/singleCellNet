@@ -4,8 +4,16 @@
 \alias{findClassyGenes}
 \title{Find Classifier-Worthy Gene Candidates}
 \usage{
-findClassyGenes(expDat, sampTab, dLevel, topX = 25, dThresh = 0,
-  alpha1 = 0.05, alpha2 = 0.001, mu = 2)
+findClassyGenes(
+  expDat,
+  sampTab,
+  dLevel,
+  topX = 25,
+  dThresh = 0,
+  alpha1 = 0.05,
+  alpha2 = 0.001,
+  mu = 2
+)
 }
 \arguments{
 \item{expDat}{a matrix of normalized expression data from \code{\link{trans_prop}}}

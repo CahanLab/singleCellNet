@@ -24,4 +24,4 @@ Imports:
     dplyr,
     cowplot,
     reshape2
-RoxygenNote: 6.1.1
+RoxygenNote: 7.2.3

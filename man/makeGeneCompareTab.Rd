@@ -4,8 +4,13 @@
 \alias{makeGeneCompareTab}
 \title{Make Gene Comparison Table}
 \usage{
-makeGeneCompareTab(queryExpTab, avgGeneTab, querySample = NULL,
-  trainingCat = NULL, geneSamples)
+makeGeneCompareTab(
+  queryExpTab,
+  avgGeneTab,
+  querySample = NULL,
+  trainingCat = NULL,
+  geneSamples
+)
 }
 \arguments{
 \item{queryExpTab}{a matrix of normalized expression query data from \code{\link{trans_prop}}}

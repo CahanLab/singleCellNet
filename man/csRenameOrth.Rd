@@ -4,8 +4,13 @@
 \alias{csRenameOrth}
 \title{enable cross-species comparison}
 \usage{
-csRenameOrth(expQuery, expTrain, orthTable, speciesQuery = "human",
-  speciesTrain = "mouse")
+csRenameOrth(
+  expQuery,
+  expTrain,
+  orthTable,
+  speciesQuery = "human",
+  speciesTrain = "mouse"
+)
 }
 \arguments{
 \item{expQuery}{expQuery}

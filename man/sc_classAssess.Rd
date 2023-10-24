@@ -4,9 +4,18 @@
 \alias{sc_classAssess}
 \title{assess the classifiers performance based on validation data}
 \usage{
-sc_classAssess(stDat, washedDat, dLevel = "description1",
-  dLevelSID = "sample_name", minCells = 40, dThresh = 0,
-  propTrain = 0.25, nRand = 50, nTrees = 2000, resolution = 0.005)
+sc_classAssess(
+  stDat,
+  washedDat,
+  dLevel = "description1",
+  dLevelSID = "sample_name",
+  minCells = 40,
+  dThresh = 0,
+  propTrain = 0.25,
+  nRand = 50,
+  nTrees = 2000,
+  resolution = 0.005
+)
 }
 \arguments{
 \item{stDat}{sample table}

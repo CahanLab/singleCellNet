@@ -4,10 +4,19 @@
 \alias{scn_train}
 \title{Training}
 \usage{
-scn_train(stTrain, expTrain, dLevel, colName_samp = "row.names",
-  nTopGenes = 10, nTopGenePairs = 25, nRand = 70, nTrees = 1000,
-  stratify = FALSE, weightedDown_total = 1500,
-  weightedDown_dThresh = 0.25, transprop_xFact = 10000)
+scn_train(
+  stTrain,
+  expTrain,
+  dLevel,
+  colName_samp = "row.names",
+  nTopGenes = 10,
+  nTopGenePairs = 25,
+  nRand = 70,
+  nTrees = 1000,
+  stratify = FALSE,
+  weightedDown_total = 10000,
+  weightedDown_dThresh = 0.25
+)
 }
 \arguments{
 \item{stTrain}{a dataframe that matches the samples with category}
@@ -28,9 +37,9 @@ scn_train(stTrain, expTrain, dLevel, colName_samp = "row.names",
 
 \item{weightedDown_dThresh}{the threshold at which anything lower than that is 0 for weighted_down function}
 
-\item{transprop_xFact}{scaling factor for transprop}
-
 \item{weightDown_total}{numeric post transformation sum of read counts for weighted_down function}
+
+\item{transprop_xFact}{scaling factor for transprop}
 }
 \value{
 a list containing normalized expression data, classification gene list, cnPRoc

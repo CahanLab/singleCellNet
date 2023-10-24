@@ -4,8 +4,15 @@
 \alias{skylineClass}
 \title{Skyline waterfall}
 \usage{
-skylineClass(classRes, cellType, sampTab, dLevel, yval,
-  cellIdLab = "cell_name", reorder = TRUE)
+skylineClass(
+  classRes,
+  cellType,
+  sampTab,
+  dLevel,
+  yval,
+  cellIdLab = "cell_name",
+  reorder = TRUE
+)
 }
 \arguments{
 \item{yval}{}

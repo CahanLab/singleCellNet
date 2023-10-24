@@ -4,10 +4,19 @@
 \alias{scn_trainGRN}
 \title{Figure out normalization factors for GRNs, and norm training data}
 \usage{
-scn_trainGRN(expTrain, stTrain, subNets, classList = NULL,
-  dLevel = "description1", tVals = NULL, classWeight = FALSE,
-  exprWeight = FALSE, sidCol = "sample_id", xmax = 1000,
-  predSD = FALSE)
+scn_trainGRN(
+  expTrain,
+  stTrain,
+  subNets,
+  classList = NULL,
+  dLevel = "description1",
+  tVals = NULL,
+  classWeight = FALSE,
+  exprWeight = FALSE,
+  sidCol = "sample_id",
+  xmax = 1000,
+  predSD = FALSE
+)
 }
 \arguments{
 \item{expTrain}{expression matrix}

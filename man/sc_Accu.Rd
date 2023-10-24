@@ -4,9 +4,14 @@
 \alias{sc_Accu}
 \title{Assess classifiers based on validation data}
 \usage{
-sc_Accu(ct_scores, stVal, dLevel = "description1",
-  dLevelSID = "sample_name", threshs = seq(0, 1, by = 0.005),
-  nRand = 50)
+sc_Accu(
+  ct_scores,
+  stVal,
+  dLevel = "description1",
+  dLevelSID = "sample_name",
+  threshs = seq(0, 1, by = 0.005),
+  nRand = 50
+)
 }
 \arguments{
 \item{ct_scores}{matrix of classification scores, rows = classifiers, columns = samples, colnames=sampleids}
